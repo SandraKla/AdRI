@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<p style="text-align:left;"> This Shiny App was developed to create Age-dependent Reference Intervals using different methods (<strong>LMS, GAMLSS, Window-Methods and Regression</strong>). By GAMLSS-Models the distribution of the data can be freely selected from: Box-Cox Cole and Green Distribution "BCCG", Box-Cox Power Exponential Distribution "BCPE" or Box-Cox t Distribution "BCT" and additionally Normal-Distribution, Log-Normal-Distribution. The models are created with the package gamlss. The GAMLSS models have different smooth additive terms (P-Splines, Cubic Splines, Polynomials (Degree 3 and 4), Neural Network and Decision Tree). Currently, three Window-Methods are available regular windows, windows connected to a Decision Tree and the Sliding Window-method. And four different Regressions (Linear, Polynomials (Degree 3,4 and 10)). Different metrics can be used to compare the models: <br/> <br/>
+
+- Akaike Information Criterion (AIC) <br/>
+- Bayesian Information Criterion (BIC) / Schwatz Bayesian Criterion (SBC) <br/>
+- Generalized Infromation Criterion (GAIC) with k=3 <br/>
+- Pseudo R-Squared (R2) <br/>
+- R-Squared (R2) <br/>
+- Mean Absolute Error <br/>
+- Mean Squared Error  <br/>
+- Root mean squared error  <br/> <br/>
+
+<strong>All data can be downloaded in CSV format, when it is open in a Browser, also all figures as PNG or selected as EPS (by Plotly at the Overview use the menu in the right corner) or the page as PDF with a right click. </strong>At each tab is an information about the method or go to the <a href="https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki" target="_blank">  Wiki </a>. </p>
+
+<p style="text-align:left;"> <strong><bigger>References:</bigger></strong> <br/>
+Rigby R.A. and Stasinopoulos D.M. (2005). Generalized additive models for location, scale and shape,(with discussion),
+  Appl. Statist., 54, part 3, pp 507-554, <a href="https://doi.org/10.1111/j.1467-9876.2005.00510.x" target="_blank"> 10.1111/j.1467-9876.2005.00510.x </a>. <br/>
+Rigby, Robert & Stasinopoulos, Dm & Heller, Gillian & De Bastiani, Fernanda. (2019). Distributions for Modeling Location, Scale, and Shape: Using GAMLSS in R. <a href="https://doi.org/10.1201/9780429298547" target="_blank"> 10.1201/9780429298547 </a>.<br/>
+Stasinopoulos, Dm & Rigby, Robert & Heller, Gillian & Voudouris, Vlasios & De Bastiani, Fernanda. (2017). Flexible regression and smoothing: Using GAMLSS in R. <a href="https://doi.org/10.1201/b21973" target="_blank"> 10.1201/b21973 </a>.<br/>
+David A Colantonio, Lianna Kyriakopoulou, Man Khun Chan, Caitlin H Daly, Davor Brinc, Allison A Venner, Maria D Pasic, David Armbruster, Khosrow Adeli. (2012). Closing the Gaps in Pediatric Laboratory Reference Intervals: A CALIPER Database of 40 Biochemical Markers in a Healthy and Multiethnic Population of Children. Clinical Chemistry. Volume 58. Issue 5. Pages 854–868. <a href="https://doi.org/10.1373/clinchem.2011.177741" target="_blank"> 10.1373/clinchem.2011.177741 </a>. <br/>
+Klawonn, F., Hoffmann, G., & Orth, M. (2020). Quantitative laboratory results: normal or lognormal distribution?, Journal of Laboratory Medicine, 44(3), 143-150.  <a href="https://doi.org/10.1515/labmed-2020-0005" target="_blank"> 10.1515/labmed-2020-0005 </a>. <br/>
+Zierk J, Hirschmann J, Toddenroth D, et al. Next-generation reference intervals for pediatric hematology. Clin Chem Lab Med. 2019;57(10):1595‐1607.<a href="https://doi.org/10.1515/cclm-2018-1236" target="_blank"> 10.1515/cclm-2018-1236 </a>.<br/>
+Zierk J, Arzideh F, Rechenauer T, et al. Age- and sex-specific dynamics in 22 hematologic and biochemical analytes from birth to adolescence. Clin Chem. 2015;61(7):964‐973. <a href="https://doi.org/10.1373/clinchem.2015.239731" target="_blank"> 10.1373/clinchem.2015.239731 </a>.</p>
+
+<p style="text-align:left;"> 
+<strong><bigger> Warning! </bigger></strong> This Shiny application has not been enough validated! There is no warranty for the app and/or the reference intervals. The R version is 3.6.1 <i>(Action of the Toes)</i> for the used package versions see the <a href="https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki" target="_blank"> Wiki </a>. Please contact the developer, if you have any questions or problems. For a master-thesis in cooperation with</p> <img src="TU_logo.svg" alt="Logo" width ="200" /> <img src="HZI_logo.svg" alt="Logo" width ="200" />
