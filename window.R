@@ -25,6 +25,7 @@ Boot_CI <- function(x, plot.it = FALSE){
   return(ci)
 }
 
+
 ####################################### Regular Window-method #####################################
 
 #' Regular Window-method with the modified.tukey() and three different calculation methods:
@@ -60,24 +61,31 @@ window_method <- function(data_, window, method){
   confidence_with_outliers_97_5 <- data.frame()
   confidence_with_tukey_97_5 <- data.frame()
   
-  ##################################### NONPARAMETRIC #############################################
-  if(method == "nonpara"){
+  n_data <- data.frame()
+  n_data_tukey <- data.frame()
+  
+  for(i in seq(min(data_[,4])+window, max(data_[,4])+window, by = window)){
     
-    # print("Nonparametric ...")
+    age_code <- i
     
-    for(i in seq(min(data_[,4])+window, max(data_[,4])+window, by = window)){
+    # The data subset 
+    age_data <- subset(data_, data_[,4] <= i)                            # Under the condition
+    age_data_ready <- subset(age_data, age_data$age_days > i-window)     # Below the lowest condition
     
-      age_code <- i
+    if(i-window == 0){
+      age_data_ready <- subset(age_data, age_data$age_days >= i-window)}
     
-      # The data subset 
-      age_data <- subset(data_, data_[,4] <= i)                            # Under the condition
-      age_data_ready <- subset(age_data, age_data$age_days > i-(window-1)) # Below the lowest condition
+    n <- nrow(age_data_ready)
     
-      n <- nrow(age_data_ready)
-      
-      # Outlierdetection modified.tukey()
-      outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)
-      
+    # Outlierdetection modified.tukey()
+    outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)
+    
+    n_data <- rbind(n_data,nrow(age_data_ready))
+    n_data_tukey <- rbind(n_data_tukey,length(outliers_tukey))
+  
+    ##################################### NONPARAMETRIC ###########################################
+    if(method == "nonpara"){
+    
       # Median (nonparametric)
       mean_tukey <- median(outliers_tukey)
       mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
@@ -99,26 +107,10 @@ window_method <- function(data_, window, method){
       confidence_with_outliers_2_5 <- rbind(confidence_with_outliers_2_5,t(data.frame(confidence_outlier[,1][2:3])))
       confidence_with_outliers_97_5 <- rbind(confidence_with_outliers_97_5,t(data.frame(confidence_outlier[,2][2:3])))
     }
-  }
   
-  ##################################### QQ-Plot ###################################################
-  if(method == "qqplot"){
-    
-    # print("Hoffmann-Method ...")
-  
-    for(i in seq(min(data_[,4])+window, max(data_[,4])+window, by = window)){
-    
-      age_code <- i
-    
-      # The data subset 
-      age_data <- subset(data_, data_[,4] <= i)                            # Under the condition
-      age_data_ready <- subset(age_data, age_data$age_days > i-(window-1)) # Below the lowest condition
-    
-      n <- nrow(age_data_ready)
-    
-      # Outlierdetection modified.tukey()
-      outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)
-    
+    ##################################### QQ-Plot #################################################
+    if(method == "qqplot"){
+   
       newx <- c(-1.96,0,1.96)
     
       # Make the QQ-Plot
@@ -156,26 +148,10 @@ window_method <- function(data_, window, method){
       confidence_with_outliers_2_5 <- rbind(confidence_with_outliers_2_5,c(result_qqline[1,2], result_qqline[1,3]))
       confidence_with_outliers_97_5 <- rbind(confidence_with_outliers_97_5,c(result_qqline[3,2], result_qqline[3,3]))
     }
-  }
   
-  ##################################### PARAMETRIC ################################################
-  if(method == "para"){
+    ##################################### PARAMETRIC ##############################################
+    if(method == "para"){
     
-    # print("Parametric ...")
-    
-    for(i in seq(min(data_[,4])+window, max(data_[,4])+window, by = window)){
-      
-      age_code <- i
-      
-      # The data subset 
-      age_data <- subset(data_, data_[,4] <= i)                            # Under the condition
-      age_data_ready <- subset(age_data, age_data$age_days > i-(window-1)) # Below the lowest condition
-      
-      n <- nrow(age_data_ready)
-      
-      # Outlierdetection modified.tukey()
-      outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE) 
-      
       # Mean (parametric)
       mean_tukey <- mean(outliers_tukey)
       mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
@@ -228,45 +204,58 @@ window_method <- function(data_, window, method){
   ##################################### Tables to download ########################################
   
   window_data_all_outlier <<- data.frame("Age-range from"         = seq(min(data_[,4]), age_code-1, by=window),
-                                         "to"                     = seq(min(data_[,4]) + window, age_code, by = window),
+                                         "to [Days]"              = c(head(seq(min(data_[,4]) + window, age_code, by = window),-1),max(data_$age_days)),
+                                         "Age-range from"         = round_df(seq(min(data_[,4]), age_code-1, by=window)/365,3),
+                                         "to [Years]"             = c(round_df(head(seq(min(data_[,4]) + window, age_code, by = window)/365,-1),3), max(data_$age)),
                                          "Median"                 = c(mean_with_outliers[,1]), 
                                          "2.5 % RI"               = c(quantiles_with_outliers[,1]),
                                          "97.5% RI"               = c(quantiles_with_outliers[,2]),
                                          "95% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
                                          "to"                     = c(confidence_with_outliers_2_5[,2]),
                                          "95% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
-                                         "to"                     = c(confidence_with_outliers_97_5[,2]), check.names = FALSE)
+                                         "to"                     = c(confidence_with_outliers_97_5[,2]),
+                                         "Number of data points"  = c(n_data[,1]), check.names = FALSE)
   
   window_data_all_tukey <<- data.frame("Age-range from"           = seq(min(data_[,4]), age_code-1, by=window),
-                                       "to"                       = seq(min(data_[,4]) + window, age_code, by = window),
+                                       "to [Days]"                = c(head(seq(min(data_[,4]) + window, age_code, by = window),-1),max(data_$age_days)),
+                                       "Age-range from"           = round_df(seq(min(data_[,4]), age_code-1, by=window)/365, 3),
+                                       "to [Years]"               = c(round_df(head(seq(min(data_[,4]) + window, age_code, by = window)/365,-1),3), max(data_$age)),
                                        "Median"                   = c(mean_with_tukey[,1]), 
                                        "2.5 % RI"                 = c(quantiles_with_tukey[,1]),
                                        "97.5% RI"                 = c(quantiles_with_tukey[,2]),
                                        "90% CI (2.5% RI) from"    = c(confidence_with_tukey_2_5[,1]),
                                        "to"                       = c(confidence_with_tukey_2_5[,2]),
                                        "90% CI (97.5% RI) from"   = c(confidence_with_tukey_97_5[,1]),
-                                       "to"                       = c(confidence_with_tukey_97_5[,2]), check.names = FALSE)
+                                       "to"                       = c(confidence_with_tukey_97_5[,2]),
+                                       "Number of data points"    = c(n_data_tukey[,1]), check.names = FALSE)
   if(method == "para"){
     window_data_all_outlier <<- data.frame("Age-range from"         = seq(min(data_[,4]), age_code-1, by=window),
-                                           "to"                     = seq(min(data_[,4]) + window, age_code, by = window),
+                                           "to [Days]"              = c(head(seq(min(data_[,4]) + window, age_code, by = window),-1),max(data_$age_days)),
+                                           "Age-range from"         = round_df(seq(min(data_[,4]), age_code-1, by=window)/365, 3),
+                                           "to [Years]"             = c(round_df(head(seq(min(data_[,4]) + window, age_code, by = window)/365,-1),3), max(data_$age)),
                                            "Mean"                   = c(mean_with_outliers[,1]), 
                                            "2.5 % RI"               = c(quantiles_with_outliers[,1]),
                                            "97.5% RI"               = c(quantiles_with_outliers[,2]),
                                            "95% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
                                            "to"                     = c(confidence_with_outliers_2_5[,2]),
                                            "95% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
-                                           "to"                     = c(confidence_with_outliers_97_5[,2]), check.names = FALSE)
+                                           "to"                     = c(confidence_with_outliers_97_5[,2]),
+                                           "Number of data points"  = c(n_data[,1]), check.names = FALSE)
     
     window_data_all_tukey <<- data.frame("Age-range from"           = seq(min(data_[,4]), age_code-1, by=window),
-                                         "to"                       = seq(min(data_[,4]) + window, age_code, by = window),
+                                         "to [Days]"                = c(head(seq(min(data_[,4]) + window, age_code, by = window),-1),max(data_$age_days)),
+                                         "Age-range from"           = round_df(seq(min(data_[,4]), age_code-1, by=window)/365, 3),
+                                         "to [Years]"               = c(round_df(head(seq(min(data_[,4]) + window, age_code, by = window)/365,-1),3), max(data_$age)),
                                          "Mean"                     = c(mean_with_tukey[,1]), 
                                          "2.5 % RI"                 = c(quantiles_with_tukey[,1]),
                                          "97.5% RI"                 = c(quantiles_with_tukey[,2]),
                                          "90% CI (2.5% RI) from"    = c(confidence_with_tukey_2_5[,1]),
                                          "to"                       = c(confidence_with_tukey_2_5[,2]),
                                          "90% CI (97.5% RI) from"   = c(confidence_with_tukey_97_5[,1]),
-                                         "to"                       = c(confidence_with_tukey_97_5[,2]), check.names = FALSE)}
+                                         "to"                       = c(confidence_with_tukey_97_5[,2]),
+                                         "Number of data points"    = c(n_data_tukey[,1]), check.names = FALSE)}
 }
+
 
 ####################################### Window-Method coupled to the Decision Tree ################
 
@@ -306,6 +295,8 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
   confidence_with_tukey_97_5 <- data.frame()
   ##################################### Value of Box-Cox-Powertransformation ######################
   # boxcox_groups <- data.frame()
+  n_data <- data.frame()
+  n_data_tukey <- data.frame()
   
   for (i in seq(2,length(split))){
     
@@ -313,7 +304,9 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
 
     # The data subset 
     age_data <- subset(data_window_split, data_window_split$age_days <= split[i])  # Under the condition
-    age_data_ready <- subset(age_data, age_data$age_days > split[i-1])             # Below the lowest condition
+    age_data_ready <- subset(age_data, age_data$age_days > split[i-1])                       # Below the lowest condition
+    if(split[i-1] == 0){
+      age_data_ready <- subset(age_data, age_data$age_days >= split[i-1])}  # Below the lowest condition
     
     if(!nrow(age_data_ready) == 0){
       if(plot_log){
@@ -328,6 +321,8 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
     
     # Outlier-Detection with modified.tukey()
     outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE) 
+    n_data <- rbind(n_data,nrow(age_data_ready))
+    n_data_tukey <- rbind(n_data_tukey,length(outliers_tukey))
     
     ################################### NONPARAMETRIC #############################################
     if(method == "nonpara"){
@@ -429,54 +424,284 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
   window_data_rpart <<- data.frame(age_days = split, mean = c(mean_with_outliers[,1], tail(mean_with_outliers[,1], n=1)),
                                    quantile1 = c(quantiles_with_outliers[,1], tail(quantiles_with_outliers[,1], n=1)),
                                    quantile2 = c(quantiles_with_outliers[,2], tail(quantiles_with_outliers[,2], n=1)))
+  
   # Window-Data with modified.tukey()
   window_data_tukey_rpart <<- data.frame(age_days = split, mean = c(mean_with_tukey[,1],tail(mean_with_outliers[,1], n=1) ),
                                          quantile1 = c(quantiles_with_tukey[,1],  tail(quantiles_with_outliers[,1], n=1)),
                                          quantile2 = c(quantiles_with_tukey[,2], tail(quantiles_with_outliers[,2], n=1)))
-  
+
   ##################################### Tables to download ########################################
 
   window_data_split_outlier <<- data.frame("Age-range from"         = split[1:length(split)-1],
-                                           "to"                     = split[2:length(split)],
+                                           "to [Days]"              = split[2:length(split)],
+                                           "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                           "to [Years]"             = round_df(split[2:length(split)]/365, 3),
                                            "Median"                 = c(mean_with_outliers[,1]),
                                            "2.5 % RI"               = c(quantiles_with_outliers[,1]),
                                            "97.5% RI"               = c(quantiles_with_outliers[,2]),
                                            "90% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
                                            "to"                     = c(confidence_with_outliers_2_5[,2]),
                                            "90% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
-                                           "to"                     = c(confidence_with_outliers_97_5[,2]), check.names = FALSE)
+                                           "to"                     = c(confidence_with_outliers_97_5[,2]), 
+                                           "Number of data points"  = c(n_data[,1]), check.names = FALSE)
 
-  window_data_split_tukey <<- data.frame("Age-range from"           = split[1:length(split)-1],
-                                         "to"                       = split[2:length(split)],
-                                         "Median"                   = c(mean_with_tukey[,1]),
-                                         "2.5 % RI"                 = c(quantiles_with_tukey[,1]),
-                                         "97.5% RI"                 = c(quantiles_with_tukey[,2]),
+  window_data_split_tukey <<- data.frame("Age-range from"         = split[1:length(split)-1],
+                                         "to [Days]"              = split[2:length(split)],
+                                         "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                         "to [Years]"             = round_df(split[2:length(split)]/365, 3),
+                                         "Median"                 = c(mean_with_tukey[,1]),
+                                         "2.5 % RI"               = c(quantiles_with_tukey[,1]),
+                                         "97.5% RI"               = c(quantiles_with_tukey[,2]),
                                          "90% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
                                          "to"                     = c(confidence_with_tukey_2_5[,2]),
                                          "90% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
-                                         "to"                     = c(confidence_with_tukey_97_5[,2]), check.names = FALSE)
+                                         "to"                     = c(confidence_with_tukey_97_5[,2]),
+                                         "Number of data points"  = c(n_data_tukey[,1]), check.names = FALSE)
   
   if(method == "para"){
     window_data_split_outlier <<- data.frame("Age-range from"         = split[1:length(split)-1],
-                                             "to"                     = split[2:length(split)],
+                                             "to [Days]"              = split[2:length(split)],
+                                             "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                             "to [Years]"             = round_df(split[2:length(split)]/365, 3),
                                              "Mean"                   = c(mean_with_outliers[,1]),
                                              "2.5 % RI"               = c(quantiles_with_outliers[,1]),
                                              "97.5% RI"               = c(quantiles_with_outliers[,2]),
                                              "90% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
                                              "to"                     = c(confidence_with_outliers_2_5[,2]),
                                              "90% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
-                                             "to"                     = c(confidence_with_outliers_97_5[,2]), check.names = FALSE)
+                                             "to"                     = c(confidence_with_outliers_97_5[,2]), 
+                                             "Number of data points"  = c(n_data[,1]), check.names = FALSE)
     
-    window_data_split_tukey <<- data.frame("Age-range from"           = split[1:length(split)-1],
-                                           "to"                       = split[2:length(split)],
-                                           "Mean"                     = c(mean_with_tukey[,1]),
-                                           "2.5 % RI"                 = c(quantiles_with_tukey[,1]),
-                                           "97.5% RI"                 = c(quantiles_with_tukey[,2]),
+    window_data_split_tukey <<- data.frame("Age-range from"         = split[1:length(split)-1],
+                                           "to [Days]"              = split[2:length(split)],
+                                           "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                           "to [Years]"             = round_df(split[2:length(split)]/365, 3),
+                                           "Mean"                   = c(mean_with_tukey[,1]),
+                                           "2.5 % RI"               = c(quantiles_with_tukey[,1]),
+                                           "97.5% RI"               = c(quantiles_with_tukey[,2]),
                                            "90% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
                                            "to"                     = c(confidence_with_tukey_2_5[,2]),
                                            "90% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
-                                           "to"                     = c(confidence_with_tukey_97_5[,2]), check.names = FALSE)}
+                                           "to"                     = c(confidence_with_tukey_97_5[,2]), 
+                                           "Number of data points"  = c(n_data_tukey[,1]), check.names = FALSE)}
 }
+
+
+#' Same as window_method_split()
+#' 
+#' @param split Age group from the LIS
+#' @param method Nonparametric with Bootstrapping, Parametric or with the Hoffmann-Method
+#' @param plot_log Plot the function def.lognorm() of each age groups
+window_method_lis <- function(data_window_split, split, method, plot_log = FALSE){
+  
+  ##################################### Mean/Median ###############################################
+  mean_with_outliers <-  data.frame()
+  mean_with_tukey <-  data.frame() 
+  ##################################### Quantile ##################################################
+  quantiles_with_outliers <- data.frame()
+  quantiles_with_tukey <- data.frame() 
+  ##################################### Standard derivation #######################################
+  sd_with_outliers <- data.frame()
+  sd_with_tukey <- data.frame()
+  ##################################### Confidence Interval (95%) for 2.5% RI #####################
+  confidence_with_outliers_2_5 <- data.frame()
+  confidence_with_tukey_2_5 <- data.frame()
+  ##################################### Confidence Interval (95%) for 97.5% RI ####################
+  confidence_with_outliers_97_5 <- data.frame()
+  confidence_with_tukey_97_5 <- data.frame()
+  ##################################### Value of Box-Cox-Powertransformation ######################
+  # boxcox_groups <- data.frame()
+  n_data <- data.frame()
+  n_data_tukey <- data.frame()
+  
+  for (i in seq(2,length(split))){
+    
+    age_code <- split[i]
+    
+    # The data subset 
+    age_data <- subset(data_window_split, data_window_split$age_days <= split[i])  # Under the condition
+    age_data_ready <- subset(age_data, age_data$age_days > split[i-1])                       # Below the lowest condition
+    if(split[i-1] == 0){
+      age_data_ready <- subset(age_data, age_data$age_days >= split[i-1])}  # Below the lowest condition
+    
+    if(!nrow(age_data_ready) == 0){
+      if(plot_log){
+        # Plot the distribution of each group to check for normally distribution
+        def.lognorm(age_data_ready$value, plot.it = TRUE)}
+      
+      # Box-Cox Powertransformation
+      # age_data_ready_box <<- age_data_ready
+      # boxcox_ <- boxcox(lm(value ~ age_days, data = age_data_ready_box), plotit = FALSE)
+      # boxcox_groups <- rbind(boxcox_groups, boxcox_$x[which.max(boxcox_$y)])
+    }
+    
+    # Outlier-Detection with modified.tukey()
+    outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE) 
+    n_data <- rbind(n_data,nrow(age_data_ready))
+    n_data_tukey <- rbind(n_data_tukey,length(outliers_tukey))
+    
+    ################################### NONPARAMETRIC #############################################
+    if(method == "nonpara"){
+      
+      # Tukey
+      mean_tukey <- median(outliers_tukey) 
+      mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
+      quantiles_tukey <- quantile(outliers_tukey, probs = c(0.0275, 0.975))
+      quantiles_with_tukey <- rbind(quantiles_with_tukey,quantiles_tukey)
+      
+      # Without Outlierdetection
+      mean_outlier <- median(age_data_ready$value)
+      mean_with_outliers <- rbind(mean_with_outliers,mean_outlier)
+      quantiles_outlier <- quantile(age_data_ready$value, probs = c(0.0275, 0.975))
+      quantiles_with_outliers <- rbind(quantiles_with_outliers,quantiles_outlier)
+      
+      # 95% Confidence Interval with Bootstrapping
+      try(confidence_tukey <- Boot_CI(outliers_tukey))
+      try(confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,t(data.frame(confidence_tukey[,1][2:3]))))
+      try(confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,t(data.frame(confidence_tukey[,2][2:3]))))
+      
+      try(confidence_outlier <- Boot_CI(age_data_ready$value))
+      try(confidence_with_outliers_2_5 <- rbind(confidence_with_outliers_2_5,t(data.frame(confidence_outlier[,1][2:3]))))
+      try(confidence_with_outliers_97_5 <- rbind(confidence_with_outliers_97_5,t(data.frame(confidence_outlier[,2][2:3]))))}
+    
+    ################################### PARAMETRIC ################################################
+    if(method == "para"){
+      
+      n <- nrow(age_data_ready)
+      
+      # Tukey (Quantile (parametric) [mu - 1.96*sigma][mu + 1.96*sigma])
+      mean_tukey <- median(outliers_tukey) 
+      mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
+      sd_tukey <- sd(outliers_tukey)
+      sd_with_tukey <- sd(sd_with_tukey, sd_tukey)
+      quantiles_tukey <- mean_tukey + c(-1, 1) * qnorm(p = 0.975) * sd_tukey
+      quantiles_with_tukey <- rbind(quantiles_with_tukey,quantiles_tukey)
+      
+      # Without Outlierdetection (Quantile (parametric) [mu - 1.96*sigma][mu + 1.96*sigma])
+      mean_outlier <- median(age_data_ready$value)
+      mean_with_outliers <- rbind(mean_with_outliers,mean_outlier)
+      sd_outlier <- sd(age_data_ready$value)
+      sd_with_outliers <- rbind(sd_with_outliers, sd_outlier)
+      quantiles_outlier <- mean_outlier + c(-1, 1) * qnorm(p = 0.975) * sd_outlier
+      quantiles_with_outliers <- rbind(quantiles_with_outliers,quantiles_outlier)
+      
+      # Error (parametric)
+      error_outlier <- qnorm(0.975)*sd_outlier/sqrt(n)
+      error_tukey <- qnorm(0.975)*sd_tukey/sqrt(n)
+      
+      # 95% Confidence Interval (parametric) [RI - error][RI + error] 
+      confidence_outliers_2_5 <- c(quantiles_outlier[1] - error_outlier, quantiles_outlier[1] + error_outlier)
+      confidence_with_outliers_2_5 <- rbind(confidence_with_outliers_2_5, confidence_outliers_2_5)
+      confidence_tukey_2_5 <- c(quantiles_tukey[1] - error_tukey, quantiles_tukey[1] + error_tukey)
+      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5, confidence_tukey_2_5)
+      
+      confidence_outliers_97_5 <- c(quantiles_outlier[2] - error_outlier, quantiles_outlier[2] + error_outlier)
+      confidence_with_outliers_97_5 <- rbind(confidence_with_outliers_97_5, confidence_outliers_97_5)
+      confidence_tukey_97_5 <- c(quantiles_tukey[2] - error_tukey, quantiles_tukey[2] + error_tukey)
+      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5, confidence_tukey_97_5)
+    }
+    
+    ################################### QQ-PLOT ###################################################
+    if(method == "qqplot"){
+      
+      newx <- c(-1.96,0,1.96)
+      
+      qqdata <- qqnorm(age_data_ready$value, plot.it = FALSE)
+      lm_qqline <- lm(y~ x, data = qqdata)
+      result_qqline <- predict(lm_qqline, newdata=data.frame(x=newx), interval="confidence")
+      
+      qqdata_tukey <- qqnorm(outliers_tukey, plot.it = FALSE)
+      lm_qqline_tukey <- lm(y~x, data = qqdata_tukey)
+      result_qqline_tukey <- predict(lm_qqline_tukey, newdata=data.frame(x=newx), interval="confidence")
+      
+      # Tukey
+      mean_tukey <- result_qqline_tukey[2,1]
+      mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
+      quantiles_tukey <- c(result_qqline_tukey[1,1], result_qqline_tukey[3,1])
+      quantiles_with_tukey <- rbind(quantiles_with_tukey,quantiles_tukey)
+      
+      # Without Outlierdetection
+      mean_outlier <- result_qqline[2,1]
+      mean_with_outliers <- rbind(mean_with_outliers,mean_outlier)
+      quantiles_outlier <- c(result_qqline[1,1], result_qqline[3,1])
+      quantiles_with_outliers <- rbind(quantiles_with_outliers,quantiles_outlier) 
+      
+      # 95% Confidence Interval
+      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(result_qqline_tukey[1,2], result_qqline_tukey[1,3]))
+      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(result_qqline_tukey[3,2], result_qqline_tukey[3,3]))
+      
+      confidence_with_outliers_2_5 <- rbind(confidence_with_outliers_2_5,c(result_qqline[1,2], result_qqline[1,3]))
+      confidence_with_outliers_97_5 <- rbind(confidence_with_outliers_97_5,c(result_qqline[3,2], result_qqline[3,3]))}
+  }
+  
+  ##################################### Save the data #############################################
+  
+  # Window-Data without outlierdetection
+  window_data_lis <<- data.frame(age_days = split, mean = c(mean_with_outliers[,1], tail(mean_with_outliers[,1], n=1)),
+                                   quantile1 = c(quantiles_with_outliers[,1], tail(quantiles_with_outliers[,1], n=1)),
+                                   quantile2 = c(quantiles_with_outliers[,2], tail(quantiles_with_outliers[,2], n=1)))
+  
+  # Window-Data with modified.tukey()
+  window_data_tukey_lis <<- data.frame(age_days = split, mean = c(mean_with_tukey[,1],tail(mean_with_outliers[,1], n=1) ),
+                                         quantile1 = c(quantiles_with_tukey[,1],  tail(quantiles_with_outliers[,1], n=1)),
+                                         quantile2 = c(quantiles_with_tukey[,2], tail(quantiles_with_outliers[,2], n=1)))
+  
+  ##################################### Tables to download ########################################
+  
+  window_data_lis_outlier <<- data.frame("Age-range from"         = split[1:length(split)-1],
+                                           "to [Days]"              = split[2:length(split)],
+                                           "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                           "to [Years]"             = round_df(split[2:length(split)]/365, 3),
+                                           "Median"                 = c(mean_with_outliers[,1]),
+                                           "2.5 % RI"               = c(quantiles_with_outliers[,1]),
+                                           "97.5% RI"               = c(quantiles_with_outliers[,2]),
+                                           "90% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
+                                           "to"                     = c(confidence_with_outliers_2_5[,2]),
+                                           "90% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
+                                           "to"                     = c(confidence_with_outliers_97_5[,2]), 
+                                           "Number of data points"  = c(n_data[,1]), check.names = FALSE)
+  
+  window_data_lis_tukey <<- data.frame("Age-range from"         = split[1:length(split)-1],
+                                         "to [Days]"              = split[2:length(split)],
+                                         "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                         "to [Years]"             = round_df(split[2:length(split)]/365, 3),
+                                         "Median"                 = c(mean_with_tukey[,1]),
+                                         "2.5 % RI"               = c(quantiles_with_tukey[,1]),
+                                         "97.5% RI"               = c(quantiles_with_tukey[,2]),
+                                         "90% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
+                                         "to"                     = c(confidence_with_tukey_2_5[,2]),
+                                         "90% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
+                                         "to"                     = c(confidence_with_tukey_97_5[,2]),
+                                         "Number of data points"  = c(n_data_tukey[,1]), check.names = FALSE)
+  
+  if(method == "para"){
+    window_data_lis_outlier <<- data.frame("Age-range from"         = split[1:length(split)-1],
+                                             "to [Days]"              = split[2:length(split)],
+                                             "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                             "to [Years]"             = round_df(split[2:length(split)]/365, 3),
+                                             "Mean"                   = c(mean_with_outliers[,1]),
+                                             "2.5 % RI"               = c(quantiles_with_outliers[,1]),
+                                             "97.5% RI"               = c(quantiles_with_outliers[,2]),
+                                             "90% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
+                                             "to"                     = c(confidence_with_outliers_2_5[,2]),
+                                             "90% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
+                                             "to"                     = c(confidence_with_outliers_97_5[,2]), 
+                                             "Number of data points"  = c(n_data[,1]), check.names = FALSE)
+    
+    window_data_lis_tukey <<- data.frame("Age-range from"         = split[1:length(split)-1],
+                                           "to [Days]"              = split[2:length(split)],
+                                           "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                           "to [Years]"             = round_df(split[2:length(split)]/365, 3),
+                                           "Mean"                   = c(mean_with_tukey[,1]),
+                                           "2.5 % RI"               = c(quantiles_with_tukey[,1]),
+                                           "97.5% RI"               = c(quantiles_with_tukey[,2]),
+                                           "90% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
+                                           "to"                     = c(confidence_with_tukey_2_5[,2]),
+                                           "90% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
+                                           "to"                     = c(confidence_with_tukey_97_5[,2]), 
+                                           "Number of data points"  = c(n_data_tukey[,1]), check.names = FALSE)}
+}
+
 
 ####################################### Sliding Window ############################################
 
@@ -503,10 +728,10 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
   ##################################### Age for the Slidng Window #################################
   # Begin of the Slining Window
   sliding_age <- rollapply(sliding_window_data$age_days, width = width_, by = by_, 
-                           FUN = max, na.rm = TRUE, partial = TRUE,align = "left")
+                           FUN = min, na.rm = TRUE, partial = TRUE,align = "left")
   # End of the Sliding Window
   sliding_age_to <- rollapply(sliding_window_data$age_days, width = width_, by = by_, 
-                             FUN = min, na.rm = TRUE, partial =TRUE,align = "left")
+                             FUN = max, na.rm = TRUE, partial =TRUE,align = "left")
   
   ##################################### Median of the subset generated by rollapply() #############
   sliding_median <- rollapply(sliding_window_data$value, width = width_, by = by_, 
@@ -600,6 +825,7 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
                              "to"                     = sliding_with_tukey_97_5_to, check.names = FALSE)
   return(slide)
 }
+
 
 ####################################### Metrics ###################################################
 

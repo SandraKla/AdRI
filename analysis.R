@@ -103,6 +103,7 @@ mse <- function(y, y_predict){
 rmse <- function(y, y_predict){
   sqrt(1/length(y) * sum((y - y_predict)^2))}
 
+
 #' Function for data preparation
 #' 
 #' @param x Expects a vector
@@ -113,6 +114,7 @@ numeric.data <- function(x, no.zero = FALSE){
   ifelse(no.zero, xx <- xx[xx > 0], xx <- xx[xx >= 0])
   return(xx)
 }
+
 
 #' Returns the Bowley skewness of a range between alpha and 1-alpha
 #' 
@@ -352,6 +354,7 @@ make_rpart <- function(data_analyte, minsplit_tree = 360){
                    control = rpart.control(minsplit = minsplit_tree, cp = 0.01))
 }
 
+
 ####################################### Residuals #################################################
 
 #' Get the residuals of the model and fit new model with data with the cut datasets with high residuals
@@ -433,6 +436,7 @@ outliers_residuals <- function(data_analyte, gamlss_family, epochs, method, resi
                             family =",gamlss_family,", data = outlierfree_nn, method = ",method,"(",epochs,"))")}
   onn_ <<- helper_make_gamlss(noquote(model_gamlss_nn))
 }
+
 
 ####################################### Discrete Model ############################################
 
