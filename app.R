@@ -599,7 +599,7 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
     progress$set(message = "Calculate RI with regular windows...", detail = "", value = 2)
     
-    days <- (input$window_age+1)*365
+    days <- input$window_age*365
     if(input$window_age <= 1){
       days <- input$window_agedays}
     
