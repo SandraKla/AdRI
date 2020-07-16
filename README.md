@@ -7,7 +7,7 @@
 This Shiny App offers the possibility to model age-dependent laboratory analytes and to calculate their reference intervals, see the [Wiki](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki). 
 
 
-<img src="shiny.png" width="1500px" height="500px" align="center"/>
+<img src="shiny.png" align="center"/>
 
 ## Installation
 
