@@ -153,7 +153,8 @@ ui <- fluidPage(
           tabsetPanel(
                     
             tabPanel("Regular",
-              p("This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
+              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method!"), 
+              "This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
               so it is only recommended for small changes through the age. Available for the calculation for the reference intervals a 
               nonparametric, parametric and the Hoffmann-Method (Without visual recognition of the linear range, it is important to know whether 
               there is a mixed distribution and to use the modified tukey before!) for the calculation from the reference intervals and 
@@ -243,9 +244,9 @@ ui <- fluidPage(
           plotOutput("regression_stats_linear", height = "500px"),
           p("Polynomials (Degree 10):"),
           plotOutput("regression_stats_poly10", height = "500px"),
-          p("Polynomials (Degree 3)"), 
+          p("Polynomials (Degree 3):"), 
           plotOutput("regression_stats_poly3", height = "500px"),
-          p("Polynomials (Degree 4)"), 
+          p("Polynomials (Degree 4):"), 
           plotOutput("regression_stats_poly4", height = "500px")
                         
         )
@@ -285,7 +286,7 @@ ui <- fluidPage(
             tabPanel("Overview", icon = icon("home"), includeHTML("www/gamlss.html"), 
               downloadButton("download_lms", "LMS-Plot in .EPS"),
               downloadButton("download_lms_jpeg", "LMS-Plot in .JPEG"),
-              downloadButton("download_gamlss", "LMS-Plot in .EPS"),
+              downloadButton("download_gamlss", "GAMLSS-Plot in .EPS"),
               downloadButton("download_gamlss_jpeg", "GAMLSS-Plot in .JPEG")),
             
             tabPanel("GAMLSS with Splines and Polynomials", plotOutput("gamlss_models", height="1000px"), verbatimTextOutput("gamlss_text")), 
@@ -506,15 +507,23 @@ server <- function(input, output, session) {
         # Read the splits from the Decision Tree
         splits <- data.frame(rpart_$splits)
         
-        split <- c(0,sort(splits$index), max(data_analyte$age_days)) 
+        split <- round(c(0,sort(splits$index), max(data_analyte$age_days))) 
         
         # Select each range of the splits and delete outliers with the modified.tukey()
-        for (i in 1:length(split)){
+        for (i in 2:length(split)){
           
           data_analyte_split <- subset(data_analyte, age_days <= split[i], select = c(patient, sex, age, age_days, value, code, name)) 
           data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days > split[i-1])
           
-          modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE)
+          if(split[i-1] == 0){
+            data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days >= split[i-1])}
+          
+          normal_log <- FALSE
+          try(normal_log <- def.lognorm(data_analyte_subset$value, plot.it = FALSE)$lognorm)
+          
+          if(normal_log == TRUE){modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE, log.mode = TRUE)}
+          else{modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE)}
+          
           data_analyte_save <- data_analyte_subset[data_analyte_subset$value %in% modi,]
           data_analyte_tukey <- rbind(data_analyte_tukey, data_analyte_save)}
         
@@ -560,15 +569,23 @@ server <- function(input, output, session) {
         # Read the splits from the Decision Tree
         splits <- data.frame(rpart_$splits) 
         
-        split <- c(0,sort(splits$index), max(data_analyte$age_days))
-        
+        split <- round(c(0,sort(splits$index), max(data_analyte$age_days)))
+
         # Select each range of the splits and delete outliers with the modified.tukey()
-        for (i in 1:length(split)){
+        for (i in 2:length(split)){
           
           data_analyte_split <- subset(data_analyte, age_days <= split[i], select = c(patient, sex, age, age_days, value, code, name)) 
-          data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days > split[i-1])  
+          data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days > split[i-1])
           
-          modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE) 
+          if(split[i-1] == 0){
+            data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days >= split[i-1])}
+          
+          normal_log <- FALSE
+          try(normal_log <- def.lognorm(data_analyte_subset$value, plot.it = FALSE)$lognorm)
+          
+          if(normal_log == TRUE){modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE, log.mode = TRUE)}
+          else{modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE)}
+          
           data_analyte_save <- data_analyte_subset[data_analyte_subset$value %in% modi,] 
           data_analyte_tukey <- rbind(data_analyte_tukey, data_analyte_save)}
         
@@ -783,7 +800,7 @@ server <- function(input, output, session) {
   
   # Bowley and Lognormfunction
   output$lognorm <- renderPlot({
-    def.lognorm(data_analyte()[,5])
+    try(def.lognorm(data_analyte()[,5]))
   })
   
   # Summary of the data for a short overview
@@ -810,13 +827,13 @@ server <- function(input, output, session) {
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
            ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(window_data$age_days, window_data$mean, type="s", col= "indianred", lty=3, lwd = 1.25)
-      points(window_data$age_days, window_data$quantile1, type="s", col= "indianred", lty=6, lwd = 1.25)
-      points(window_data$age_days, window_data$quantile2, type="s", col= "indianred", lty=6, lwd = 1.25)
+      points(window_data$age_days, window_data$mean, type="s", col= "indianred", lty=3, lwd = 1.5)
+      points(window_data$age_days, window_data$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
+      points(window_data$age_days, window_data$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)
 
-      points(window_data_tukey$age_days, window_data_tukey$mean, type="s", col= "seagreen3", lty=3, lwd = 1.25)
-      points(window_data_tukey$age_days, window_data_tukey$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.25)
-      points(window_data_tukey$age_days, window_data_tukey$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.25)
+      points(window_data_tukey$age_days, window_data_tukey$mean, type="s", col= "seagreen3", lty=3, lwd = 1.5)
+      points(window_data_tukey$age_days, window_data_tukey$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
+      points(window_data_tukey$age_days, window_data_tukey$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
     
       legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
@@ -827,9 +844,9 @@ server <- function(input, output, session) {
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
            ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(window_data$age_days, window_data$mean, type="s", col= "black", lty=3, lwd = 1.25)
-      points(window_data$age_days, window_data$quantile1, type="s", col= "indianred", lty=6, lwd = 1.25)
-      points(window_data$age_days, window_data$quantile2, type="s", col= "indianred", lty=6, lwd = 1.25)}
+      points(window_data$age_days, window_data$mean, type="s", col= "black", lty=3, lwd = 1.5)
+      points(window_data$age_days, window_data$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
+      points(window_data$age_days, window_data$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)}
      
     # Modified Tukey-method 
     if(input$window_select == "tukey"){ 
@@ -837,9 +854,9 @@ server <- function(input, output, session) {
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
            ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(window_data_tukey$age_days, window_data_tukey$mean, type="s", col= "black", lty=3, lwd = 1.25)
-      points(window_data_tukey$age_days, window_data_tukey$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.25)
-      points(window_data_tukey$age_days, window_data_tukey$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.25)}
+      points(window_data_tukey$age_days, window_data_tukey$mean, type="s", col= "black", lty=3, lwd = 1.5)
+      points(window_data_tukey$age_days, window_data_tukey$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
+      points(window_data_tukey$age_days, window_data_tukey$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)}
   })
   
   # Tables to the regular windowmethod - Without Outlierdetction
@@ -876,13 +893,13 @@ server <- function(input, output, session) {
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
     
-      points(window_data_rpart$age_days, window_data_rpart$mean, type="s", col= "red", lty=3, lwd = 1.25)
-      points(window_data_rpart$age_days, window_data_rpart$quantile1, type="s", col= "indianred", lty=6, lwd = 1.25)
-      points(window_data_rpart$age_days, window_data_rpart$quantile2, type="s", col= "indianred", lty=6, lwd = 1.25)
+      points(window_data_rpart$age_days, window_data_rpart$mean, type="s", col= "red", lty=3, lwd = 1.5)
+      points(window_data_rpart$age_days, window_data_rpart$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
+      points(window_data_rpart$age_days, window_data_rpart$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)
     
       points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$mean, type="s", col= "green", lty=3, lwd = 1.25)
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.25)
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.25)
+      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
+      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
     
       legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
@@ -892,18 +909,18 @@ server <- function(input, output, session) {
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(window_data_rpart$age_days, window_data_rpart$mean, type="s", col= "black", lty=3, lwd = 1.25)
-      points(window_data_rpart$age_days, window_data_rpart$quantile1, type="s", col= "indianred", lty=6, lwd = 1.25)
-      points(window_data_rpart$age_days, window_data_rpart$quantile2, type="s", col= "indianred", lty=6, lwd = 1.25) }
+      points(window_data_rpart$age_days, window_data_rpart$mean, type="s", col= "black", lty=3, lwd = 1.5)
+      points(window_data_rpart$age_days, window_data_rpart$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
+      points(window_data_rpart$age_days, window_data_rpart$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5) }
     
     if(input$window_select == "tukey"){    
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$mean, type="s", col= "black", lty=3, lwd = 1.25)
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.25)
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.25)}
+      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$mean, type="s", col= "black", lty=3, lwd = 1.5)
+      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
+      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)}
   })
   
   # Plot used Decision Tree
@@ -963,13 +980,13 @@ server <- function(input, output, session) {
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(slidingwindow()[,2], slidingwindow()[,3], type="s", col= "red", lty=3, lwd = 1.25)
-      points(slidingwindow()[,2], slidingwindow()[,4], type="s", col= "indianred", lty=6, lwd = 1.25)
-      points(slidingwindow()[,2], slidingwindow()[,5], type="s", col= "indianred", lty=6, lwd = 1.25)
+      points(slidingwindow()[,2], slidingwindow()[,3], type="s", col= "red", lty=3, lwd = 1.5)
+      points(slidingwindow()[,2], slidingwindow()[,4], type="s", col= "indianred", lty=6, lwd = 1.5)
+      points(slidingwindow()[,2], slidingwindow()[,5], type="s", col= "indianred", lty=6, lwd = 1.5)
       
-      points(slide_tukey[,2], slide_tukey[,3], type="s", col= "green", lty=3, lwd = 1.25)
-      points(slide_tukey[,2], slide_tukey[,4], type="s", col= "seagreen3", lty=6, lwd = 1.25)
-      points(slide_tukey[,2], slide_tukey[,5], type="s", col= "seagreen3", lty=6, lwd = 1.25)
+      points(slide_tukey[,2], slide_tukey[,3], type="s", col= "green", lty=3, lwd = 1.5)
+      points(slide_tukey[,2], slide_tukey[,4], type="s", col= "seagreen3", lty=6, lwd = 1.5)
+      points(slide_tukey[,2], slide_tukey[,5], type="s", col= "seagreen3", lty=6, lwd = 1.5)
       
       legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
@@ -979,18 +996,18 @@ server <- function(input, output, session) {
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(slidingwindow()[,2], slidingwindow()[,3], type="s", col= "black", lty=3, lwd = 1.25)
-      points(slidingwindow()[,2], slidingwindow()[,4], type="s", col= "indianred", lty=6, lwd = 1.25)
-      points(slidingwindow()[,2], slidingwindow()[,5], type="s", col= "indianred", lty=6, lwd = 1.25)}
+      points(slidingwindow()[,2], slidingwindow()[,3], type="s", col= "black", lty=3, lwd = 1.5)
+      points(slidingwindow()[,2], slidingwindow()[,4], type="s", col= "indianred", lty=6, lwd = 1.5)
+      points(slidingwindow()[,2], slidingwindow()[,5], type="s", col= "indianred", lty=6, lwd = 1.5)}
     
     if(input$window_select == "tukey"){    
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(slide_tukey[,2], slide_tukey[,3], type="s", col= "green", lty=3, lwd = 1.25)
-      points(slide_tukey[,2], slide_tukey[,4], type="s", col= "seagreen3", lty=6, lwd = 1.25)
-      points(slide_tukey[,2], slide_tukey[,5], type="s", col= "seagreen3", lty=6, lwd = 1.25)}
+      points(slide_tukey[,2], slide_tukey[,3], type="s", col= "green", lty=3, lwd = 1.5)
+      points(slide_tukey[,2], slide_tukey[,4], type="s", col= "seagreen3", lty=6, lwd = 1.5)
+      points(slide_tukey[,2], slide_tukey[,5], type="s", col= "seagreen3", lty=6, lwd = 1.5)}
     })
   
   # Sliding Window-Method - Table
@@ -1073,13 +1090,13 @@ server <- function(input, output, session) {
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(window_data_lis$age_days, window_data_lis$mean, type="s", col= "red", lty=3, lwd = 1.25)
-      points(window_data_lis$age_days, window_data_lis$quantile1, type="s", col= "indianred", lty=6, lwd = 1.25)
-      points(window_data_lis$age_days, window_data_lis$quantile2, type="s", col= "indianred", lty=6, lwd = 1.25)
+      points(window_data_lis$age_days, window_data_lis$mean, type="s", col= "red", lty=3, lwd = 1.5)
+      points(window_data_lis$age_days, window_data_lis$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
+      points(window_data_lis$age_days, window_data_lis$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)
       
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$mean, type="s", col= "green", lty=3, lwd = 1.25)
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.25)
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.25)
+      points(window_data_tukey_lis$age_days, window_data_tukey_lis$mean, type="s", col= "green", lty=3, lwd = 1.5)
+      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
+      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
       
       legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
@@ -1089,18 +1106,18 @@ server <- function(input, output, session) {
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(window_data_lis$age_days, window_data_lis$mean, type="s", col= "black", lty=3, lwd = 1.25)
-      points(window_data_lis$age_days, window_data_lis$quantile1, type="s", col= "indianred", lty=6, lwd = 1.25)
-      points(window_data_lis$age_days, window_data_lis$quantile2, type="s", col= "indianred", lty=6, lwd = 1.25) }
+      points(window_data_lis$age_days, window_data_lis$mean, type="s", col= "black", lty=3, lwd = 1.5)
+      points(window_data_lis$age_days, window_data_lis$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
+      points(window_data_lis$age_days, window_data_lis$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5) }
     
     if(input$window_select == "tukey"){    
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$mean, type="s", col= "black", lty=3, lwd = 1.25)
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.25)
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.25)}
+      points(window_data_tukey_lis$age_days, window_data_tukey_lis$mean, type="s", col= "black", lty=3, lwd = 1.5)
+      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
+      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)}
     })
   
   

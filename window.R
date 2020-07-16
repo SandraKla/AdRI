@@ -77,8 +77,11 @@ window_method <- function(data_, window, method){
     
     n <- nrow(age_data_ready)
     
-    # Outlierdetection modified.tukey()
-    outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)
+    normal_log <- FALSE
+    try(normal_log <- def.lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
+    
+    if(normal_log == TRUE){outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE, log.mode = TRUE)}
+    else{outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)}
     
     n_data <- rbind(n_data,nrow(age_data_ready))
     n_data_tukey <- rbind(n_data_tukey,length(outliers_tukey))
@@ -304,14 +307,13 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
 
     # The data subset 
     age_data <- subset(data_window_split, data_window_split$age_days <= split[i])  # Under the condition
-    age_data_ready <- subset(age_data, age_data$age_days > split[i-1])                       # Below the lowest condition
+    age_data_ready <- subset(age_data, age_data$age_days > split[i-1])             # Below the lowest condition
     if(split[i-1] == 0){
       age_data_ready <- subset(age_data, age_data$age_days >= split[i-1])}  # Below the lowest condition
-    
     if(!nrow(age_data_ready) == 0){
       if(plot_log){
         # Plot the distribution of each group to check for normally distribution
-        def.lognorm(age_data_ready$value, plot.it = TRUE)}
+        try(def.lognorm(age_data_ready$value, plot.it = TRUE))}
         
         # Box-Cox Powertransformation
         # age_data_ready_box <<- age_data_ready
@@ -320,7 +322,13 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
     }
     
     # Outlier-Detection with modified.tukey()
-    outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE) 
+    
+    normal_log <- FALSE
+    try(normal_log <- def.lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
+    
+    if(normal_log == TRUE){outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE, log.mode = TRUE)}
+    else{outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)}
+    
     n_data <- rbind(n_data,nrow(age_data_ready))
     n_data_tukey <- rbind(n_data_tukey,length(outliers_tukey))
     
@@ -527,7 +535,7 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
     if(!nrow(age_data_ready) == 0){
       if(plot_log){
         # Plot the distribution of each group to check for normally distribution
-        def.lognorm(age_data_ready$value, plot.it = TRUE)}
+        try(def.lognorm(age_data_ready$value, plot.it = TRUE))}
       
       # Box-Cox Powertransformation
       # age_data_ready_box <<- age_data_ready
@@ -535,8 +543,13 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
       # boxcox_groups <- rbind(boxcox_groups, boxcox_$x[which.max(boxcox_$y)])
     }
     
-    # Outlier-Detection with modified.tukey()
-    outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE) 
+   
+    normal_log <- FALSE
+    try(normal_log <- def.lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
+    
+    if(normal_log == TRUE){outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE, log.mode = TRUE)}
+    else{outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)}
+    
     n_data <- rbind(n_data,nrow(age_data_ready))
     n_data_tukey <- rbind(n_data_tukey,length(outliers_tukey))
     
@@ -761,7 +774,11 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
     
   for (i in seq(1,nrow(sliding_tukey_data))){ 
     
-    sliding_tukey <- modified.tukey(sliding_tukey_data[i,], plot.it = FALSE) # Modified Tukey
+    normal_log <- FALSE
+    try(normal_log <- def.lognorm(sliding_tukey_data[i,], plot.it = FALSE)$lognorm)
+    
+    if(normal_log == TRUE){sliding_tukey <- modified.tukey(sliding_tukey_data[i,], plot.it = FALSE, log.mode = TRUE)}
+    else{sliding_tukey <- modified.tukey(sliding_tukey_data[i,], plot.it = FALSE)}
     
     # 95% Confidence Interval
     try(confidence_tukey <- Boot_CI(sliding_tukey))
