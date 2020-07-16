@@ -897,7 +897,7 @@ server <- function(input, output, session) {
       points(window_data_rpart$age_days, window_data_rpart$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
       points(window_data_rpart$age_days, window_data_rpart$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)
     
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$mean, type="s", col= "green", lty=3, lwd = 1.25)
+      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$mean, type="s", col= "green", lty=3, lwd = 1.5)
       points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
       points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
     
