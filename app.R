@@ -9,55 +9,49 @@ source("window.R")
 
 ####################################### Libraries #################################################
 
-library(boot)
-# if("boot" %in% rownames(installed.packages())){
-#  library(boot)} else{
-#    install.packages("boot")}
+if("boot" %in% rownames(installed.packages())){
+ library(boot)} else{
+   install.packages("boot")}
 
-library(dplyr)
-#if("dplyr" %in% rownames(installed.packages())){
-#  library(dplyr)} else{
-#    install.packages("dplyr")}
+if("dplyr" %in% rownames(installed.packages())){
+ library(dplyr)} else{
+   install.packages("dplyr")}
 
-library(DT)
-#if("DT" %in% rownames(installed.packages())){
-#  library(DT)} else{
-#    install.packages("DT")}
+if("DT" %in% rownames(installed.packages())){
+ library(DT)} else{
+   install.packages("DT")}
 
-library(gamlss)
-#if("gamlss" %in% rownames(installed.packages())){
-#  library(gamlss)} else{
-#    install.packages("gamlss")}
+if("gamlss" %in% rownames(installed.packages())){
+ library(gamlss)} else{
+   install.packages("gamlss")}
 
-library(gamlss.add)
-#if("gamlss.add" %in% rownames(installed.packages())){
-#  library(gamlss.add)} else{
-#    install.packages("gamlss.add")}
+if("gamlss.add" %in% rownames(installed.packages())){
+ library(gamlss.add)} else{
+   install.packages("gamlss.add")}
 
-#library(MASS)
+#if("hexbin" %in% rownames(installed.packages())){
+#  library(hexbin)} else{
+#    install.packages("hexbin")}
+
 #if("MASS" %in% rownames(installed.packages())){
 #  library(MASS)} else{
 #    install.packages("MASS")}
 
-library(plotly)
-#if("plotly" %in% rownames(installed.packages())){
-#  library(plotly)} else{
-#    install.packages("plotly")}
+if("plotly" %in% rownames(installed.packages())){
+ library(plotly)} else{
+   install.packages("plotly")}
 
-library(rpart)
-#if("rpart" %in% rownames(installed.packages())){
-#  library(rpart)} else{
-#    install.packages("rpart")}
+if("rpart" %in% rownames(installed.packages())){
+ library(rpart)} else{
+   install.packages("rpart")}
 
-library(rpart.plot)
-#if("rpart.plot" %in% rownames(installed.packages())){
-#  library(rpart.plot)} else{
-#    install.packages("rpart.plot")}
+if("rpart.plot" %in% rownames(installed.packages())){
+ library(rpart.plot)} else{
+   install.packages("rpart.plot")}
 
-library(zoo)
-#if("zoo" %in% rownames(installed.packages())){
-#  library(zoo)} else{
-#    install.packages("zoo")}
+if("zoo" %in% rownames(installed.packages())){
+ library(zoo)} else{
+   install.packages("zoo")}
 
 
 ####################################### USER INTERFACE ############################################
@@ -90,9 +84,12 @@ ui <- fluidPage(
           helpText("Outlierdetection:"), checkboxInput("unique", "First Unique values", value = TRUE),
           checkboxInput("checkboxtukey", "Modified Tukey-method coupled with a Decision Tree", value = FALSE),
           
-          selectInput("tree_minsplit", "Setting for the Decision Tree:", choices = list("Big dataset > 1000" = 360,
-                                                                                   "Normal dataset > 500" = 120,
-                                                                                   "Small dataset > 100" = 40))
+          helpText("Hyperparameter for the Decision Tree (minsbucket): Minimum number of observations in a leaf node (age group).
+                   According to CLSI 120 patients must be available for good Reference Intervals (RI)!"),
+          selectInput("tree_minsplit", "Setting for the Decision Tree:", 
+                      choices = list("Each group with > 120 patients (for RI according to CLSI)" = 360,
+                                     "> 40 patients" = 120,
+                                     "> 20 patients" = 60))
           ),
                           
         mainPanel(width = 9,
@@ -109,16 +106,16 @@ ui <- fluidPage(
               
               plotlyOutput("scatterplot_plotly", height="600px")),
             
-            tabPanel("Dataset", verbatimTextOutput("summary"), DT::dataTableOutput("datatable")),
+            tabPanel("2D Density Plot", plotlyOutput("hexbinplotly", height="600px")),
+            tabPanel("Dataset", DT::dataTableOutput("datatable"), verbatimTextOutput("summary")),
           
-            tabPanel("Barplots", p("Distribution of the", strong("SEX"),"across the ages:"),
-                     plotOutput("barplot_sex", height="500px"), p("Distribution of the", strong("EINSCODE"),"across the ages:"),
-                     plotOutput("barplot_station", height="500px")),
+            tabPanel("Barplots", p("Distribution of the", strong("SEX"),"across the ages and", strong("EINSCODE"),":"),
+                     plotOutput("barplot_sex", height="500px"), plotOutput("barplot_station", height="300px")),
           
             tabPanel("Statistics", 
-              p(strong("Analyze of the distribution:"),"QQ-Plot to analyze if the data is normally distributed and a density plot to check 
-              if the data is normally or log-normally distributed with the Bowley Skewness (see paper Frank Klawonn et al. (2020))"),
-              plotOutput("qqplot", height="500px"), plotOutput("lognorm", height="500px"))
+              p(strong("Analyze of the distribution:"),"QQ-Plots to analyze for normal distribution and a density plot to check 
+              if the data is normally or log-normally distributed with the help of the Bowley Skewness (see Frank Klawonn et al. (2020))"),
+              plotOutput("qqplot", height="400px"), plotOutput("lognorm", height="375px"))
           )
         )
       )
@@ -137,13 +134,13 @@ ui <- fluidPage(
           selectInput("method_window", "Calculation-method for the Reference Intervals:", 
                       choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")), hr(),
           
-          helpText("Settings for the Regular Window:"), sliderInput("window_age", "Regular Window for the Subgroups [Years]:", 1, 18, 1),
+          helpText("Settings for the Regular Window:"), sliderInput("window_age", "Regular Window for the Subgroups [Years]:", 1, 18, 10),
           conditionalPanel(
             condition = "input.window_age <= 1",
             numericInput("window_agedays", "Regular Window for the Subgroups [Days]:", 365, min = 1, max = 123*365)),
           
-          helpText("Settings for the Laboratory information system (LIS) (Data must end with lis.txt):"), 
-          selectInput("lis_data", "Select Dataset with the LIS:", choice = list.files(pattern = "lis.txt", recursive = TRUE)),
+          helpText("Settings for the Laboratory information system (LIS):"), 
+          selectInput("lis_data", "Select Dataset with the LIS:", choice = list.files(pattern = ".txt", recursive = TRUE)),
           
           helpText("Settings for the Sliding Window-Method:"), numericInput("sliding_width", "Sliding Window-Method:", 500, min = 10, max = 10000),
           numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500), hr(), htmlOutput("helptext_window")
@@ -153,7 +150,8 @@ ui <- fluidPage(
           tabsetPanel(
                     
             tabPanel("Regular",
-              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method!"), 
+              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
+              use the nonparametric if it is a Lognormal-distribution."), 
               "This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
               so it is only recommended for small changes through the age. Available for the calculation for the reference intervals a 
               nonparametric, parametric and the Hoffmann-Method (Without visual recognition of the linear range, it is important to know whether 
@@ -175,7 +173,7 @@ ui <- fluidPage(
               are used to calculate the reference intervals (nonparametric, parametric or with the Hoffmann-Method)."),
 
               plotOutput("tree_window", height = "600px"), hr(), p("Used Decision Tree and Analysis for each subgroup for 
-              Normal- or Lognormaldistribution with the Bowley-Skewness (see paper Frank Klawonn et al. (2020)):"),
+              Normal- or Lognormaldistribution with the Bowley-Skewness (see Frank Klawonn et al. (2020)):"),
               downloadButton("download_tree", "Decision Tree"),
               plotOutput("tree_rpart", height = "500px"),
               plotOutput("tree_window_analysis")),
@@ -186,8 +184,17 @@ ui <- fluidPage(
               downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with modified Tukey-method"), 
               DT::dataTableOutput("tree_windowtable_t")),
 
+            tabPanel("Comparison", icon = icon("balance-scale"), p("Compare the Regular Window-Method and the Window-Method coupled to
+                                                                   the Decision Tree with R-Squared (R2), Mean Absolute Error (MAE), 
+                                                                   Mean squared error (MSE), Root mean squared error (RMSE). Best models to each
+                                                                   each metric are marked"),
+                     downloadButton("Download_rsquared_table", "Table with Metrics"),
+                     DT::dataTableOutput("rsquared_table")),
+            
             tabPanel("Laboratory information system (LIS)",
                      
+              p("Load a TXT file on the left with the age groups from your laboratory information system 
+                and the Reference Intervals will be calculated."),
               plotOutput("lis_window", height = "600px")),
             
             tabPanel("", icon = icon("table"), 
@@ -207,14 +214,7 @@ ui <- fluidPage(
               downloadButton("Download_sliding", "Table with Reference Intervals without Outlierdetection"),
               DT::dataTableOutput("sliding"),
               downloadButton("Download_sliding_tukey", "Table with Reference Intervals with modified Tukey-method"), 
-              DT::dataTableOutput("sliding_tukey")),
-            
-            tabPanel("Comparison", icon = icon("balance-scale"), p("Compare the Regular Window-Method and the Window-Method coupled to
-                                                                   the Decision Tree with R-Squared (R2), Mean Absolute Error (MAE), 
-                                                                   Mean squared error (MSE), Root mean squared error (RMSE). Best models to each
-                                                                   each metric are marked"),
-              downloadButton("Download_rsquared_table", "Table with Metrics"),
-              DT::dataTableOutput("rsquared_table"))
+              DT::dataTableOutput("sliding_tukey"))
           )
         )
       )
@@ -229,9 +229,18 @@ ui <- fluidPage(
     tabPanel("Regression", icon = icon("square-root-alt"),
              
       tabsetPanel( 
-        tabPanel("Overview", plotOutput("regression", height="800px")),
+        tabPanel("Overview", p("Regression can be used for normally distributed data to get the 95% prediction interval. The blue
+                               line show the 95% Confindence interval from the regression and the red the prediction interval (2.5% and 97.5%),
+                               the black line show the regression (50%)."), 
+                 plotOutput("regression", height="800px")),
               
-        tabPanel("Metrics", icon = icon("balance-scale"),
+        tabPanel("", icon = icon("table"),
+                 DT::dataTableOutput("regression_linear"), 
+                 DT::dataTableOutput("regression_poly10"), 
+                 DT::dataTableOutput("regression_poly2"), 
+                 DT::dataTableOutput("regression_poly3")),
+        
+        tabPanel("Comparison", icon = icon("balance-scale"),
                  p("Compare the Regressions with Akaike Information Criterion (AIC), 
                  Bayesian Information Criterion (BIC)/Schwatz Bayesian Criterion (SBC)
                  R-Squared (R2), Mean absolute Error (MAE), Mean squared error (MSE), 
@@ -248,7 +257,6 @@ ui <- fluidPage(
           plotOutput("regression_stats_poly3", height = "500px"),
           p("Polynomials (Degree 4):"), 
           plotOutput("regression_stats_poly4", height = "500px")
-                        
         )
       )
     ),
@@ -352,9 +360,9 @@ ui <- fluidPage(
                                                                                     "Machine Learning" = c("Neural Network" = "nn_ri", 
                                                                                                            "Decision Tree" = "tr_ri"))),
           textOutput("prediction_gamlss"), hr(),
-          helpText("To make discrete Reference Intervals from the continuous models set the percentiles are compared and when a change
-          from the upper or the lower Percentile over a specific threshold (deviation) occurs the age is split in two age groups:"),
-          numericInput("deviation", " Set deviation [in %] to build agegroups from the GAMLSS models:", 10, min = 1, max = 100), hr(),
+          helpText("To make discrete Reference Intervals from the continuous models the upper or the lower percentiles are compared 
+          and split in two age groups when a specific change over the threshold (deviation) occurs:"),
+          numericInput("deviation", " Deviation in %:", 10, min = 1, max = 100), hr(),
           htmlOutput("helptext_prediction")),
                
         mainPanel(width = 9,
@@ -407,13 +415,12 @@ ui <- fluidPage(
           tabPanel("Overview", 
             p("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
             outliers from the model and refit the model. High residuals values are in red, low in green", 
-            strong("This must not be equal to the real outliers of the data!"),"."), br(),
+            strong("This must not be equal to the real outliers of the data!"),"."),
             plotOutput("outlier", height="900px")),
                              
-        tabPanel("Refitted GAMLSS models", 
+        tabPanel("Refit GAMLSS models", 
             plotOutput("gamlss_outlier", height="900px"), 
                                     
-            p("Analysis for the refitted models:"),
             p("GAMLSS with P-Splines"), plotOutput("outlier_term_pb"),
             p("GAMLSS with Cubic Splines"), plotOutput("outlier_term_cs"),
             p("GAMLSS with Polynomial (Degree 3)"), plotOutput("outlier_term_poly"),
@@ -801,6 +808,28 @@ server <- function(input, output, session) {
   # Bowley and Lognormfunction
   output$lognorm <- renderPlot({
     try(def.lognorm(data_analyte()[,5]))
+  })
+  
+  #Hexbin for the Data with the package hexbin
+  # output$hexbin <- renderPlot({
+  # 
+  #   hexbin_data <- data_analyte()
+  #   try(plot(hexbin(hexbin_data$value ~ hexbin_data$age_days, ylab = ylab_, xlab = "Age [Days]", shape = 0.5, xbins = 100)))
+  # })
+  
+  output$hexbinplotly <- renderPlotly({
+    
+    hexbin_data <- data_analyte()
+    s <- subplot(
+      plot_ly(data_analyte(), x = ~age_days, type = "histogram", nbinsx = 100),
+      plotly_empty(type = "scatter", mode = "markers"),
+      plot_ly(data_analyte(), x = ~age_days, y = ~value, type = "histogram2dcontour", nbinsx = 100) %>%
+        layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
+               yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15))),
+      plot_ly(data_analyte(), y = ~value, type = "histogram", nbinsx = 100),
+      nrows = 2, heights = c(0.2, 0.8), widths = c(0.8, 0.2), margin = 0,
+      shareX = TRUE, shareY = TRUE)
+    fig <- layout(s, showlegend = FALSE)
   })
   
   # Summary of the data for a short overview
@@ -2067,7 +2096,7 @@ server <- function(input, output, session) {
     par(mfrow = c(2,2))
     regression_pred <- seq(min(data_analyte()[,4]),max(data_analyte()[,4]))
     data_regression <- data_analyte()
-    
+
     ################################### Linear regression #########################################
     
     linear_regression <<- lm(value~age_days, data = data_regression)
@@ -2212,6 +2241,52 @@ server <- function(input, output, session) {
     plot(poly_4_regression)
   })
    
+  
+  # Table for the linear Regression
+  output$regression_linear <- DT::renderDataTable({
+
+    regression_pred <- seq(min(data_analyte()[,4]),max(data_analyte()[,4]))
+    reg_p <- predict(linear_regression, newdata=data.frame(age_days=regression_pred), interval="prediction")
+    regression_ <- data.frame(regression_pred, reg_p)
+    
+    colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
+    DT::datatable(regression_, rownames = FALSE, caption = htmltools::tags$caption(
+      style = 'caption-side: bottom; text-align: center;','Table: Linear Regression'))
+  })
+  
+  output$regression_poly10 <- DT::renderDataTable({
+    
+    regression_pred <- seq(min(data_analyte()[,4]),max(data_analyte()[,4]))
+    reg_p <- predict(poly_4_regression, newdata=data.frame(age_days=regression_pred), interval="prediction")
+    regression_ <- data.frame(regression_pred, reg_p)
+    
+    colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
+    DT::datatable(regression_, rownames = FALSE, caption = htmltools::tags$caption(
+      style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (10)'))
+  })
+  
+  output$regression_poly2 <- DT::renderDataTable({
+    
+    regression_pred <- seq(min(data_analyte()[,4]),max(data_analyte()[,4]))
+    reg_p <- predict(poly_2_regression, newdata=data.frame(age_days=regression_pred), interval="prediction")
+    regression_ <- data.frame(regression_pred, reg_p)
+    
+    colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
+    DT::datatable(regression_, rownames = FALSE, caption = htmltools::tags$caption(
+      style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (2)'))
+  })
+  
+  output$regression_poly3 <- DT::renderDataTable({
+    
+    regression_pred <- seq(min(data_analyte()[,4]),max(data_analyte()[,4]))
+    reg_p <- predict(poly_3_regression, newdata=data.frame(age_days=regression_pred), interval="prediction")
+    regression_ <- data.frame(regression_pred, reg_p)
+    
+    colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
+    DT::datatable(regression_, rownames = FALSE, caption = htmltools::tags$caption(
+      style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (3)'))
+  })
+  
   ##################################### Download ##################################################
 
   # Regular Window without Outlierdetection
