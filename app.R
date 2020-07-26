@@ -10,24 +10,24 @@ source("window.R")
 ####################################### Libraries #################################################
 
 if("boot" %in% rownames(installed.packages())){
- library(boot)} else{
-   install.packages("boot")}
+  library(boot)} else{
+    install.packages("boot")}
 
 if("dplyr" %in% rownames(installed.packages())){
- library(dplyr)} else{
-   install.packages("dplyr")}
+  library(dplyr)} else{
+    install.packages("dplyr")}
 
 if("DT" %in% rownames(installed.packages())){
- library(DT)} else{
-   install.packages("DT")}
+  library(DT)} else{
+    install.packages("DT")}
 
 if("gamlss" %in% rownames(installed.packages())){
- library(gamlss)} else{
-   install.packages("gamlss")}
+  library(gamlss)} else{
+    install.packages("gamlss")}
 
 if("gamlss.add" %in% rownames(installed.packages())){
- library(gamlss.add)} else{
-   install.packages("gamlss.add")}
+  library(gamlss.add)} else{
+    install.packages("gamlss.add")}
 
 #if("hexbin" %in% rownames(installed.packages())){
 #  library(hexbin)} else{
@@ -38,21 +38,20 @@ if("gamlss.add" %in% rownames(installed.packages())){
 #    install.packages("MASS")}
 
 if("plotly" %in% rownames(installed.packages())){
- library(plotly)} else{
-   install.packages("plotly")}
+  library(plotly)} else{
+    install.packages("plotly")}
 
 if("rpart" %in% rownames(installed.packages())){
- library(rpart)} else{
-   install.packages("rpart")}
+  library(rpart)} else{
+    install.packages("rpart")}
 
 if("rpart.plot" %in% rownames(installed.packages())){
- library(rpart.plot)} else{
-   install.packages("rpart.plot")}
+  library(rpart.plot)} else{
+    install.packages("rpart.plot")}
 
 if("zoo" %in% rownames(installed.packages())){
- library(zoo)} else{
-   install.packages("zoo")}
-
+  library(zoo)} else{
+    install.packages("zoo")}
 
 ####################################### USER INTERFACE ############################################
 
@@ -391,7 +390,7 @@ ui <- fluidPage(
             
             tabPanel("Discrete Reference Intervals",
                      downloadButton("Download_deviation_gamlss", "Table with discrete Reference Intervals"),
-                     DT::dataTableOutput("gamlss_split"))
+                     DT::dataTableOutput("gamlss_split"), plotOutput("gamlss_plot", height = "400px"))
             )
           )
         )
@@ -1887,6 +1886,22 @@ server <- function(input, output, session) {
     DT::datatable(deviation_gamlss, rownames = FALSE, caption = htmltools::tags$caption(
       style = 'caption-side: bottom; text-align: center;','Table: Prediction of the GAMLSS Models with', text_model)) %>%
     DT::formatRound(c(3:length(deviation_gamlss)), 2)
+  })
+  
+  
+  output$gamlss_plot <- renderPlot({
+    
+    input$deviation
+    input$select_model
+    
+    if(input$select_model == "lms_ri"){
+      validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
+    }
+    
+    plot(deviation_gamlss$`Age [Days] from`, deviation_gamlss$`97.5% Percentil`, type = "s", col = "cornflowerblue", xlab = "Age [Days]",
+         ylab = ylab_, lwd = 2, ylim = c(min(deviation_gamlss$`2.5% Percentil`), max(deviation_gamlss$`97.5% Percentil`)))
+    lines(deviation_gamlss$`Age [Days] from`, deviation_gamlss$`2.5% Percentil`, type = "s", col = "indianred", lwd = 2)
+    lines(deviation_gamlss$`Age [Days] from`, deviation_gamlss$`50% Percentil`, type = "s", col = "black")
   })
   
   ################################ Residuals #######################################
