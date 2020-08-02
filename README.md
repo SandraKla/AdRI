@@ -17,7 +17,7 @@ This Shiny App was developed to create **A**ge-**d**ependent **R**eference **I**
 
 ## Installation
 
-Download the Zip-File from this Shiny App and set your working direction to this path and run::
+Download the Zip-File from this Shiny App, set your working direction to this path and run:
 
 ```bash
 # Test if shiny is installed:
