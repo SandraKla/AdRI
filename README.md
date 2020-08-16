@@ -15,6 +15,9 @@ This Shiny App was developed to create **A**ge-**d**ependent **R**eference **I**
 **GAMLSS:**
 <img src="www/shiny2.png" align="center"/>
 
+**Make discrete models from the GAMLSS-models:**
+<img src="www/shiny3.png" align="center"/>
+
 ## Installation
 
 Download the Zip-File from this Shiny App, set your working direction to this path and run:
