@@ -9,6 +9,7 @@ source("window.R")
 
 ####################################### Libraries #################################################
 
+
 if("boot" %in% rownames(installed.packages())){
   library(boot)} else{
     install.packages("boot")}
@@ -68,7 +69,7 @@ ui <- fluidPage(
         sidebarPanel(width = 3,
                      
           selectInput("dataset", "Select Dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
-          selectInput("days_or_years", "Unit of the age [Years or Days]:", choices = list(Year = "age", Days = "age_days")),
+          radioButtons("days_or_years", "Unit of the age:",c(Year = "age", Day = "age_days")),
           sliderInput("age_end", "Select age-range in years:", min = 0 , max = 123, value = c(0,18)),
 
           conditionalPanel(
@@ -77,26 +78,25 @@ ui <- fluidPage(
           conditionalPanel(
             condition = "input.days_or_years == 'age_days'", numericInput("age_input", "-", 100, min = 1, max = 123*365)), 
           
-          selectInput("sex", "Select Sex:", choices = list("M + W" = "t", "M" = "m", "W" = "w")), 
+          selectInput("sex", "Select Sex (Male = M, Female = F):", choices = list("M + F" = "t", "M" = "m", "F" = "w")), 
           textInput("text_unit", "Unit of the Analyte:", value = "Unit"), hr(),
 
           helpText("Outlierdetection:"), checkboxInput("unique", "First Unique values", value = TRUE),
           checkboxInput("checkboxtukey", "Modified Tukey-method coupled with a Decision Tree", value = FALSE),
           
-          helpText("Hyperparameter for the Decision Tree (minsbucket): Minimum number of observations in a leaf node (age group).
-                   According to CLSI 120 patients must be available for good Reference Intervals (RI)!"),
+          helpText("Hyperparameter for the Decision Tree (minbucket): Minimum number of observations in a leaf node (age group).
+                   According to CLSI 120 patients must be available for Reference Intervals (RI)!"),
           selectInput("tree_minsplit", "Setting for the Decision Tree:", 
                       choices = list("Each group with > 120 patients (for RI according to CLSI)" = 360,
                                      "> 40 patients" = 120,
-                                     "> 20 patients" = 60))
-          ),
+                                     "> 20 patients" = 60))),
                           
         mainPanel(width = 9,
           
           tabsetPanel(
             
             tabPanel("Overview", icon = icon("home"),
-              p(strong("This application is designed to make Age-dependent Reference Intervals!"), "New data must have the 
+              p(strong("This application is designed to make Age-dependent Reference Intervals!"),br() ,"New data must have the 
               following structure: 1)", strong("PATISTAMMNR"),"(patient number) will be automatic filled with unique numbers, when
               no information is given. 2)", strong("SEX"),". 3)", strong("ALTER"), "(age in years). 4)", strong("ALTERTAG"),
               "(age in days). 5)", strong("ERGEBNIST1"),"(value of the analyte), no values will be deleted. 6)", 
@@ -112,8 +112,8 @@ ui <- fluidPage(
                      plotOutput("barplot_sex", height="500px"), plotOutput("barplot_station", height="300px")),
           
             tabPanel("Statistics", 
-              p(strong("Analyze of the distribution:"),"QQ-Plots to analyze for normal distribution and a density plot to check 
-              if the data is normally or log-normally distributed with the help of the Bowley Skewness (see Frank Klawonn et al. (2020))"),
+              p("QQ-Plots to analyze for normal distribution and a density plot to check 
+              if the data is normally or log-normally distributed with the help of the Bowley Skewness (see Frank Klawonn et al. (2020)):"),
               plotOutput("qqplot", height="400px"), plotOutput("lognorm", height="375px"))
           )
         )
@@ -133,13 +133,13 @@ ui <- fluidPage(
           selectInput("method_window", "Calculation-method for the Reference Intervals:", 
                       choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")), hr(),
           
-          helpText("Settings for the Regular Window:"), sliderInput("window_age", "Regular Window for the Subgroups [Years]:", 1, 18, 10),
+          helpText("Settings for the Regular Window:"), sliderInput("window_age", "Regular Window for the Subgroups in years:", 1, 18, 10),
           conditionalPanel(
             condition = "input.window_age <= 1",
-            numericInput("window_agedays", "Regular Window for the Subgroups [Days]:", 365, min = 1, max = 123*365)),
+            numericInput("window_agedays", "Regular Window for the Subgroups in days:", 365, min = 1, max = 123*365)),
           
           helpText("Settings for the Laboratory information system (LIS):"), 
-          selectInput("lis_data", "Select Dataset with the LIS:", choice = list.files(pattern = ".txt", recursive = TRUE)),
+          selectInput("lis_data", "Select Dataset with the age groups from the LIS:", choice = list.files(pattern = ".txt", recursive = TRUE)),
           
           helpText("Settings for the Sliding Window-Method:"), numericInput("sliding_width", "Sliding Window-Method:", 500, min = 10, max = 10000),
           numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500), hr(), htmlOutput("helptext_window")
@@ -186,13 +186,13 @@ ui <- fluidPage(
             tabPanel("Comparison", icon = icon("balance-scale"), p("Compare the Regular Window-Method and the Window-Method coupled to
                                                                    the Decision Tree with R-Squared (R2), Mean Absolute Error (MAE), 
                                                                    Mean squared error (MSE), Root mean squared error (RMSE). Best models to each
-                                                                   each metric are marked"),
+                                                                   each metric are marked."),
                      downloadButton("Download_rsquared_table", "Table with Metrics"),
                      DT::dataTableOutput("rsquared_table")),
             
             tabPanel("Laboratory information system (LIS)",
                      
-              p("Load a TXT file on the left with the age groups from your laboratory information system 
+              p("Load a TXT file on the left with the age groups from your laboratory information system (LIS)
                 and the Reference Intervals will be calculated."),
               plotOutput("lis_window", height = "600px")),
             
@@ -204,9 +204,9 @@ ui <- fluidPage(
             
             tabPanel("Sliding Window",
 
-              p("Sliding Window-method goes through the data with a window calculates the mean and quantile and goes then
+              p("Sliding Window-method goes through the data with a window calculates the mean and reference intervals and goes then
               with a window-steps further through the data to the end. Only nonparametric method available for the reference intervals
-              This method is not yet validated, caution when using for meaningful reference intervals."), 
+              This method is not yet validated, caution when using it for meaningful reference intervals."), 
               plotOutput("slidingwindow", height = "600px")),
 
             tabPanel("", icon = icon("table"), 
@@ -229,8 +229,7 @@ ui <- fluidPage(
              
       tabsetPanel( 
         tabPanel("Overview", p("Regression can be used for normally distributed data to get the 95% prediction interval. The blue
-                               line show the 95% Confindence interval from the regression and the red the prediction interval (2.5% and 97.5%),
-                               the black line show the regression (50%)."), 
+                               line show the 95% Confindence interval from the regression in black and the red the prediction interval (2.5% and 97.5%)."), 
                  plotOutput("regression", height="800px")),
               
         tabPanel("", icon = icon("table"),
@@ -241,7 +240,7 @@ ui <- fluidPage(
         
         tabPanel("Comparison", icon = icon("balance-scale"),
                  p("Compare the Regressions with Akaike Information Criterion (AIC), 
-                 Bayesian Information Criterion (BIC)/Schwatz Bayesian Criterion (SBC)
+                 Bayesian Information Criterion (BIC) / Schwatz Bayesian Criterion (SBC),
                  R-Squared (R2), Mean absolute Error (MAE), Mean squared error (MSE), 
                  Root mean squared error (RMSE). Best model to each metric is marked"),
                  downloadButton("downloadData_regression_table", "Table with Metrics"),
@@ -309,7 +308,6 @@ ui <- fluidPage(
           tabPanel("GAMLSS with Neural Network", 
                    
                    plotOutput("gamlss_net", height="500px"), verbatimTextOutput("net_text"), 
-                   p("Neural Network with a single Hidden Layer and three Hidden Units:"), 
                    # Plot neural network with term.plot(nn_)
                    plotOutput("network_term"), plotOutput("network_fitted", height="500px"), plotOutput("nn_wormplots")),
           
@@ -333,10 +331,10 @@ ui <- fluidPage(
       tabPanel("2. Comparison",
                
         p("Models from the package gamlss can be compared visually or with the Akaike Information Criterion (AIC), 
-        Bayesian Information Criterion (BIC)/Schwatz Bayesian Criterion (SBC), Generalized Information Criterion (GAIC) 
+        Bayesian Information Criterion (BIC) / Schwatz Bayesian Criterion (SBC), Generalized Information Criterion (GAIC) 
         or Pseudo R-Squared (R^2). The model with the smallest value for AIC, BIC and GAIC is the best model for the data.
         The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored. The models 
-        without high residuals also can be compared here, when they are calculated"), 
+        without high residuals also can be compared here, when they are calculated."), 
                
         downloadButton("downloadData_comparison", "Comparison"),
         DT::dataTableOutput("table_compare"),
@@ -1382,7 +1380,7 @@ server <- function(input, output, session) {
   output$gamlss_net <- renderPlot({
     
     build_gamlss_model()
-    centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+    centiles(nn_, main = "GAMLSS with Neural Network (3 Hidden-Units, decay=0.1)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, legend = FALSE, col = "lightgrey")
   })
 
@@ -1423,7 +1421,7 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
     
-    centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+    centiles(tr_, main = "GAMLSS with Decision Tree only for mu (minsplit = 360, cp = 0.01)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, legend = FALSE, col = "lightgrey")
   })
   
@@ -1880,7 +1878,7 @@ server <- function(input, output, session) {
     
     deviation_gamlss <- cbind(head(deviation_gamlss,-1), tail(deviation_gamlss,-1), head(deviation_gamlss,-1)/365, tail(deviation_gamlss,-1)/365,
                               gamlss_2_5, mean_gamlss, gamlss_97_5)
-    colnames(deviation_gamlss) <- c("Age [Days] from", "Age [Days] to","Age [Years] from", "Age [Years] to",
+    colnames(deviation_gamlss) <- c("Age-range from", "to [Days]","Age from", "to [Years]",
                                     "2.5% Percentil","50% Percentil","97.5% Percentil")
     deviation_gamlss <<- deviation_gamlss
     DT::datatable(deviation_gamlss, rownames = FALSE, caption = htmltools::tags$caption(
@@ -1898,10 +1896,11 @@ server <- function(input, output, session) {
       validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
     }
     
-    plot(deviation_gamlss$`Age [Days] from`, deviation_gamlss$`97.5% Percentil`, type = "s", col = "cornflowerblue", xlab = "Age [Days]",
-         ylab = ylab_, lwd = 2, ylim = c(min(deviation_gamlss$`2.5% Percentil`), max(deviation_gamlss$`97.5% Percentil`)))
-    lines(deviation_gamlss$`Age [Days] from`, deviation_gamlss$`2.5% Percentil`, type = "s", col = "indianred", lwd = 2)
-    lines(deviation_gamlss$`Age [Days] from`, deviation_gamlss$`50% Percentil`, type = "s", col = "black")
+    
+    plot(deviation_gamlss$`Age-range from`, deviation_gamlss$`97.5% Percentil`, type = "s", col = "cornflowerblue", xlab = "Age [Days]",
+         ylab = ylab_, lwd = 2, ylim = c(min(deviation_gamlss$`2.5% Percentil`, na.rm = TRUE), max(deviation_gamlss$`97.5% Percentil`, na.rm = TRUE)))
+    lines(deviation_gamlss$`Age-range from`, deviation_gamlss$`2.5% Percentil`, type = "s", col = "indianred", lwd = 2)
+    lines(deviation_gamlss$`Age-range from`, deviation_gamlss$`50% Percentil`, type = "s", col = "black")
   })
   
   ################################ Residuals #######################################

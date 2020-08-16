@@ -226,9 +226,9 @@ window_method <- function(data_, window, method){
                                        "Median"                   = c(mean_with_tukey[,1]), 
                                        "2.5 % RI"                 = c(quantiles_with_tukey[,1]),
                                        "97.5% RI"                 = c(quantiles_with_tukey[,2]),
-                                       "90% CI (2.5% RI) from"    = c(confidence_with_tukey_2_5[,1]),
+                                       "95% CI (2.5% RI) from"    = c(confidence_with_tukey_2_5[,1]),
                                        "to"                       = c(confidence_with_tukey_2_5[,2]),
-                                       "90% CI (97.5% RI) from"   = c(confidence_with_tukey_97_5[,1]),
+                                       "95% CI (97.5% RI) from"   = c(confidence_with_tukey_97_5[,1]),
                                        "to"                       = c(confidence_with_tukey_97_5[,2]),
                                        "Number of data points"    = c(n_data_tukey[,1]), check.names = FALSE)
   if(method == "para"){
@@ -252,9 +252,9 @@ window_method <- function(data_, window, method){
                                          "Mean"                     = c(mean_with_tukey[,1]), 
                                          "2.5 % RI"                 = c(quantiles_with_tukey[,1]),
                                          "97.5% RI"                 = c(quantiles_with_tukey[,2]),
-                                         "90% CI (2.5% RI) from"    = c(confidence_with_tukey_2_5[,1]),
+                                         "95% CI (2.5% RI) from"    = c(confidence_with_tukey_2_5[,1]),
                                          "to"                       = c(confidence_with_tukey_2_5[,2]),
-                                         "90% CI (97.5% RI) from"   = c(confidence_with_tukey_97_5[,1]),
+                                         "95% CI (97.5% RI) from"   = c(confidence_with_tukey_97_5[,1]),
                                          "to"                       = c(confidence_with_tukey_97_5[,2]),
                                          "Number of data points"    = c(n_data_tukey[,1]), check.names = FALSE)}
 }
@@ -447,9 +447,9 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
                                            "Median"                 = c(mean_with_outliers[,1]),
                                            "2.5 % RI"               = c(quantiles_with_outliers[,1]),
                                            "97.5% RI"               = c(quantiles_with_outliers[,2]),
-                                           "90% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
+                                           "95% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
                                            "to"                     = c(confidence_with_outliers_2_5[,2]),
-                                           "90% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
+                                           "95% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
                                            "to"                     = c(confidence_with_outliers_97_5[,2]), 
                                            "Number of data points"  = c(n_data[,1]), check.names = FALSE)
 
@@ -460,9 +460,9 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
                                          "Median"                 = c(mean_with_tukey[,1]),
                                          "2.5 % RI"               = c(quantiles_with_tukey[,1]),
                                          "97.5% RI"               = c(quantiles_with_tukey[,2]),
-                                         "90% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
+                                         "95% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
                                          "to"                     = c(confidence_with_tukey_2_5[,2]),
-                                         "90% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
+                                         "95% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
                                          "to"                     = c(confidence_with_tukey_97_5[,2]),
                                          "Number of data points"  = c(n_data_tukey[,1]), check.names = FALSE)
   
@@ -474,9 +474,9 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
                                              "Mean"                   = c(mean_with_outliers[,1]),
                                              "2.5 % RI"               = c(quantiles_with_outliers[,1]),
                                              "97.5% RI"               = c(quantiles_with_outliers[,2]),
-                                             "90% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
+                                             "95% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
                                              "to"                     = c(confidence_with_outliers_2_5[,2]),
-                                             "90% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
+                                             "95% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
                                              "to"                     = c(confidence_with_outliers_97_5[,2]), 
                                              "Number of data points"  = c(n_data[,1]), check.names = FALSE)
     
@@ -487,9 +487,9 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
                                            "Mean"                   = c(mean_with_tukey[,1]),
                                            "2.5 % RI"               = c(quantiles_with_tukey[,1]),
                                            "97.5% RI"               = c(quantiles_with_tukey[,2]),
-                                           "90% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
+                                           "95% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
                                            "to"                     = c(confidence_with_tukey_2_5[,2]),
-                                           "90% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
+                                           "95% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
                                            "to"                     = c(confidence_with_tukey_97_5[,2]), 
                                            "Number of data points"  = c(n_data_tukey[,1]), check.names = FALSE)}
 }
@@ -668,9 +668,9 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
                                            "Median"                 = c(mean_with_outliers[,1]),
                                            "2.5 % RI"               = c(quantiles_with_outliers[,1]),
                                            "97.5% RI"               = c(quantiles_with_outliers[,2]),
-                                           "90% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
+                                           "95% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
                                            "to"                     = c(confidence_with_outliers_2_5[,2]),
-                                           "90% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
+                                           "95% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
                                            "to"                     = c(confidence_with_outliers_97_5[,2]), 
                                            "Number of data points"  = c(n_data[,1]), check.names = FALSE)
   
@@ -681,9 +681,9 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
                                          "Median"                 = c(mean_with_tukey[,1]),
                                          "2.5 % RI"               = c(quantiles_with_tukey[,1]),
                                          "97.5% RI"               = c(quantiles_with_tukey[,2]),
-                                         "90% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
+                                         "95% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
                                          "to"                     = c(confidence_with_tukey_2_5[,2]),
-                                         "90% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
+                                         "95% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
                                          "to"                     = c(confidence_with_tukey_97_5[,2]),
                                          "Number of data points"  = c(n_data_tukey[,1]), check.names = FALSE)
   
@@ -695,9 +695,9 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
                                              "Mean"                   = c(mean_with_outliers[,1]),
                                              "2.5 % RI"               = c(quantiles_with_outliers[,1]),
                                              "97.5% RI"               = c(quantiles_with_outliers[,2]),
-                                             "90% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
+                                             "95% CI (2.5% RI) from"  = c(confidence_with_outliers_2_5[,1]),
                                              "to"                     = c(confidence_with_outliers_2_5[,2]),
-                                             "90% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
+                                             "95% CI (97.5% RI) from" = c(confidence_with_outliers_97_5[,1]),
                                              "to"                     = c(confidence_with_outliers_97_5[,2]), 
                                              "Number of data points"  = c(n_data[,1]), check.names = FALSE)
     
@@ -708,9 +708,9 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
                                            "Mean"                   = c(mean_with_tukey[,1]),
                                            "2.5 % RI"               = c(quantiles_with_tukey[,1]),
                                            "97.5% RI"               = c(quantiles_with_tukey[,2]),
-                                           "90% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
+                                           "95% CI (2.5% RI) from"  = c(confidence_with_tukey_2_5[,1]),
                                            "to"                     = c(confidence_with_tukey_2_5[,2]),
-                                           "90% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
+                                           "95% CI (97.5% RI) from" = c(confidence_with_tukey_97_5[,1]),
                                            "to"                     = c(confidence_with_tukey_97_5[,2]), 
                                            "Number of data points"  = c(n_data_tukey[,1]), check.names = FALSE)}
 }
@@ -826,9 +826,9 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
                        "Median" = sliding_median,
                        "2.5% Percentil" = sliding_2_5,
                        "97.5% Percentil" = sliding_97_5,
-                       "90% CI (2.5% RI) from"  = sliding_with_outliers_2_5_from,
+                       "95% CI (2.5% RI) from"  = sliding_with_outliers_2_5_from,
                        "to"                     = sliding_with_outliers_2_5_to,
-                       "90% CI (97.5% RI) from" = sliding_with_outliers_97_5_from,
+                       "95% CI (97.5% RI) from" = sliding_with_outliers_97_5_from,
                        "to"                     = sliding_with_outliers_97_5_to, check.names = FALSE)
   
   slide_tukey <<- data.frame("Age-Range from" = sliding_age,
@@ -836,9 +836,9 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
                              "Median" = sliding_median_tukey,
                              "2.5% Percentil" = sliding_2_5_tukey,
                              "97.5% Percentil" = sliding_97_5_tukey, 
-                             "90% CI (2.5% RI) from"  = sliding_with_tukey_2_5_from,
+                             "95% CI (2.5% RI) from"  = sliding_with_tukey_2_5_from,
                              "to"                     = sliding_with_tukey_2_5_to,
-                             "90% CI (97.5% RI) from" = sliding_with_tukey_97_5_from,
+                             "95% CI (97.5% RI) from" = sliding_with_tukey_97_5_from,
                              "to"                     = sliding_with_tukey_97_5_to, check.names = FALSE)
   return(slide)
 }

@@ -318,8 +318,8 @@ make_gamlss <- function(data_analyte, age_end, family_gamlss, epochs, method){
                                data = data_analyte, method = ",method,"(",epochs,"))")}
   poly4_ <<- helper_make_gamlss(noquote(model_gamlss_poly4))
   
-  # Minsplit by 360 to became at least 120 values at the last leaf from the Decision Tree (only for mu, because it has the most age-dependent
-  # impact)
+  # Minsplit by 360 to became at least 120 values at the last leaf from the Decision Tree 
+  # (only for mu, because it has the most age-dependent impact)
   model_gamlss_tr <- {paste("gamlss(value ~ tr(~age_days, control = rpart.control(minsplit = 360)), sigma.formula = ~age_days, 
                             nu.formula = ~age_days, tau.formula = ~age_days, family =",family_gamlss,", 
                             data = data_analyte, method = ",method,"(",epochs,"))")}
@@ -359,7 +359,7 @@ make_rpart <- function(data_analyte, minsplit_tree = 360){
 
 #' Get the residuals of the model and fit new model with data with the cut datasets with high residuals
 #' 
-#' @param x Dataset 
+#' @param data_analyte Dataset 
 #' 
 #' #'    sex age age_days value
 #' 25   W   2      905  40.9
