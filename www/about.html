@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<p style="text-align:left;"> This Shiny App was developed to create Age-dependent Reference Intervals using different methods (<strong>LMS, GAMLSS, Window-Methods and Regression</strong>). By GAMLSS-Models the distribution of the data can be freely selected from: Box-Cox Cole and Green Distribution "BCCG", Box-Cox Power Exponential Distribution "BCPE" or Box-Cox t Distribution "BCT" and additionally Normal-Distribution, Log-Normal-Distribution. The models are created with the package gamlss. The GAMLSS models have different smooth additive terms (P-Splines, Cubic Splines, Polynomials (Degree 3 and 4), Neural Network and Decision Tree). Currently, three Window-Methods are available regular windows, windows connected to a Decision Tree and the Sliding Window-method. And four different Regressions (Linear, Polynomials (Degree 3,4 and 10)). Different metrics can be used to compare the models: <br/> <br/>
+<p style="text-align:left;"> This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods (<strong>LMS, GAMLSS, Window-Methods and Regression</strong>). By GAMLSS-Models the distribution of the data can be freely selected from: Box-Cox Cole & Green Distribution "BCCG", Box-Cox Power Exponential Distribution "BCPE" or Box-Cox t-Distribution "BCT" and additionally Normal-Distribution, Log-Normal-Distribution. The models are created with the package gamlss. The GAMLSS models have different smooth additive terms (P-Splines, Cubic Splines, Polynomials (Degree 3 and 4), Neural Network and Decision Tree). Currently, four Window-Methods are available regular windows, windows connected to a Decision Tree, Window-Method with the age groups from the laboratory information system (LIS) and the Sliding Window-method. And four different Regressions (Linear, Polynomials (Degree 3,4 and 10)). Different metrics can be used to compare the models: <br/> <br/>
 
 - Akaike Information Criterion (AIC) <br/>
 - Bayesian Information Criterion (BIC) / Schwatz Bayesian Criterion (SBC) <br/>
 - Generalized Infromation Criterion (GAIC) with k=3 <br/>
 - Pseudo R-Squared (R2) <br/>
 - R-Squared (R2) <br/>
-- Mean Absolute Error <br/>
-- Mean Squared Error  <br/>
-- Root mean squared error  <br/> <br/>
+- Mean Absolute Error (MAE)<br/>
+- Mean Squared Error (MSE) <br/>
+- Root mean squared error (RMSE)<br/> <br/>
 
-<strong>All data can be downloaded in CSV format, when it is open in a Browser, also all figures as PNG or selected as EPS/JPEG (by Plotly use the menu in the right corner) or the page as PDF with a right click. </strong>At each tab is an information about the method or go to the <a href="https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki" target="_blank">  Wiki </a>. </p>
+All data can be downloaded in CSV format, when it is open in a Browser, also all figures as PNG or selected as EPS/JPEG (by Plotly use the menu in the right corner) or the page as PDF with a right click. At each tab is an information about the method or go to the <a href="https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki" target="_blank">  Wiki </a>. </p>
 
 <p style="text-align:left;"> <strong><bigger>References:</bigger></strong> <br/>
 Rigby R.A. and Stasinopoulos D.M. (2005). Generalized additive models for location, scale and shape,(with discussion),
