@@ -89,7 +89,8 @@ ui <- fluidPage(
           selectInput("tree_minsplit", "Setting for the Decision Tree:", 
                       choices = list("Each group with > 120 patients (for RI according to CLSI)" = 360,
                                      "> 40 patients" = 120,
-                                     "> 20 patients" = 60))),
+                                     "> 20 patients" = 60)),
+          checkboxInput("fast", "Load Plotly fast (only in Browser)", value = FALSE)),
                           
         mainPanel(width = 9,
           
@@ -760,8 +761,11 @@ server <- function(input, output, session) {
 
   # Scatterplot from the data_analyte() with plotly
   output$scatterplot_plotly <- renderPlotly({
+
     ylab_ <<- paste0(data_analyte()[1,7],"[", input$text_unit,"]") 
-    fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, color = ~sex, colors = c("cornflowerblue", "indianred"),
+    
+    if(input$fast == FALSE){
+      fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, color = ~sex, colors = c("cornflowerblue", "indianred"),
                    text = ~ paste('</br>Patient: ', patient,
                                   '</br>Station: ', code,
                                   '</br>Age [Years]: ', age,
@@ -771,7 +775,20 @@ server <- function(input, output, session) {
                    mode = "markers",
                    marker = list(size = 5)) %>%
           layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
-                 yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))
+                 yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))}
+    else{
+      fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, color = ~sex, colors = c("cornflowerblue", "indianred"),
+                     text = ~ paste('</br>Patient: ', patient,
+                                    '</br>Station: ', code,
+                                    '</br>Age [Years]: ', age,
+                                    '</br>Age [Days]: ', age_days,
+                                    '</br>Value: ', value),
+                     type = "scattergl",
+                     mode = "markers",
+                     marker = list(size = 5)) %>%
+        layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
+               yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))
+      }
   })
   
   # Barplot with the distribution of the sex
