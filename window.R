@@ -114,18 +114,20 @@ window_method <- function(data_, window, method){
     ##################################### QQ-Plot #################################################
     if(method == "qqplot"){
    
+      modi_qq <- modified.qqplot(outliers_tukey, plot.it = FALSE)
+       
       newx <- c(-1.96,0,1.96)
     
       # Make the QQ-Plot
       qqdata <- qqnorm(age_data_ready$value)
       lm_qqline <- lm(y~ x, data = qqdata)
     
-      qqdata_tukey <- qqnorm(outliers_tukey)
-      lm_qqline_tukey <- lm(y~x, data = qqdata_tukey)
+      #qqdata_tukey <- qqnorm(outliers_tukey)
+      #lm_qqline_tukey <- lm(y~x, data = qqdata_tukey)
       
       # Predict the RI and the Median
       result_qqline <- predict(lm_qqline, newdata=data.frame(x=newx), interval="confidence")
-      result_qqline_tukey <- predict(lm_qqline_tukey, newdata=data.frame(x=newx), interval="confidence")
+      #result_qqline_tukey <- predict(lm_qqline_tukey, newdata=data.frame(x=newx), interval="confidence")
       
       # fit      lwr      upr
       # 1 20.69910 16.24553 25.15268 # 2.5% Reference interval
@@ -133,21 +135,24 @@ window_method <- function(data_, window, method){
       # 3 56.66616 52.21259 61.11974 # 97.5% Refernce interval
     
       # Median
-      mean_tukey <- result_qqline_tukey[2,1]
+      mean_tukey <- modi_qq[1,]
       mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
       mean_outlier <- result_qqline[2,1]
       mean_with_outliers <- rbind(mean_with_outliers,mean_outlier)
     
       # Quantile
-      quantiles_tukey <- c(result_qqline_tukey[1,1], result_qqline_tukey[3,1])
+      quantiles_tukey <- c(modi_qq[3,], modi_qq[4,])
       quantiles_with_tukey <- rbind(quantiles_with_tukey,quantiles_tukey)
       quantiles_outlier <- c(result_qqline[1,1], result_qqline[3,1])
       quantiles_with_outliers <- rbind(quantiles_with_outliers,quantiles_outlier)
     
       # 95% Confidence Interval
-      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(result_qqline_tukey[1,2], result_qqline_tukey[1,3]))
-      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(result_qqline_tukey[3,2], result_qqline_tukey[3,3]))
+      #confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(result_qqline_tukey[1,2], result_qqline_tukey[1,3]))
+      #confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(result_qqline_tukey[3,2], result_qqline_tukey[3,3]))
     
+      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(0, 0))
+      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(0,0))
+      
       confidence_with_outliers_2_5 <- rbind(confidence_with_outliers_2_5,c(result_qqline[1,2], result_qqline[1,3]))
       confidence_with_outliers_97_5 <- rbind(confidence_with_outliers_97_5,c(result_qqline[3,2], result_qqline[3,3]))
     }
@@ -398,18 +403,20 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
       
       newx <- c(-1.96,0,1.96)
       
+      modi_qq <- modified.qqplot(outliers_tukey, plot.it = FALSE)
+      
       qqdata <- qqnorm(age_data_ready$value, plot.it = FALSE)
       lm_qqline <- lm(y~ x, data = qqdata)
       result_qqline <- predict(lm_qqline, newdata=data.frame(x=newx), interval="confidence")
       
-      qqdata_tukey <- qqnorm(outliers_tukey, plot.it = FALSE)
-      lm_qqline_tukey <- lm(y~x, data = qqdata_tukey)
-      result_qqline_tukey <- predict(lm_qqline_tukey, newdata=data.frame(x=newx), interval="confidence")
+      #qqdata_tukey <- qqnorm(outliers_tukey, plot.it = FALSE)
+      #lm_qqline_tukey <- lm(y~x, data = qqdata_tukey)
+      #result_qqline_tukey <- predict(lm_qqline_tukey, newdata=data.frame(x=newx), interval="confidence")
       
       # Tukey
-      mean_tukey <- result_qqline_tukey[2,1]
+      mean_tukey <- modi_qq[1,]
       mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
-      quantiles_tukey <- c(result_qqline_tukey[1,1], result_qqline_tukey[3,1])
+      quantiles_tukey <- c(modi_qq[3,], modi_qq[4,])
       quantiles_with_tukey <- rbind(quantiles_with_tukey,quantiles_tukey)
       
       # Without Outlierdetection
@@ -419,8 +426,11 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
       quantiles_with_outliers <- rbind(quantiles_with_outliers,quantiles_outlier) 
       
       # 95% Confidence Interval
-      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(result_qqline_tukey[1,2], result_qqline_tukey[1,3]))
-      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(result_qqline_tukey[3,2], result_qqline_tukey[3,3]))
+      #confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(result_qqline_tukey[1,2], result_qqline_tukey[1,3]))
+      #confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(result_qqline_tukey[3,2], result_qqline_tukey[3,3]))
+      
+      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(0, 0))
+      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(0,0))
       
       confidence_with_outliers_2_5 <- rbind(confidence_with_outliers_2_5,c(result_qqline[1,2], result_qqline[1,3]))
       confidence_with_outliers_97_5 <- rbind(confidence_with_outliers_97_5,c(result_qqline[3,2], result_qqline[3,3]))}
@@ -616,23 +626,25 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
     
     ################################### QQ-PLOT ###################################################
     if(method == "qqplot"){
-      
+
       newx <- c(-1.96,0,1.96)
+      
+      modi_qq <- modified.qqplot(outliers_tukey, plot.it = FALSE)
       
       qqdata <- qqnorm(age_data_ready$value, plot.it = FALSE)
       lm_qqline <- lm(y~ x, data = qqdata)
       result_qqline <- predict(lm_qqline, newdata=data.frame(x=newx), interval="confidence")
       
-      qqdata_tukey <- qqnorm(outliers_tukey, plot.it = FALSE)
-      lm_qqline_tukey <- lm(y~x, data = qqdata_tukey)
-      result_qqline_tukey <- predict(lm_qqline_tukey, newdata=data.frame(x=newx), interval="confidence")
+      #qqdata_tukey <- qqnorm(outliers_tukey, plot.it = FALSE)
+      #lm_qqline_tukey <- lm(y~x, data = qqdata_tukey)
+      #result_qqline_tukey <- predict(lm_qqline_tukey, newdata=data.frame(x=newx), interval="confidence")
       
       # Tukey
-      mean_tukey <- result_qqline_tukey[2,1]
+      mean_tukey <- modi_qq[1,]
       mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
-      quantiles_tukey <- c(result_qqline_tukey[1,1], result_qqline_tukey[3,1])
+      quantiles_tukey <- c(modi_qq[3,], modi_qq[4,])
       quantiles_with_tukey <- rbind(quantiles_with_tukey,quantiles_tukey)
-      
+
       # Without Outlierdetection
       mean_outlier <- result_qqline[2,1]
       mean_with_outliers <- rbind(mean_with_outliers,mean_outlier)
@@ -640,8 +652,11 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
       quantiles_with_outliers <- rbind(quantiles_with_outliers,quantiles_outlier) 
       
       # 95% Confidence Interval
-      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(result_qqline_tukey[1,2], result_qqline_tukey[1,3]))
-      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(result_qqline_tukey[3,2], result_qqline_tukey[3,3]))
+      #confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(result_qqline_tukey[1,2], result_qqline_tukey[1,3]))
+      #confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(result_qqline_tukey[3,2], result_qqline_tukey[3,3]))
+      
+      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5,c(0, 0))
+      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5,c(0,0))
       
       confidence_with_outliers_2_5 <- rbind(confidence_with_outliers_2_5,c(result_qqline[1,2], result_qqline[1,3]))
       confidence_with_outliers_97_5 <- rbind(confidence_with_outliers_97_5,c(result_qqline[3,2], result_qqline[3,3]))}
