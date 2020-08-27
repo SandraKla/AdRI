@@ -308,7 +308,7 @@ ui <- fluidPage(
             
           tabPanel("GAMLSS with Neural Network", 
                    
-                   plotOutput("gamlss_net", height="500px"), verbatimTextOutput("net_text"), 
+                   plotOutput("gamlss_net", height="500px"), verbatimTextOutput("net_text"), p("Neural Network - Analysis:"), 
                    # Plot neural network with term.plot(nn_)
                    plotOutput("network_term"), plotOutput("network_fitted", height="500px"), plotOutput("nn_wormplots")),
           
@@ -655,7 +655,7 @@ server <- function(input, output, session) {
     
     req(input$sliding_width, input$sliding_by)
     slide <- sliding_window(data_analyte(), input$sliding_width, input$sliding_by, outliers = input$window_select)
-    
+
     on.exit(progress$close())
     slide
   })
@@ -1725,11 +1725,12 @@ server <- function(input, output, session) {
   output$gamlss_table_pb <- DT::renderDataTable({
     
     build_gamlss_model()
-
-    try(table_pb_ri <- data.frame(pb_ri))
+    
+    if(exists("pb_ri")){
+    table_pb_ri <- data.frame(pb_ri)
     colnames(table_pb_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
     DT::datatable(table_pb_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the P-Splines'))
+      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the P-Splines'))}
   })
   
   # Table for prediction for the Cubic Splines
@@ -1737,10 +1738,11 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
    
-    try(table_cs_ri <- data.frame(cs_ri))
+    if(exists("cs_ri")){
+    table_cs_ri <- data.frame(cs_ri)
     colnames(table_cs_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
     DT::datatable(table_cs_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the Cubic Splines'))
+      style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the Cubic Splines'))}
   })
   
   # Table for prediction for the  Polynomials (Degree 3)
@@ -1748,10 +1750,11 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
     
-    try(table_poly_ri <- data.frame(poly_ri))
+    if(exists("poly_ri")){
+    table_poly_ri <- data.frame(poly_ri)
     colnames(table_poly_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
     DT::datatable(table_poly_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the  Polynomials (Degree 3)'))
+      style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the  Polynomials (Degree 3)'))}
   })
   
   # Table for prediction for the  Polynomials (Degree 4)
@@ -1759,10 +1762,11 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
     
-    try(table_poly4_ri <- data.frame(poly4_ri))
+    if(exists("poly4_ri")){
+    table_poly4_ri <- data.frame(poly4_ri)
     colnames(table_poly4_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
     DT::datatable(table_poly4_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the  Polynomials (Degree 4)'))
+      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the  Polynomials (Degree 4)'))}
   })
   
   # Table for prediction for the Neural Network
@@ -1770,10 +1774,11 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
    
-    try(table_nn_ri <- data.frame(nn_ri))
+    if(exists("nn_ri")){
+    table_nn_ri <- data.frame(nn_ri)
     colnames(table_nn_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
     DT::datatable(table_nn_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Neural Network'))
+      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Neural Network'))}
   })
   
   # Table for prediction for the Decision Tree
@@ -1781,10 +1786,11 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
    
-    try(table_tr_ri <- data.frame(tr_ri))
+    if(exists("tr_ri")){
+    table_tr_ri <- data.frame(tr_ri)
     colnames(table_tr_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
     DT::datatable(table_tr_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Decision Tree'))
+      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Decision Tree'))}
   })
   
   # Table for prediction with the LMS model
@@ -1794,10 +1800,11 @@ server <- function(input, output, session) {
       build_gamlss_model()
       lms_reactive()
       
-      try(table_lms_ri <- data.frame(lms_ri))
+      if(exists("lms_ri")){
+      table_lms_ri <- data.frame(lms_ri)
       colnames(table_lms_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
       DT::datatable(table_lms_ri, rownames = FALSE, caption = htmltools::tags$caption(
-        style = 'caption-side: bottom; text-align: center;','Table: Prediction of the LMS'))}
+        style = 'caption-side: bottom; text-align: center;','Table: Prediction of the LMS'))}}
   })
   
   # Tool to predict reference intervals for the different gamlss models
@@ -1810,8 +1817,6 @@ server <- function(input, output, session) {
     if(input$select_model == "poly4_ri"){text_model <- "Polynomials (Degree 4)"}
     if(input$select_model == "tr_ri"){text_model <- "Decsion Tree"}
     if(input$select_model == "nn_ri"){text_model <- "Neural Network"}
-    
-    build_gamlss_model()
     
     if(modelsprediction == TRUE){
       if(input$select_model == "lms_ri" && lms_ready == FALSE){
@@ -1833,15 +1838,18 @@ server <- function(input, output, session) {
   # Tables with the discrete values from the predicted GAMLSS models ##############################
   output$gamlss_split <- DT::renderDataTable({
     
-    build_gamlss_model()
+    if(input$select_model == "lms_ri"){
+      if(lms_ready == TRUE){text_model <- "LMS"}
+      else{validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))}}
     
-    if(input$select_model == "lms_ri"){text_model <- "LMS"}
     if(input$select_model == "pb_ri"){text_model <- "P-Splines"}
     if(input$select_model == "cs_ri"){text_model <- "Cubic Splines"}
     if(input$select_model == "poly_ri"){text_model <- " Polynomials (Degree 3)"}
     if(input$select_model == "poly4_ri"){text_model <- "Polynomials (Degree 4)"}
     if(input$select_model == "tr_ri"){text_model <- "Decision Tree"}
     if(input$select_model == "nn_ri"){text_model <- "Neural Network"}
+    
+    build_gamlss_model()
     
     deviation_gamlss <- split_gamlss(eval(parse(text = input$select_model)), input$deviation/100)
     deviation_gamlss <- rbind(0, deviation_gamlss, max(eval(parse(text = input$select_model))))
@@ -1903,16 +1911,17 @@ server <- function(input, output, session) {
     DT::formatRound(c(3:length(deviation_gamlss)), 2)
   })
   
-  
+  # Plot for the discrete reference intervals from the GAMLSS-models
   output$gamlss_plot <- renderPlot({
     
     input$deviation
     input$select_model
     
+    build_gamlss_model()
+   
     if(input$select_model == "lms_ri"){
       validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
     }
-    
     
     plot(deviation_gamlss$`Age-range from`, deviation_gamlss$`97.5% Percentil`, type = "s", col = "cornflowerblue", xlab = "Age [Days]",
          ylab = ylab_, lwd = 2, ylim = c(min(deviation_gamlss$`2.5% Percentil`, na.rm = TRUE), max(deviation_gamlss$`97.5% Percentil`, na.rm = TRUE)))
