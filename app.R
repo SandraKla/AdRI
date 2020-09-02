@@ -387,9 +387,9 @@ ui <- fluidPage(
                      downloadButton("Download_lms_ri", "LMS Model"),
                      DT::dataTableOutput("gamlss_table_lms")),
             
-            tabPanel("Discrete Reference Intervals",
+            tabPanel("Discrete Reference Intervals", plotOutput("gamlss_plot", height = "500px"),
                      downloadButton("Download_deviation_gamlss", "Table with discrete Reference Intervals"),
-                     DT::dataTableOutput("gamlss_split"), plotOutput("gamlss_plot", height = "400px"))
+                     DT::dataTableOutput("gamlss_split"))
             )
           )
         )
@@ -1967,20 +1967,20 @@ server <- function(input, output, session) {
     cat(paste("The maximal values for the Residuals is for all models:", round_df(value_max,3), round_df(value_min, 3), "\n"))
     
     par(mfrow = c(2,3))
-    palette <- colorRampPalette(c("indianred","seagreen3","indianred"))(100)
+    palette <- colorRampPalette(c("indianred","seagreen3","cornflowerblue","seagreen3","indianred"))(50)
     
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_pb$resid, 100)], pch = 20, cex = 1.5, xaxs = "i",
+    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_pb$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
          xlab = "Age [Days]", ylab = ylab_, main = "Residuals from P-Splines")
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_cs$resid, 100)], pch = 20, cex = 1.5, xaxs = "i",
+    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_cs$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
          xlab = "Age [Days]", ylab = ylab_, main = "Residuals from Cubic Splines")
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_poly$resid, 100)], pch = 20, cex = 1.5, xaxs = "i",
+    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_poly$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
          xlab = "Age [Days]", ylab = ylab_, main = "Residuals from  Polynomials (Degree 3)")
     
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_poly4$resid, 100)], pch = 20, cex = 1.5, xaxs = "i",
+    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_poly4$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
          xlab = "Age [Days]", ylab = ylab_, main = "Residuals from  Polynomials (Degree 4)")
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_nn$resid, 100)], pch = 20, cex = 1.5, xaxs = "i",
+    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_nn$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
          xlab = "Age [Days]", ylab = ylab_, main = "Residuals from Neural Network")
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_tr$resid, 100)], pch = 20, cex = 1.5, xaxs = "i",
+    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_tr$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
          xlab = "Age [Days]", ylab = ylab_, main = "Residuals from Decision Tree")
   })
   
