@@ -7,7 +7,6 @@
 #' Bootstrapping Confidence Intervals with package boot and 1000 Bootstrap replicates
 #'
 #' @param x Data for the Confidence Intervals
-#' @param value Select for median or quantile
 #' @param plot.it Plot the Bootstrapping
 Boot_CI <- function(x, plot.it = FALSE){
   
@@ -29,7 +28,7 @@ Boot_CI <- function(x, plot.it = FALSE){
 ####################################### Regular Window-method #####################################
 
 #' Regular Window-method with the modified.tukey() and three different calculation methods:
-#' Nonparametric with Bootstrapping, Parametric or with the Hoffmann-Method 
+#' Nonparametric with Bootstrapping, Parametric or with the Hoffmann-Method with QQ-Plots
 #' 
 #' @param data_ Given dataset:
 #' 
@@ -505,8 +504,9 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
 }
 
 
-#' Same as window_method_split()
+#' Same as window_method_split() just with given age groups
 #' 
+#' @param data_window_split Selected data
 #' @param split Age group from the LIS
 #' @param method Nonparametric with Bootstrapping, Parametric or with the Hoffmann-Method
 #' @param plot_log Plot the function def.lognorm() of each age groups
@@ -733,7 +733,8 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
 
 ####################################### Sliding Window ############################################
 
-#' Sliding Window-Method: Go through the data with a specific window width and with specific steps
+#' Sliding Window-Method goes through the data with a specific window width and with specific steps, only with
+#' nonparametric calculation
 #'
 #' @param sliding_window_data Selected data
 #' 

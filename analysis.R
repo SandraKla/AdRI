@@ -67,7 +67,7 @@ modified.tukey <- function(x, perc = 2.5, log.mode = FALSE, print.cycles = FALSE
 }
 
 #' Expects a numeric vector x without NAs (usually central 95% of normal distribution)
-#' Returns intercept and slope of a robust q-q line plus calculated lower and upper limits of reference interval
+#' Returns intercept and slope of a robust QQ-line plus calculated lower and upper limits of reference interval
 #'
 #' @param x represents a central percentage of a normal distribution defined by perc standard is central 
 #' 95% (perc means: from 2.5th to 97.5th percentile)
@@ -240,7 +240,9 @@ round_df <- function(x, digits) {
 #' Preprocessing of the data: Given age range in years
 #'
 #' @param data Selected data
-#' @param age_end Range of the data in years
+#' @param age_begin Range of the data in years (beginning)
+#' @param age_end Range of the data in years (end)
+#' @param sex Selected sex
 select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){  
 
   # Fill PATISTAMMNR (patient) and EINSCODE (station) when not given in the dataset
@@ -290,7 +292,9 @@ select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){
 #' Preprocessing of the data: Given age range in days
 #'
 #' @param data Selected data
-#' @param age_end Range of the data in days
+#' @param age_begin Range of the data in days (beginning)
+#' @param age_end Range of the data in days (end)
+#' @param sex Selected sex
 select_data_days <- function(data_, age_begin = 0, age_end, sex = "t"){  
   
   # Fill PATISTAMMNR (patient) and EINSCODE (station) when not given in the dataset
@@ -505,7 +509,7 @@ outliers_residuals <- function(data_analyte, gamlss_family, epochs, method, resi
 
 #' Make discrete model from the GAMLSS model with a given deviation for the upper and low 
 #' reference intervals. When a change occurs in the 2.5% or 97.5% RI the age group is split
-#' and the mean and RI from this agegroups is calculated
+#' and the mean and RI from this age groups is calculated
 #' 
 #' @param model predicted GAMLSS model
 #' @param deviation Deviation from the upper/lower Reference Intervals
