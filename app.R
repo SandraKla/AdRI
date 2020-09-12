@@ -70,8 +70,9 @@ ui <- fluidPage(
                      
           selectInput("dataset", "Select Dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
           radioButtons("days_or_years", "Unit of the age:",c(Year = "age", Day = "age_days")),
-          sliderInput("age_end", "Select age-range in years:", min = 0 , max = 123, value = c(0,18)),
-
+          conditionalPanel(
+            condition = "input.days_or_years == 'age'", sliderInput("age_end", "Select age-range in years:", 
+                                                                         min = 0 , max = 123, value = c(0,18))),
           conditionalPanel(
             condition = "input.days_or_years == 'age_days'", numericInput("age_input_min", "Select age-range in days:", 
                                                                           0, min = 0, max = 123*365)), 
@@ -139,10 +140,10 @@ ui <- fluidPage(
             condition = "input.window_age <= 1",
             numericInput("window_agedays", "Regular Window for the Subgroups in days:", 365, min = 1, max = 123*365)),
           
-          helpText("Settings for the Laboratory information system (LIS):"), 
+          hr(), helpText("Settings for the Laboratory information system (LIS):"), 
           selectInput("lis_data", "Select Dataset with the age groups from the LIS:", choice = list.files(pattern = ".txt", recursive = TRUE)),
           
-          helpText("Settings for the Sliding Window-Method:"), numericInput("sliding_width", "Sliding Window-Method:", 500, min = 10, max = 10000),
+          hr(), helpText("Settings for the Sliding Window-Method:"), numericInput("sliding_width", "Sliding Window-Method:", 500, min = 10, max = 10000),
           numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500), hr(), htmlOutput("helptext_window")
         ),
         
@@ -412,7 +413,7 @@ ui <- fluidPage(
         tabsetPanel(               
           tabPanel("Overview", 
             p("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
-            outliers from the model and refit the model. High residuals values are in red, low in green", 
+            outliers from the model and refit the model. High residuals values are in red, low in blue", 
             strong("This must not be equal to the real outliers of the data!"),"."),
             plotOutput("outlier", height="900px")),
                              
@@ -428,7 +429,7 @@ ui <- fluidPage(
       
         tabPanel("", icon = icon("table"), 
                                     
-            p("Tables with the Prediction Tables, can be downloaded and be used like another dataset for the Shiny App AdRI!"),
+            p("Tables with the Prediction Tables, can be downloaded and be used like another dataset for this Shiny App!"),
             downloadButton("Download_pb_residuals", "GAMLSS with P-Splines"),
             DT::dataTableOutput("gamlss_residuals_pb"), 
             downloadButton("Download_cs_residuals", "GAMLSS with Cubic Splines"),
@@ -762,7 +763,7 @@ server <- function(input, output, session) {
   # Scatterplot from the data_analyte() with plotly
   output$scatterplot_plotly <- renderPlotly({
 
-    ylab_ <<- paste0(data_analyte()[1,7],"[", input$text_unit,"]") 
+    ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]") 
     
     if(input$fast == FALSE){
       fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, color = ~sex, colors = c("cornflowerblue", "indianred"),
@@ -853,7 +854,7 @@ server <- function(input, output, session) {
   
   # Data-Table
   output$datatable <- DT::renderDataTable({
-    DT::datatable(data_analyte(), rownames= FALSE, 
+    DT::datatable(data_analyte(), rownames= FALSE, options = list(pageLength = 15),
     caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset'))
   })
   
