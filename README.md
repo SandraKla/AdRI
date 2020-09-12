@@ -34,28 +34,27 @@ All required packages are downloaded when starting this app or imported if they 
 ## Example with the Creatinine data from the CALIPER study
 
 **Overview:**
-Dataset:
-<img src="www/shiny.png" align="center"/>
+<img src="www/shiny_overview.png" align="center"/>
 Dataset with modified Tukey-method coupled to a Decision Tree:
 <img src="www/shiny_tukey.png" align="center"/>
 Gender distribution:
-<img src="www/shiny1.png" align="center"/>
+<img src="www/shiny_barplot.png" align="center"/>
 
 **Window-Methods:**
-<img src="www/shiny2.png" align="center"/>
-**Decision Tree for for age partitioning:**
-<img src="www/shiny3.png" align="center"/>
+<img src="www/shiny_window.png" align="center"/>
+**Decision Tree for age partitioning:**
+<img src="www/shiny_tree.png" align="center"/>
 
 **Regressions:**
-<img src="www/shiny4.png" align="center"/>
+<img src="www/shiny_regression.png" align="center"/>
 
 **GAMLSS:**
-<img src="www/shiny5.png" align="center"/>
-**Comparison of GAMLSS:**
-<img src="www/shiny6.png" align="center"/>
-
-**Make discrete models from the GAMLSS-models:**
-<img src="www/shiny7.png" align="center"/>
+<img src="www/shiny_gamlss.png" align="center"/>
+**Comparison of GAMLSS-models:**
+<img src="www/shiny_comparison.png" align="center"/>
 
 **Residuals from the GAMLSS-models:**
-<img src="www/shiny8.png" align="center"/>
+<img src="www/shiny_residuals.png" align="center"/>
+
+**Make discrete models from the GAMLSS-models:**
+<img src="www/shiny_discrete.png" align="center"/>
