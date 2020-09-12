@@ -28,7 +28,7 @@ library(shiny)
 runGitHub("Age-dependent-Reference-Intervals", "SandraKla")
 ```
 
-All required packages are downloaded when starting this app or imported if they already exist. For more information about the required packages use the [Wiki](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/References).
+All required packages are downloaded when starting this app or imported if they already exist. For more information about the required packages use the [Wiki](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Versions).
 
 
 ## Example with the Creatinine data from the CALIPER study
