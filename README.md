@@ -1,4 +1,6 @@
 # Age-dependent-Reference-Intervals (AdRI)
+[![Github All Releases](https://img.shields.io/github/downloads/SandraKla/Age-dependent-Reference-Intervals/total.svg)]()
+[![License](https://img.shields.io/github/license/SandraKla/Age-dependent-Reference-Intervals.svg)]()
 
 <img src="www/Logo.svg" width="225px" height="150px" align="right"/>
 
