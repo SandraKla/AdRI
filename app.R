@@ -4,8 +4,8 @@
 
 ####################################### Scripts ###################################################
 
-source("analysis.R")
-source("window.R")
+source("R/analysis.R")
+source("R/window.R")
 
 ####################################### Libraries #################################################
 
@@ -108,10 +108,10 @@ ui <- fluidPage(
               plotlyOutput("scatterplot_plotly", height="600px")),
             
             tabPanel("2D Density Plot", plotlyOutput("hexbinplotly", height="600px")),
-            tabPanel("Dataset", DT::dataTableOutput("datatable"), verbatimTextOutput("summary")),
+            tabPanel("Dataset", DT::dataTableOutput("datatable")), #, verbatimTextOutput("summary")),
           
             tabPanel("Barplots", p("Distribution of the", strong("SEX"),"across the ages and", strong("EINSCODE"),":"),
-                     plotOutput("barplot_sex", height="500px"), plotOutput("barplot_station", height="300px")),
+                     plotOutput("barplot_sex", height="500px")), # plotOutput("barplot_station", height="300px")),
           
             tabPanel("Statistics", 
               p("QQ-Plots to analyze for normal distribution and a density plot to check 
@@ -446,10 +446,10 @@ ui <- fluidPage(
        )
      )
    )
- ),
+ )#,
     
     ################################### Information about the App #################################
-    tabPanel("About", icon = icon("info"), includeHTML("www/about.html"))
+    #tabPanel("About", icon = icon("info"), includeHTML("www/about.html"))
   )
 )
 
@@ -1661,9 +1661,9 @@ server <- function(input, output, session) {
     data_subset <- data_analyte()
     subset_age_days <- max(subset(data_subset, age == max(data_subset$age), c(age_days)))
     x_values <- seq(round(min(data_analyte()[,4]),1), subset_age_days, by=1)
-  
+    
     build_gamlss_model()
-
+    
     pb_ri <<- centiles.pred(pb_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
     plot(pb_ri$age_days, pb_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  main = "GAMLSS with P-Splines", type = "l",
          col = "indianred", ylim = c(0,max(pb_ri$C97.5)))
@@ -1681,19 +1681,19 @@ server <- function(input, output, session) {
          main = "GAMLSS with Polynomials (Degree 3)", type = "l", col = "indianred", ylim = c(0,max(poly_ri$C97.5)))
     lines(poly_ri$age_days, poly_ri$C50, cex = 0.5, lty = 1, col = "black")
     lines(poly_ri$age_days, poly_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")
-
+    
     poly4_ri <<- centiles.pred(poly4_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
     plot(poly4_ri$age_days, poly4_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  type = "l",
          main = "GAMLSS with Polynomials (Degree 4)", col = "indianred", ylim = c(0,max(poly4_ri$C97.5)))
     lines(poly4_ri$age_days, poly4_ri$C50, cex = 0.5, lty = 1, col = "black")
     lines(poly4_ri$age_days, poly4_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")
-
+    
     nn_ri <<- centiles.pred(nn_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
     plot(nn_ri$age_days, nn_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
          main = "GAMLSS with Neural Network", col = "indianred", ylim = c(0,max(nn_ri$C97.5)))
     lines(nn_ri$age_days, nn_ri$C50, cex = 0.5, lty = 1, col = "black")
     lines(nn_ri$age_days, nn_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")
-
+    
     tr_ri <<- centiles.pred(tr_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
     plot(tr_ri$age_days, tr_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
          main = "GAMLSS with Decision Tree", col = "indianred", ylim = c(0,max(tr_ri$C97.5)))
