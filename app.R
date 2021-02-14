@@ -67,8 +67,14 @@ ui <- fluidPage(
              
       sidebarLayout( 
         sidebarPanel(width = 3,
-                     
+          
           selectInput("dataset", "Select Dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
+          
+          fileInput("dataset_file", "Upload CSV File:", accept = c(
+            "text/csv",
+            "text/comma-separated-values,text/plain",
+            ".csv")), 
+          
           radioButtons("days_or_years", "Unit of the age:",c(Year = "age", Day = "age_days")),
           conditionalPanel(
             condition = "input.days_or_years == 'age'", sliderInput("age_end", "Select age-range in years:", 
@@ -477,8 +483,12 @@ server <- function(input, output, session) {
     residuals_ready <<- FALSE  # Check if the residuals are calculated
     
     # Read the data (from the CALIPER study or from the generator)
-    data_data <- read.csv2(input$dataset, header = TRUE, stringsAsFactors = FALSE, sep = ";", dec = ",", na.strings = "")
-    
+    if(is.null(input$dataset_file)){
+    data_data <- read.csv2(input$dataset, header = TRUE, 
+                           stringsAsFactors = FALSE, sep = ";", dec = ",", na.strings = "")}
+    if(!is.null(input$dataset_file))
+    {data_data <- read.csv2(input$dataset_file[["datapath"]], header = TRUE, 
+                            stringsAsFactors = FALSE, sep = ";", dec = ",", na.strings = "")}
     ################################### Age is given by days ######################################
     if(input$days_or_years == "age_days"){
       
@@ -1818,7 +1828,7 @@ server <- function(input, output, session) {
     if(input$select_model == "poly4_ri"){text_model <- "Polynomials (Degree 4)"}
     if(input$select_model == "tr_ri"){text_model <- "Decsion Tree"}
     if(input$select_model == "nn_ri"){text_model <- "Neural Network"}
-    
+   
     if(modelsprediction == TRUE){
       if(input$select_model == "lms_ri" && lms_ready == FALSE){
         prediction_text <- "First you need to make LMS Models, than you can predict with these!"
