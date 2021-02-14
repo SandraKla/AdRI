@@ -1665,40 +1665,40 @@ server <- function(input, output, session) {
     build_gamlss_model()
     
     pb_ri <<- centiles.pred(pb_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(pb_ri$age_days, pb_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  main = "GAMLSS with P-Splines", type = "l",
-         col = "indianred", ylim = c(0,max(pb_ri$C97.5)))
-    lines(pb_ri$age_days, pb_ri$C50, cex = 0.5, lty = 1, col = "black")
-    lines(pb_ri$age_days, pb_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")
+    plot(pb_ri$x, pb_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  main = "GAMLSS with P-Splines", type = "l",
+         col = "indianred", ylim = c(0,max(pb_ri$`97.5`)))
+    lines(pb_ri$x, pb_ri$`50`, cex = 0.5, lty = 1, col = "black")
+    lines(pb_ri$x, pb_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
     
-    cs_ri <<- centiles.pred(cs_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(cs_ri$age_days, cs_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  main = "GAMLSS with Cubic Splines", type = "l",
-         col = "indianred", ylim = c(0,max(cs_ri$C97.5)))
-    lines(cs_ri$age_days, cs_ri$C50, cex = 0.5, lty = 1, col = "black")
-    lines(cs_ri$age_days, cs_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")
+    cs_ri <<- centiles.pred(cs_, xname="age_days",  xvalues=x_values, cent = c(2.5,50,97.5))
+    plot(cs_ri$x, cs_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  main = "GAMLSS with Cubic Splines", type = "l",
+         col = "indianred", ylim = c(0,max(cs_ri$`97.5`)))
+    lines(cs_ri$x, cs_ri$`50`, cex = 0.5, lty = 1, col = "black")
+    lines(cs_ri$x, cs_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
     
     poly_ri <<- centiles.pred(poly_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(poly_ri$age_days, poly_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,
-         main = "GAMLSS with Polynomials (Degree 3)", type = "l", col = "indianred", ylim = c(0,max(poly_ri$C97.5)))
-    lines(poly_ri$age_days, poly_ri$C50, cex = 0.5, lty = 1, col = "black")
-    lines(poly_ri$age_days, poly_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")
+    plot(poly_ri$x, poly_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,
+         main = "GAMLSS with Polynomials (Degree 3)", type = "l", col = "indianred", ylim = c(0,max(poly_ri$`97.5`)))
+    lines(poly_ri$x, poly_ri$`50`, cex = 0.5, lty = 1, col = "black")
+    lines(poly_ri$x, poly_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
     
     poly4_ri <<- centiles.pred(poly4_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(poly4_ri$age_days, poly4_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  type = "l",
-         main = "GAMLSS with Polynomials (Degree 4)", col = "indianred", ylim = c(0,max(poly4_ri$C97.5)))
-    lines(poly4_ri$age_days, poly4_ri$C50, cex = 0.5, lty = 1, col = "black")
-    lines(poly4_ri$age_days, poly4_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")
+    plot(poly4_ri$x, poly4_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  type = "l",
+         main = "GAMLSS with Polynomials (Degree 4)", col = "indianred", ylim = c(0,max(poly4_ri$`97.5`)))
+    lines(poly4_ri$x, poly4_ri$`50`, cex = 0.5, lty = 1, col = "black")
+    lines(poly4_ri$x, poly4_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
     
     nn_ri <<- centiles.pred(nn_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(nn_ri$age_days, nn_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
-         main = "GAMLSS with Neural Network", col = "indianred", ylim = c(0,max(nn_ri$C97.5)))
-    lines(nn_ri$age_days, nn_ri$C50, cex = 0.5, lty = 1, col = "black")
-    lines(nn_ri$age_days, nn_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")
+    plot(nn_ri$x, nn_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
+         main = "GAMLSS with Neural Network", col = "indianred", ylim = c(0,max(nn_ri$`97.5`)))
+    lines(nn_ri$x, nn_ri$`50`, cex = 0.5, lty = 1, col = "black")
+    lines(nn_ri$x, nn_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
     
     tr_ri <<- centiles.pred(tr_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(tr_ri$age_days, tr_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
-         main = "GAMLSS with Decision Tree", col = "indianred", ylim = c(0,max(tr_ri$C97.5)))
-    lines(tr_ri$age_days, tr_ri$C50, cex = 0.5, lty = 1, col = "black")
-    lines(tr_ri$age_days, tr_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")
+    plot(tr_ri$x, tr_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
+         main = "GAMLSS with Decision Tree", col = "indianred", ylim = c(0,max(tr_ri$`97.5`)))
+    lines(tr_ri$x, tr_ri$`50`, cex = 0.5, lty = 1, col = "black")
+    lines(tr_ri$x, tr_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
   })
       
   # Predict new values with the fitted LMS model 
@@ -1714,10 +1714,10 @@ server <- function(input, output, session) {
       
       lms_ri <<- centiles.pred(lms_, xname="age_lms", xvalues=x_values, cent = c(2.5,50,97.5))
       
-      plot(lms_ri$age_lms, lms_ri$C2.5, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
-           main = "LMS", col = "indianred", ylim = c(0,max(lms_ri$C97.5)))
-      lines(lms_ri$age_lms, lms_ri$C50, cex = 0.5, lty = 1, col = "black")
-      lines(lms_ri$age_lms, lms_ri$C97.5, cex = 0.5, lty = 3, col = "cornflowerblue")}
+      plot(lms_ri$x, lms_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
+           main = "LMS", col = "indianred", ylim = c(0,max(lms_ri$`97.5`)))
+      lines(lms_ri$x, lms_ri$`50`, cex = 0.5, lty = 1, col = "black")
+      lines(lms_ri$x, lms_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")}
   })
 
   # Tables of the predicted values ################################################################
@@ -1863,16 +1863,16 @@ server <- function(input, output, session) {
     for (i in seq(2,nrow(deviation_gamlss))){
       
       # The data subset 
-      age_data <- subset(model, model$age_days <= deviation_gamlss[i,])  
-      age_data_ready <- subset(age_data, age_data$age_days > deviation_gamlss[i-1,])  # Below the lowest condition
+      age_data <- subset(model, model$x <= deviation_gamlss[i,])  
+      age_data_ready <- subset(age_data, age_data$x > deviation_gamlss[i-1,])  # Below the lowest condition
     
-      mean_gamlss_ <- mean(age_data_ready$C50) 
+      mean_gamlss_ <- mean(age_data_ready$`50`) 
       mean_gamlss <- rbind(mean_gamlss,mean_gamlss_) 
       
-      gamlss_2_5_ <- mean(age_data_ready$C2.5) 
+      gamlss_2_5_ <- mean(age_data_ready$`2.5`) 
       gamlss_2_5 <- rbind(gamlss_2_5,gamlss_2_5_) 
       
-      gamlss_97_5_ <- mean(age_data_ready$C97.5) 
+      gamlss_97_5_ <- mean(age_data_ready$`97.5`) 
       gamlss_97_5 <- rbind(gamlss_97_5,gamlss_97_5_) 
     }
     
@@ -1888,16 +1888,16 @@ server <- function(input, output, session) {
       for (i in seq(2,nrow(deviation_gamlss))){
         
         # The data subset 
-        age_data <- subset(model, model$age_lms <= deviation_gamlss[i,])  
-        age_data_ready <- subset(age_data, age_data$age_lms > deviation_gamlss[i-1,])  # Below the lowest condition
+        age_data <- subset(model, model$x <= deviation_gamlss[i,])  
+        age_data_ready <- subset(age_data, age_data$x > deviation_gamlss[i-1,])  # Below the lowest condition
         
-        mean_gamlss_ <- mean(age_data_ready$C50) 
+        mean_gamlss_ <- mean(age_data_ready$`50`) 
         mean_gamlss <- rbind(mean_gamlss,mean_gamlss_) 
         
-        gamlss_2_5_ <- mean(age_data_ready$C2.5) 
+        gamlss_2_5_ <- mean(age_data_ready$`2.5`) 
         gamlss_2_5 <- rbind(gamlss_2_5,gamlss_2_5_) 
         
-        gamlss_97_5_ <- mean(age_data_ready$C97.5) 
+        gamlss_97_5_ <- mean(age_data_ready$`97.5`) 
         gamlss_97_5 <- rbind(gamlss_97_5,gamlss_97_5_) 
       }
     }

@@ -522,8 +522,8 @@ split_gamlss <- function(model, deviation = 0.1){
   # Go through the data to the end and check if the Reference Intervals are changed
   while (i < nrow(model)){
     
-    if (xor(model$C2.5[para_split]/model$C2.5[i+1] < 1-deviation, model$C2.5[para_split]/model$C2.5[i+1] > 1+deviation) ||
-        xor(model$C97.5[para_split]/model$C97.5[i+1] < 1-deviation, model$C97.5[para_split]/model$C97.5[i+1] > 1+deviation)){
+    if (xor(model$`2.5`[para_split]/model$`2.5`[i+1] < 1-deviation, model$`2.5`[para_split]/model$`2.5`[i+1] > 1+deviation) ||
+        xor(model$`97.5`[para_split]/model$`97.5`[i+1] < 1-deviation, model$`97.5`[para_split]/model$`97.5`[i+1] > 1+deviation)){
       
       para_split <- i # change para_split for the next age group
       splitsgamlss <- rbind(splitsgamlss, para_split)}
