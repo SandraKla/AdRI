@@ -149,6 +149,8 @@ ui <- fluidPage(
           hr(), helpText("Settings for the Laboratory information system (LIS):"), 
           selectInput("lis_data", "Select Dataset with the age groups from the LIS:", choice = list.files(pattern = ".txt", recursive = TRUE)),
           
+          fileInput("lis_data_file", "Upload TXT File:", accept = ".txt"), 
+          
           hr(), helpText("Settings for the Sliding Window-Method:"), numericInput("sliding_width", "Sliding Window-Method:", 500, min = 10, max = 10000),
           numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500), hr(), htmlOutput("helptext_window")
         ),
@@ -1128,7 +1130,12 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
     progress$set(message = "Make groups with the given intervals from the LIS...", detail = "", value = 2)
     
-    lis_data <- read.delim2(input$lis_data)
+    if(is.null(input$lis_data_file)){
+      lis_data <- read.delim2(input$lis_data)}
+    if(!is.null(input$lis_data_file))
+    {lis_data <- read.delim2(input$lis_data_file[["datapath"]])}
+    
+
     lis <- subset(lis_data, to <= input$age_input)
 
     lis <- data.frame(lis_data[,2])
