@@ -78,12 +78,12 @@ ui <- fluidPage(
           radioButtons("days_or_years", "Unit of the age:",c(Year = "age", Day = "age_days")),
           conditionalPanel(
             condition = "input.days_or_years == 'age'", sliderInput("age_end", "Select age-range in years:", 
-                                                                         min = 0 , max = 123, value = c(0,18))),
+                                                                         min = 0 , max = 100, value = c(0,18))),
           conditionalPanel(
             condition = "input.days_or_years == 'age_days'", numericInput("age_input_min", "Select age-range in days:", 
-                                                                          0, min = 0, max = 123*365)), 
+                                                                          0, min = 0, max = 100*365)), 
           conditionalPanel(
-            condition = "input.days_or_years == 'age_days'", numericInput("age_input", "-", 100, min = 1, max = 123*365)), 
+            condition = "input.days_or_years == 'age_days'", numericInput("age_input", "-", 100, min = 1, max = 100*365)), 
           
           selectInput("sex", "Select Sex (Male = M, Female = F):", choices = list("M + F" = "t", "M" = "m", "F" = "w")), 
           textInput("text_unit", "Unit of the Analyte:", value = "Unit"), hr(),
@@ -144,7 +144,7 @@ ui <- fluidPage(
           helpText("Settings for the Regular Window:"), sliderInput("window_age", "Regular Window for the Subgroups in years:", 1, 18, 10),
           conditionalPanel(
             condition = "input.window_age <= 1",
-            numericInput("window_agedays", "Regular Window for the Subgroups in days:", 365, min = 1, max = 123*365)),
+            numericInput("window_agedays", "Regular Window for the Subgroups in days:", 365, min = 1, max = 100*365)),
           
           hr(), helpText("Settings for the Laboratory information system (LIS):"), 
           selectInput("lis_data", "Select Dataset with the age groups from the LIS:", choice = list.files(pattern = ".txt", recursive = TRUE)),
