@@ -42,6 +42,8 @@ All required packages are downloaded when starting this app or imported if they 
 
 ## Contact
 
+**Warning!** This Shiny application has not been enough validated for the basis of a medical diagnosis! There is no warranty for the app and/or the reference intervals!
+
 You are welcome to:
 - Submit suggestions and bugs at: https://github.com/SandraKla/Age-dependent-Reference-Intervals/issues
 - Make a pull request on: https://github.com/SandraKla/Age-dependent-Reference-Intervals/pulls
