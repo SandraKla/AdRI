@@ -1,19 +1,17 @@
 # Age-dependent-Reference-Intervals (AdRI)
 
-[![](https://img.shields.io/github/license/SandraKla/Age-dependent-Reference-Intervals.svg)]()
-[![](https://img.shields.io/github/last-commit/SandraKla/Age-dependent-Reference-Intervals.svg)]()
-[![](https://img.shields.io/github/languages/count/SandraKla/Age-dependent-Reference-Intervals.svg)]()
-[![](https://img.shields.io/github/languages/top/SandraKla/Age-dependent-Reference-Intervals.svg)]()
+![](https://img.shields.io/github/license/SandraKla/Age-dependent-Reference-Intervals.svg)
+![](https://img.shields.io/github/last-commit/SandraKla/Age-dependent-Reference-Intervals.svg)
+![](https://img.shields.io/github/languages/count/SandraKla/Age-dependent-Reference-Intervals.svg)
+![](https://img.shields.io/github/languages/top/SandraKla/Age-dependent-Reference-Intervals.svg)
 
 <img src="www/Logo.svg" width="225px" height="150px" align="right"/>
 
 **Shiny App for calculating Age-dependent Reference Intervals!**
 
-This Shiny App was developed to create **A**ge-**d**ependent **R**eference **I**ntervals (**AdRI**) using different methods ([**LMS**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Generalized-additive-models-for-location,-scale-and-shape-(GAMLSS)#lms), [**GAMLSS**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Generalized-additive-models-for-location,-scale-and-shape-(GAMLSS)), [**Window-Methods**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Window-Methods) and [**Regression**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Regression)).
+This Shiny App was developed to create **A**ge-**d**ependent **R**eference **I**ntervals (**AdRI**) using different methods: [**LMS**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Generalized-additive-models-for-location,-scale-and-shape-(GAMLSS)#lms), [**GAMLSS**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Generalized-additive-models-for-location,-scale-and-shape-(GAMLSS)), [**Window-Methods**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Window-Methods) and [**Regression**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Regression).
 
 <img src="www/shiny_overview.png" align="center"/>
-<img src="www/shiny_tree.png" align="center"/>
-<img src="www/shiny_gamlss.png" align="center"/>
 
 ## Installation 
 
