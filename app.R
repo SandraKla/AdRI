@@ -1,5 +1,5 @@
 ####################################### WELCOME TO THE SHINY APP AdRI #############################
-####################################### from Sandra Klawitter (2020) ##############################
+####################################### from Sandra K. (2022) #####################################
 ###################################################################################################
 
 ####################################### Scripts ###################################################
@@ -68,24 +68,24 @@ ui <- fluidPage(
       sidebarLayout( 
         sidebarPanel(width = 3,
           
-          selectInput("dataset", "Select Dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
+          selectInput("dataset", "Select already preinstalled Dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
           
-          fileInput("dataset_file", "Upload CSV File:", accept = c(
+          fileInput("dataset_file", "Upload own dataset:", accept = c(
             "text/csv",
             "text/comma-separated-values,text/plain",
-            ".csv")), 
+            ".csv")), hr(),
           
-          radioButtons("days_or_years", "Unit of the age:",c(Year = "age", Day = "age_days")),
+          selectInput("days_or_years", "Age-Unit:", choices = list("Year" = "age", "Day "= "age_days")), 
+          
           conditionalPanel(
-            condition = "input.days_or_years == 'age'", sliderInput("age_end", "Select age-range in years:", 
+            condition = "input.days_or_years == 'age'", sliderInput("age_end", "Select age-range:", 
                                                                          min = 0 , max = 100, value = c(0,18))),
           conditionalPanel(
-            condition = "input.days_or_years == 'age_days'", numericInput("age_input_min", "Select age-range in days:", 
-                                                                          0, min = 0, max = 100*365)), 
+            condition = "input.days_or_years == 'age_days'", numericInput("age_input_min", "Select age-range from:", 0, min = 0, max = 100*365)), 
           conditionalPanel(
-            condition = "input.days_or_years == 'age_days'", numericInput("age_input", "-", 100, min = 1, max = 100*365)), 
+            condition = "input.days_or_years == 'age_days'", numericInput("age_input", "to:", 100, min = 1, max = 100*365)), hr(),
           
-          selectInput("sex", "Select Sex (Male = M, Female = F):", choices = list("M + F" = "t", "M" = "m", "F" = "w")), 
+          selectInput("sex", "Select the Sex:", choices = list("Male + Female" = "t", "Male" = "m", "Female" = "w")), 
           textInput("text_unit", "Unit of the Analyte:", value = "Unit"), hr(),
 
           helpText("Outlierdetection:"), checkboxInput("unique", "First Unique values", value = TRUE),
@@ -104,21 +104,19 @@ ui <- fluidPage(
           tabsetPanel(
             
             tabPanel("Overview", icon = icon("home"),
-              p(strong("This application is designed to make Age-dependent Reference Intervals!"),br() ,"New data must have the 
-              following structure: 1)", strong("PATISTAMMNR"),"(patient number) will be automatic filled with unique numbers, when
-              no information is given. 2)", strong("SEX"),". 3)", strong("ALTER"), "(age in years). 4)", strong("ALTERTAG"),
-              "(age in days). 5)", strong("ERGEBNIST1"),"(value of the analyte), no values will be deleted. 6)", 
-              strong("EINSCODE"),"(station code), if not given it will be automatic filled. 7)", strong("CODE1"),
-              "(name of the analyte). Have fun :)"),
-              
+              p(strong("Shiny App for calculating Age-dependent Reference Intervals!"), br(), br(),
+                       "This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods: 
+                        LMS, GAMLSS, Window-Methods and Regression.", br(), "For further information visit our", a("Wiki", 
+                        href="https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki"),"!"),
               plotlyOutput("scatterplot_plotly", height="600px")),
             
-            tabPanel("2D Density Plot", plotlyOutput("hexbinplotly", height="600px")),
-            tabPanel("Dataset", DT::dataTableOutput("datatable")), #, verbatimTextOutput("summary")),
-          
+            tabPanel("Dataset", DT::dataTableOutput("datatable"), verbatimTextOutput("summary")),
+            
             tabPanel("Barplots", p("Distribution of the", strong("SEX"),"across the ages and", strong("EINSCODE"),":"),
-                     plotOutput("barplot_sex", height="500px")), # plotOutput("barplot_station", height="300px")),
+                     plotOutput("barplot_sex", height="500px"), plotOutput("barplot_station", height="300px")),
           
+            tabPanel("2D Density Plot", plotlyOutput("hexbinplotly", height="600px")),
+            
             tabPanel("Statistics", 
               p("QQ-Plots to analyze for normal distribution and a density plot to check 
               if the data is normally or log-normally distributed with the help of the Bowley Skewness (see Frank Klawonn et al. (2020)):"),
@@ -135,7 +133,7 @@ ui <- fluidPage(
       sidebarLayout(
         sidebarPanel(width = 3,
                      
-          selectInput("window_select", "Outlierdetection:", choices = list("All" = "all",
+          selectInput("window_select", "Show outlierdetection in plot:", choices = list("All" = "all",
                                                                            "None" = "none",
                                                                            "Tukey" = "tukey")),
           selectInput("method_window", "Calculation-method for the Reference Intervals:", 
@@ -160,7 +158,7 @@ ui <- fluidPage(
                     
             tabPanel("Regular",
               p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
-              use the nonparametric if it is a Lognormal-distribution."), 
+              use the nonparametric if it is a Lognormal-distribution."), br(),  br(),
               "This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
               so it is only recommended for small changes through the age. Available for the calculation for the reference intervals a 
               nonparametric, parametric and the Hoffmann-Method (Without visual recognition of the linear range, it is important to know whether 
@@ -454,11 +452,7 @@ ui <- fluidPage(
        )
      )
    )
- )#,
-    
-    ################################### Information about the App #################################
-    #tabPanel("About", icon = icon("info"), includeHTML("www/about.html"))
-  )
+ ))
 )
 
 ####################################### SERVER ####################################################
