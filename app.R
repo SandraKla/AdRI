@@ -1,10 +1,11 @@
 ####################################### WELCOME TO THE SHINY APP AdRI #############################
-####################################### from Sandra K. (2022) #####################################
+####################################### from Sandra K. (2023) #####################################
 ###################################################################################################
 
 ####################################### Scripts ###################################################
 
 source("R/analysis.R")
+source("R/reflim.R")
 source("R/window.R")
 
 ####################################### Libraries #################################################
@@ -61,163 +62,227 @@ ui <- fluidPage(
   theme = "style.css",  
   navbarPage("Age-dependent Reference Intervals (AdRI)", 
   
-    ################################### Overview ##################################################
+  ################################### Overview ##################################################
     
-    tabPanel("Analysis", icon = icon("database"),
-             
-      sidebarLayout( 
-        sidebarPanel(width = 3,
+  tabPanel("Analysis", icon = icon("database"),
+    sidebarLayout( 
+    ### Sidebar - Analysis ###
+      sidebarPanel(width = 3,
+                   
+        selectInput("dataset", "Select preinstalled dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
           
-          selectInput("dataset", "Select already preinstalled Dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
+        fileInput("dataset_file", "Upload own dataset:", accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")), hr(),
           
-          fileInput("dataset_file", "Upload own dataset:", accept = c(
-            "text/csv",
-            "text/comma-separated-values,text/plain",
-            ".csv")), hr(),
+        selectInput("days_or_years", "Unit for the Age:", choices = list("Year" = "age", "Day "= "age_days")), 
           
-          selectInput("days_or_years", "Age-Unit:", choices = list("Year" = "age", "Day "= "age_days")), 
+        conditionalPanel(condition = "input.days_or_years == 'age'", 
+                         sliderInput("age_end", "Select age-range:", min = 0 , max = 100, value = c(0,18))),
           
-          conditionalPanel(
-            condition = "input.days_or_years == 'age'", sliderInput("age_end", "Select age-range:", 
-                                                                         min = 0 , max = 100, value = c(0,18))),
-          conditionalPanel(
-            condition = "input.days_or_years == 'age_days'", numericInput("age_input_min", "Select age-range from:", 0, min = 0, max = 100*365)), 
-          conditionalPanel(
-            condition = "input.days_or_years == 'age_days'", numericInput("age_input", "to:", 100, min = 1, max = 100*365)), hr(),
+        conditionalPanel(condition = "input.days_or_years == 'age_days'", 
+                         numericInput("age_input_min", "Select age-range from:", 0, min = 0, max = 100*365)), 
+      
+        conditionalPanel(condition = "input.days_or_years == 'age_days'", 
+                         numericInput("age_input", "to:", 100, min = 1, max = 100*365)), hr(),
           
-          selectInput("sex", "Select the Sex:", choices = list("Male + Female" = "t", "Male" = "m", "Female" = "w")), 
-          textInput("text_unit", "Unit of the Analyte:", value = "Unit"), hr(),
+        selectInput("sex", "Select the Sex:", choices = list("Male + Female" = "t", "Male" = "m", "Female" = "w")), 
+          
+        textInput("text_unit", "Unit of the Analyte:", value = "Unit"), hr(),
+          
+        helpText("Outlierdetection:"), 
+      
+        checkboxInput("unique", "First Unique values", value = TRUE),
+      
+        checkboxInput("checkboxtukey", "Modified Tukey-method coupled with a Decision Tree", value = FALSE),
+      
+        helpText("Hyperparameter for the Decision Tree (minbucket): Minimum number of observations in a leaf node (age group).
+                 According to CLSI 120 patients must be available for Reference Intervals (RI)!"),
+      
+        selectInput("tree_minsplit", "Setting for the Decision Tree:", 
+                    choices = list("Each group with > 120 patients (for RI according to CLSI)" = 360,
+                                   "> 40 patients" = 120, 
+                                   "> 20 patients" = 60))),
+      
+    ### MainPanel - Analysis ###              
+    mainPanel(width = 9,
+      tabsetPanel(
+        tabPanel("Overview", icon = icon("home"),
+                 
+          p(strong("Shiny App for calculating Age-dependent Reference Intervals!"), br(), br(),
+          "This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods: 
+          LMS, GAMLSS, Window-Methods and Regression.", br(), "For further information visit our", 
+          a("Wiki", href="https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki"),"!"), 
+          plotlyOutput("scatterplot_plotly", height="700px")),
+            
+        tabPanel("Dataset", 
+                 
+          DT::dataTableOutput("datatable"), verbatimTextOutput("summary")),
+            
+        tabPanel("Barplots", 
+                 
+          p("Distribution of the", strong("SEX"),"across the ages and", strong("Stations (EINSCODE)"),":"),
+          plotOutput("barplot_sex", height="500px"), 
+          plotOutput("barplot_station", height="300px")),
+          
+        #tabPanel("2D Density Plot", plotlyOutput("hexbinplotly", height="600px")),
+            
+        tabPanel("Statistics", 
+          
+          p("QQ-Plots (Quantile-Quantile plot)"), 
+          plotOutput("qqplot", height="400px"),
+          p("Density plot to check if the data is normally or log-normally distributed with the help of the Bowley Skewness 
+            (see Frank Klawonn et al. (2020)):"),
+          plotOutput("lognorm", height="375px"))
+        )
+    ))),
+  
+  ################################### Window-Methods ############################################
 
-          helpText("Outlierdetection:"), checkboxInput("unique", "First Unique values", value = TRUE),
-          checkboxInput("checkboxtukey", "Modified Tukey-method coupled with a Decision Tree", value = FALSE),
-          
-          helpText("Hyperparameter for the Decision Tree (minbucket): Minimum number of observations in a leaf node (age group).
-                   According to CLSI 120 patients must be available for Reference Intervals (RI)!"),
-          selectInput("tree_minsplit", "Setting for the Decision Tree:", 
-                      choices = list("Each group with > 120 patients (for RI according to CLSI)" = 360,
-                                     "> 40 patients" = 120,
-                                     "> 20 patients" = 60)),
-          checkboxInput("fast", "Load Plotly fast (only in Browser)", value = FALSE)),
-                          
+  navbarMenu("Window-method", icon = icon("align-center"),
+      
+    ##### Regular Window-Method #####        
+    tabPanel("Regular Window-Method",
+      sidebarLayout(
+        ### Sidebar - Regular Window ###
+        sidebarPanel(width = 3,
+                     
+          selectInput("window_select_regular", "Show outlierdetection in plot:", choices = list("All" = "all",
+                                                                                                "None" = "none",
+                                                                                                "Tukey" = "tukey")),
+          selectInput("method_window_regular", "Calculation-method for the Reference Intervals:", 
+                      choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
+          sliderInput("window_age", "Regular Window for the Subgroups in years:", 1, 10, 10),
+          conditionalPanel(condition = "input.window_age <= 1", 
+                           numericInput("window_agedays", "Regular Window for the Subgroups in days:", 365, min = 1, max = 100*365))),
+              
+        ### MainPanel - Regular Window ###
         mainPanel(width = 9,
-          
           tabsetPanel(
-            
-            tabPanel("Overview", icon = icon("home"),
-              p(strong("Shiny App for calculating Age-dependent Reference Intervals!"), br(), br(),
-                       "This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods: 
-                        LMS, GAMLSS, Window-Methods and Regression.", br(), "For further information visit our", a("Wiki", 
-                        href="https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki"),"!"),
-              plotlyOutput("scatterplot_plotly", height="600px")),
-            
-            tabPanel("Dataset", DT::dataTableOutput("datatable"), verbatimTextOutput("summary")),
-            
-            tabPanel("Barplots", p("Distribution of the", strong("SEX"),"across the ages and", strong("EINSCODE"),":"),
-                     plotOutput("barplot_sex", height="500px"), plotOutput("barplot_station", height="300px")),
-          
-            tabPanel("2D Density Plot", plotlyOutput("hexbinplotly", height="600px")),
-            
-            tabPanel("Statistics", 
-              p("QQ-Plots to analyze for normal distribution and a density plot to check 
-              if the data is normally or log-normally distributed with the help of the Bowley Skewness (see Frank Klawonn et al. (2020)):"),
-              plotOutput("qqplot", height="400px"), plotOutput("lognorm", height="375px"))
+            tabPanel("Plot",
+                           
+              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
+                       use the nonparametric if it is a Lognormal-distribution."), br(),  br(),
+                       "This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
+                       so it is only recommended for small changes through the age. Available for the calculation for the reference intervals a 
+                       nonparametric, parametric and the Hoffmann-Method (Without visual recognition of the linear range, it is important to know whether 
+                       there is a mixed distribution and to use the modified tukey before!) for the calculation from the reference intervals and 
+                       the modified Tukey-Method for Outlierdetection."),
+              plotOutput("window", height="600px")),
+
+            tabPanel("Table", icon = icon("table"), 
+                     
+                     downloadButton("Download_window_data_all_outlier", "Table with Reference intervals without Outlierdetection"),
+                     DT::dataTableOutput("windowtable_o"), 
+                     downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with modified Tukey-method"),
+                     DT::dataTableOutput("windowtable_t"))
           )
         )
       )
     ),
-  
-    ################################### Window-Methods ############################################
-
-    tabPanel("Window-method", icon = icon("align-center"),
-
+    
+    ##### LIS Window-Method #####      
+    tabPanel("LIS Window-method",
       sidebarLayout(
+        ### Sidebar - LIS Window-Method ###
         sidebarPanel(width = 3,
-                     
-          selectInput("window_select", "Show outlierdetection in plot:", choices = list("All" = "all",
-                                                                           "None" = "none",
-                                                                           "Tukey" = "tukey")),
-          selectInput("method_window", "Calculation-method for the Reference Intervals:", 
-                      choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")), hr(),
-          
-          helpText("Settings for the Regular Window:"), sliderInput("window_age", "Regular Window for the Subgroups in years:", 1, 18, 10),
-          conditionalPanel(
-            condition = "input.window_age <= 1",
-            numericInput("window_agedays", "Regular Window for the Subgroups in days:", 365, min = 1, max = 100*365)),
-          
-          hr(), helpText("Settings for the Laboratory information system (LIS):"), 
-          selectInput("lis_data", "Select Dataset with the age groups from the LIS:", choice = list.files(pattern = ".txt", recursive = TRUE)),
-          
-          fileInput("lis_data_file", "Upload TXT File:", accept = ".txt"), 
-          
-          hr(), helpText("Settings for the Sliding Window-Method:"), numericInput("sliding_width", "Sliding Window-Method:", 500, min = 10, max = 10000),
-          numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500), hr(), htmlOutput("helptext_window")
-        ),
-        
+
+          selectInput("window_select_lis", "Show outlierdetection in plot:", choices = list("All" = "all",
+                                                                                            "None" = "none",
+                                                                                            "Tukey" = "tukey")),
+          selectInput("method_window_lis", "Calculation-method for the Reference Intervals:", 
+                      choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
+          selectInput("lis_data", "Select preinstalled dataset:", choice = list.files(pattern = ".txt", recursive = TRUE)),
+          fileInput("lis_data_file", "Upload TXT File:", accept = ".txt")),
+            
+        ### MainPanel - LIS Window-Method ###   
         mainPanel(width = 9,
           tabsetPanel(
-                    
-            tabPanel("Regular",
+            tabPanel("Plot",
+                         
               p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
-              use the nonparametric if it is a Lognormal-distribution."), br(),  br(),
-              "This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
-              so it is only recommended for small changes through the age. Available for the calculation for the reference intervals a 
-              nonparametric, parametric and the Hoffmann-Method (Without visual recognition of the linear range, it is important to know whether 
-              there is a mixed distribution and to use the modified tukey before!) for the calculation from the reference intervals and 
-              the modified Tukey-Method for Outlierdetection."),
-              plotOutput("window", height="600px")),
-
-            tabPanel("", icon = icon("table"), 
-              downloadButton("Download_window_data_all_outlier", "Table with Reference intervals without Outlierdetection"),
-              DT::dataTableOutput("windowtable_o"), 
-              downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with modified Tukey-method"),
-              DT::dataTableOutput("windowtable_t")),
-
-            tabPanel("Decision Tree",
-
-              p("Decision Trees are used for machine learning. It can be used for classification (supervised learning), but also
-              for clustering (unsupervised learning). Here it used to cluster the data into subgroups with similar values.
-              The Decision is from the package rpart and is visualized with rpart.plot. The subgroups according to the Decision Tree
-              are used to calculate the reference intervals (nonparametric, parametric or with the Hoffmann-Method)."),
-
-              plotOutput("tree_window", height = "600px"), hr(), p("Used Decision Tree and Analysis for each subgroup for 
-              Normal- or Lognormaldistribution with the Bowley-Skewness (see Frank Klawonn et al. (2020)):"),
-              downloadButton("download_tree", "Decision Tree"),
-              plotOutput("tree_rpart", height = "500px"),
-              plotOutput("tree_window_analysis")),
-
-            tabPanel("", icon = icon("table"), 
-              downloadButton("Download_window_data_split_outlier","Table with Reference Intervals without Outlierdetection"),
-              DT::dataTableOutput("tree_windowtable_o"),
-              downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with modified Tukey-method"), 
-              DT::dataTableOutput("tree_windowtable_t")),
-
-            tabPanel("Comparison", icon = icon("balance-scale"), p("Compare the Regular Window-Method and the Window-Method coupled to
-                                                                   the Decision Tree with R-Squared (R2), Mean Absolute Error (MAE), 
-                                                                   Mean squared error (MSE), Root mean squared error (RMSE). Best models to each
-                                                                   each metric are marked."),
-                     downloadButton("Download_rsquared_table", "Table with Metrics"),
-                     DT::dataTableOutput("rsquared_table")),
-            
-            tabPanel("Laboratory information system (LIS)",
-                     
-              p("Load a TXT file on the left with the age groups from your laboratory information system (LIS)
-                and the Reference Intervals will be calculated."),
+              use the nonparametric if it is a Lognormal-distribution"), br(),br(), "Load a TXT file on the left with the age groups from your laboratory information system (LIS)
+              and the Reference Intervals will be calculated."),
+              
               plotOutput("lis_window", height = "600px")),
-            
-            tabPanel("", icon = icon("table"), 
+                           
+            tabPanel("Table", icon = icon("table"), 
+                     
               downloadButton("Download_lis_table_o","Table with Reference Intervals without Outlierdetection"),
               DT::dataTableOutput("lis_table_o"),
               downloadButton("Download_lis_table_t","Table with Reference Intervals without Outlierdetection"),
-              DT::dataTableOutput("lis_table_t")),
+              DT::dataTableOutput("lis_table_t")))
+        )
+      )   
+    ),
+    
+    ##### Decision Tree Method #####                       
+    tabPanel("Decision Tree", icon = icon("tree"),
+      sidebarLayout(
+        ### Sidebar - Decision Tree Method ###
+        sidebarPanel(width = 3,
             
-            tabPanel("Sliding Window",
-
-              p("Sliding Window-method goes through the data with a window calculates the mean and reference intervals and goes then
+          selectInput("window_select_tree", "Show outlierdetection in plot:", choices = list("All" = "all",
+                                                                                             "None" = "none",
+                                                                                             "Tukey" = "tukey")),
+          selectInput("method_window_tree", "Calculation-method for the Reference Intervals:", 
+                      choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot"))),
+      
+        ### MainPanel - Decision Tree Method ###
+        mainPanel(width = 9,
+          tabsetPanel(
+            tabPanel("Plot",
+                     
+              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
+                use the nonparametric if it is a Lognormal-distribution"), br(),br(), "Decision Trees are used for machine learning. It can be used for classification (supervised learning), but also
+                for clustering (unsupervised learning). Here it used to cluster the data into subgroups with similar values.
+                The Decision is from the package rpart and is visualized with rpart.plot. The subgroups according to the Decision Tree
+                are used to calculate the reference intervals (nonparametric, parametric or with the Hoffmann-Method)."),
+              plotOutput("tree_window", height = "600px")),
+              
+            tabPanel("Decision Tree", icon = icon("tree"),
+                     
+              p("Used Decision Tree and Analysis for each subgroup for Normal- or Lognormaldistribution with the 
+                Bowley-Skewness (see Frank Klawonn et al. (2020)):"),
+                downloadButton("download_tree", "Decision Tree"),
+              plotOutput("tree_rpart", height = "500px"),
+              plotOutput("tree_window_analysis")),
+                           
+            tabPanel("Table", icon = icon("table"), 
+                     
+              downloadButton("Download_window_data_split_outlier","Table with Reference Intervals without Outlierdetection"),
+              DT::dataTableOutput("tree_windowtable_o"),
+              downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with modified Tukey-method"), 
+              DT::dataTableOutput("tree_windowtable_t")))
+        )
+      )
+    ),
+    
+    tabPanel("Sliding Window",
+      sidebarLayout(
+        ### Sidebar - Sliding Window
+          sidebarPanel(width = 3,
+                
+            selectInput("window_select_sliding", "Show outlierdetection in plot:", choices = list("All" = "all",
+                                                                                                  "None" = "none",
+                                                                                                  "Tukey" = "tukey")),
+            selectInput("method_window_sliding", "Calculation-method for the Reference Intervals:", 
+                        choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
+                            
+            numericInput("sliding_width", "Sliding Window-Method:", 500, min = 10, max = 10000),
+            numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500)),
+             
+        ### MainPanel - Sliding Window
+        mainPanel(width = 9,
+          tabsetPanel(
+            tabPanel("Plot",
+                  
+              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
+              use the nonparametric if it is a Lognormal-distribution"), br(),br(), "Sliding Window-method goes through the data with a window calculates the mean and reference intervals and goes then
               with a window-steps further through the data to the end. Only nonparametric method available for the reference intervals
               This method is not yet validated, caution when using it for meaningful reference intervals."), 
               plotOutput("slidingwindow", height = "600px")),
-
-            tabPanel("", icon = icon("table"), 
+                       
+            tabPanel("Table", icon = icon("table"), 
+                     
               downloadButton("Download_sliding", "Table with Reference Intervals without Outlierdetection"),
               DT::dataTableOutput("sliding"),
               downloadButton("Download_sliding_tukey", "Table with Reference Intervals with modified Tukey-method"), 
@@ -227,43 +292,56 @@ ui <- fluidPage(
       )
     ),
 
+    ##### Comparison #####   
+    tabPanel("Comparison", icon = icon("balance-scale"),
+             
+      p("Compare the Regular Window-Method and the Window-Method coupled to
+      the Decision Tree with R-Squared (R2), Mean Absolute Error (MAE), 
+      Mean squared error (MSE), Root mean squared error (RMSE). Best models to each each metric are marked."),
+           
+      downloadButton("Download_rsquared_table", "Table with Metrics"), DT::dataTableOutput("rsquared_table"))),
+  
     ############################## Quant sheets ####################################
     
     # tabPanel("Quant Sheets", icon = icon("table"), plotOutput("quantsheets", height = "600px")),
     
     ############################## Regression ######################################
     
-    tabPanel("Regression", icon = icon("square-root-alt"),
-             
-      tabsetPanel( 
-        tabPanel("Overview", p("Regression can be used for normally distributed data to get the 95% prediction interval. The blue
-                               line show the 95% Confindence interval from the regression in black and the red the prediction interval (2.5% and 97.5%)."), 
-                 plotOutput("regression", height="800px")),
-              
-        tabPanel("", icon = icon("table"),
-                 DT::dataTableOutput("regression_linear"), 
-                 DT::dataTableOutput("regression_poly10"), 
-                 DT::dataTableOutput("regression_poly2"), 
-                 DT::dataTableOutput("regression_poly3")),
+    navbarMenu("Regression", icon = icon("chart-line"),
+               
+      tabPanel("Overview",icon = icon("home"),
         
-        tabPanel("Comparison", icon = icon("balance-scale"),
-                 p("Compare the Regressions with Akaike Information Criterion (AIC), 
-                 Bayesian Information Criterion (BIC) / Schwatz Bayesian Criterion (SBC),
-                 R-Squared (R2), Mean absolute Error (MAE), Mean squared error (MSE), 
-                 Root mean squared error (RMSE). Best model to each metric is marked"),
-                 downloadButton("downloadData_regression_table", "Table with Metrics"),
-                 DT::dataTableOutput("regression_table")),
+        p("Regression can be used for normally distributed data to get the 95% prediction interval. The blue
+        line show the 95% Confindence interval from the regression in black and the red the prediction interval (2.5% and 97.5%).
+        This method is not yet validated, caution when using it for meaningful reference intervals."), 
+        plotOutput("regression", height="800px")),
+              
+      tabPanel("Tables", icon = icon("table"),
+               
+        DT::dataTableOutput("regression_linear"), 
+        DT::dataTableOutput("regression_poly10"), 
+        DT::dataTableOutput("regression_poly2"), 
+        DT::dataTableOutput("regression_poly3")),
+        
+      tabPanel("Comparison", icon = icon("balance-scale"),
+               
+        p("Compare the Regressions with Akaike Information Criterion (AIC), 
+        Bayesian Information Criterion (BIC) / Schwatz Bayesian Criterion (SBC),
+        R-Squared (R2), Mean absolute Error (MAE), Mean squared error (MSE), 
+        Root mean squared error (RMSE). Best model to each metric is marked"),
+        downloadButton("downloadData_regression_table", "Table with Metrics"),
+        DT::dataTableOutput("regression_table")),
          
-        tabPanel("Analysis",
-          p("Linear Regression:"), 
-          plotOutput("regression_stats_linear", height = "500px"),
-          p("Polynomials (Degree 10):"),
-          plotOutput("regression_stats_poly10", height = "500px"),
-          p("Polynomials (Degree 3):"), 
-          plotOutput("regression_stats_poly3", height = "500px"),
-          p("Polynomials (Degree 4):"), 
-          plotOutput("regression_stats_poly4", height = "500px")
-        )
+      tabPanel("Analysis",
+               
+        p("Linear Regression:"), 
+        plotOutput("regression_stats_linear", height = "500px"),
+        p("Polynomials (Degree 10):"),
+        plotOutput("regression_stats_poly10", height = "500px"),
+        p("Polynomials (Degree 3):"), 
+        plotOutput("regression_stats_poly3", height = "500px"),
+        p("Polynomials (Degree 4):"), 
+        plotOutput("regression_stats_poly4", height = "500px")
       )
     ),
     
@@ -272,77 +350,81 @@ ui <- fluidPage(
     navbarMenu("GAMLSS", icon = icon("chart-line"),
     
       tabPanel("1. Models",
-             
-      sidebarLayout( 
-        sidebarPanel(width = 3,
+        sidebarLayout( 
+          ### Sidebar - GAMLSS ###
+          sidebarPanel(width = 3,
             
-          selectInput("method", "GAMLSS Algorithm:", choices = list("Rigby and Stasinopoulos algorithm (RS)" = "RS",
-                                                                    "Cole and Green algorithm (CG)" = "CG")),
-          sliderInput("epochs", "Number of Epochs:", 5 , 250, 30),
-          selectInput("distribtion_gamlss", "Distribution:", choices = list("Normal distribution" = "NO", 
-                                                                            "LOG-Normal distribution" = "LOGNO",
-                                                               "Box-Cox" = c("Box-Cole Green Distrubtion" = "BCCG", 
-                                                                             "Box-Cole Green Distrubtion (orginal)" = "BCCGo",
-                                                                             "Box-Cole Green Exp. Distrubtion" = "BCPE",
-                                                                             "Box-Cole Green Exp. Distrubtion (orginal)" = "BCPEo", 
-                                                                             "Box-Cole Green T-Distribution" = "BCT", 
-                                                                             "Box-Cole Green T-Distribution (orginal)" = "BCTo"))),
-          checkboxInput("checkbox", "Use the distribution from the LMS-Method", value = FALSE),
-          actionButton("button_gamlss", "Make GAMLSS-Models", icon("calculator")),
-          actionButton("button_lms", "Make LMS-Model", icon("calculator")), 
-          htmlOutput("buttons_gamlss"), htmlOutput("buttons_lms"), 
-          hr(), htmlOutput("helptext_gamlss")
-        ),
+            selectInput("method", "GAMLSS Algorithm:", choices = list("Rigby and Stasinopoulos algorithm (RS)" = "RS",
+                                                                      "Cole and Green algorithm (CG)" = "CG")),
+            sliderInput("epochs", "Number of Epochs:", 5 , 250, 30),
+            selectInput("distribtion_gamlss", "Distribution:", choices = list("Normal distribution" = "NO", 
+                                                                              "Log-Normal distribution" = "LOGNO",
+                                                                "Box-Cox" = c("Box-Cole Green Distrubtion" = "BCCG", 
+                                                                              "Box-Cole Green Distrubtion (orginal)" = "BCCGo",
+                                                                              "Box-Cole Green Exp. Distrubtion" = "BCPE",
+                                                                              "Box-Cole Green Exp. Distrubtion (orginal)" = "BCPEo", 
+                                                                              "Box-Cole Green T-Distribution" = "BCT", 
+                                                                              "Box-Cole Green T-Distribution (orginal)" = "BCTo"))),
+            checkboxInput("checkbox", "Distribution from the LMS-Method", value = FALSE),
+            actionButton("button_gamlss", "Make GAMLSS-Models", icon("calculator")),
+            actionButton("button_lms", "Make LMS-Model", icon("calculator")), 
+            htmlOutput("buttons_gamlss"), htmlOutput("buttons_lms"), 
+            hr(), htmlOutput("helptext_gamlss")
+          ),
         
+        ### MainPanel - GAMLSS ###        
         mainPanel(width = 9, 
                   
           tabsetPanel( 
             tabPanel("Overview", icon = icon("home"), includeHTML("www/gamlss.html"), 
+                     
               downloadButton("download_lms", "LMS-Plot in .EPS"),
               downloadButton("download_lms_jpeg", "LMS-Plot in .JPEG"),
               downloadButton("download_gamlss", "GAMLSS-Plot in .EPS"),
               downloadButton("download_gamlss_jpeg", "GAMLSS-Plot in .JPEG")),
             
-            tabPanel("GAMLSS with Splines and Polynomials", plotOutput("gamlss_models", height="1000px"), verbatimTextOutput("gamlss_text")), 
+            tabPanel("GAMLSS with Splines and Polynomials", 
+              
+              plotOutput("gamlss_models", height="1000px"), verbatimTextOutput("gamlss_text")), 
             
             tabPanel("GAMLSS with Splines and Polynomial - Analysis", 
-                     p("GAMLSS with P-Splines:"), plotOutput("gamlss_term_pb"), plotOutput("gamlss_fitted_pb_"),
-                     p("GAMLSS with Cubic-Splines:"),plotOutput("gamlss_term_cs"), plotOutput("gamlss_fitted_cs_"),
-                     p("GAMLSS with Polynomial Degree 3:"), plotOutput("gamlss_term_poly"), plotOutput("gamlss_fitted_poly_"),
-                     p("GAMLSS with Polynomial Degree 4:"), plotOutput("gamlss_term_poly4"), plotOutput("gamlss_fitted_poly4_"),
-                     p("Wormplots for GAMLSS with the P-Splines, Cubic Splines and Polynomial Degree 3 and 4:"), 
-                     plotOutput("wormplots", height="500px")),
+                    
+              p("GAMLSS with P-Splines:"), plotOutput("gamlss_term_pb"), plotOutput("gamlss_fitted_pb_"),
+              p("GAMLSS with Cubic-Splines:"),plotOutput("gamlss_term_cs"), plotOutput("gamlss_fitted_cs_"),
+              p("GAMLSS with Polynomial Degree 3:"), plotOutput("gamlss_term_poly"), plotOutput("gamlss_fitted_poly_"),
+              p("GAMLSS with Polynomial Degree 4:"), plotOutput("gamlss_term_poly4"), plotOutput("gamlss_fitted_poly4_"),
+              p("Wormplots for GAMLSS with the P-Splines, Cubic Splines and Polynomial Degree 3 and 4:"), 
+              plotOutput("wormplots", height="500px")),
             
-          tabPanel("GAMLSS with Neural Network", 
+            tabPanel("GAMLSS with Neural Network", 
                    
-                   plotOutput("gamlss_net", height="500px"), verbatimTextOutput("net_text"), p("Neural Network - Analysis:"), 
-                   # Plot neural network with term.plot(nn_)
-                   plotOutput("network_term"), plotOutput("network_fitted", height="500px"), plotOutput("nn_wormplots")),
+              plotOutput("gamlss_net", height="500px"), verbatimTextOutput("net_text"), p("Neural Network - Analysis:"), 
+              # Plot neural network with term.plot(nn_)
+              plotOutput("network_term"), plotOutput("network_fitted", height="500px"), plotOutput("nn_wormplots")),
           
-          tabPanel("GAMLSS with Decision Tree", 
+            tabPanel("GAMLSS with Decision Tree", 
                    
-                   plotOutput("gamlss_tree", height="500px"), verbatimTextOutput("tree_text"), p("Decision Tree - Analysis:"), 
-                   plotOutput("rpart_tree"),  plotOutput("tree_term"), plotOutput("tree_fitted", height="500px"), 
-                   plotOutput("tr_wormplots")),
+              plotOutput("gamlss_tree", height="500px"), verbatimTextOutput("tree_text"), p("Decision Tree - Analysis:"), 
+              plotOutput("rpart_tree"),  plotOutput("tree_term"), plotOutput("tree_fitted", height="500px"), 
+              plotOutput("tr_wormplots")),
           
-          tabPanel("LMS", 
+            tabPanel("LMS", 
                   
-                   plotOutput("lms", height="500px"), p("LMS - Analysis:"), verbatimTextOutput("lms_text"), 
-                   plotOutput("lms_plot"), plotOutput("lms_fitted", height = "500px"), plotOutput("lms_wormplots"))
-            )
+              plotOutput("lms", height="500px"), p("LMS - Analysis:"), verbatimTextOutput("lms_text"), 
+              plotOutput("lms_plot"), plotOutput("lms_fitted", height = "500px"), plotOutput("lms_wormplots"))
           )
+        )
         )
       ),
       
     ##################################### GAMLSS - Comparison #####################################
       
-      tabPanel("2. Comparison",
+      tabPanel("2. Comparison", icon = icon("balance-scale"),
                
         p("Models from the package gamlss can be compared visually or with the Akaike Information Criterion (AIC), 
-        Bayesian Information Criterion (BIC) / Schwatz Bayesian Criterion (SBC), Generalized Information Criterion (GAIC) 
+        Bayesian Information Criterion (BIC), Generalized Information Criterion (GAIC) 
         or Pseudo R-Squared (R^2). The model with the smallest value for AIC, BIC and GAIC is the best model for the data.
-        The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored. The models 
-        without high residuals also can be compared here, when they are calculated."), 
+        The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored."), 
                
         downloadButton("downloadData_comparison", "Comparison"),
         DT::dataTableOutput("table_compare"),
@@ -351,8 +433,8 @@ ui <- fluidPage(
     ################################### GAMLSS - Prediction #######################################
     
     tabPanel("3. Predict the Reference Intervals", 
-             
-      sidebarLayout(      
+      sidebarLayout(    
+        ### Sidebar - GAMLSS ###
         sidebarPanel(width = 3,
                      
           numericInput("prediction_age", "Prediction of the Reference Intervals for age [Days]:", 0, min = 0, max = 12*365),
@@ -370,89 +452,94 @@ ui <- fluidPage(
           numericInput("deviation", " Deviation in %:", 10, min = 1, max = 100), hr(),
           htmlOutput("helptext_prediction")),
                
+        ### MainPanel - GAMLSS ###
         mainPanel(width = 9,
-                  
           tabsetPanel( 
             tabPanel("Predicted Reference Intervals",
                      
-                     plotOutput("gamlss_prediction", height = "1200px"), 
-                     plotOutput("gamlss_prediction_lms_plot", height = "400px")),
+              plotOutput("gamlss_prediction", height = "1200px"), 
+              plotOutput("gamlss_prediction_lms_plot", height = "400px")),
            
             tabPanel("", icon = icon("table"), 
-                     downloadButton("Download_pb_ri", "GAMLSS with P-Splines"),
-                     DT::dataTableOutput("gamlss_table_pb"), 
-                     downloadButton("Download_cs_ri", "GAMLSS with Cubic Splines"),
-                     DT::dataTableOutput("gamlss_table_cs"),
-                     downloadButton("Download_poly_ri", "GAMLSS with Polynomial Regerssion with Degree 3"),
-                     DT::dataTableOutput("gamlss_table_poly"),
-                     downloadButton("Download_poly4_ri", "GAMLSS with Polynomial Regerssion with Degree 4"),
-                     DT::dataTableOutput("gamlss_table_poly4"),
-                     downloadButton("Download_nn_ri", "GAMLSS with Neural Network"),
-                     DT::dataTableOutput("gamlss_table_nn"),
-                     downloadButton("Download_tr_ri", "GAMLSS with Decision Tree"),
-                     DT::dataTableOutput("gamlss_table_tr"), 
-                     downloadButton("Download_lms_ri", "LMS Model"),
-                     DT::dataTableOutput("gamlss_table_lms")),
+                     
+              downloadButton("Download_pb_ri", "GAMLSS with P-Splines"),
+              DT::dataTableOutput("gamlss_table_pb"), 
+              downloadButton("Download_cs_ri", "GAMLSS with Cubic Splines"),
+              DT::dataTableOutput("gamlss_table_cs"),
+              downloadButton("Download_poly_ri", "GAMLSS with Polynomial Regerssion with Degree 3"),
+              DT::dataTableOutput("gamlss_table_poly"),
+              downloadButton("Download_poly4_ri", "GAMLSS with Polynomial Regerssion with Degree 4"),
+              DT::dataTableOutput("gamlss_table_poly4"),
+              downloadButton("Download_nn_ri", "GAMLSS with Neural Network"),
+              DT::dataTableOutput("gamlss_table_nn"),
+              downloadButton("Download_tr_ri", "GAMLSS with Decision Tree"),
+              DT::dataTableOutput("gamlss_table_tr"), 
+              downloadButton("Download_lms_ri", "LMS Model"),
+              DT::dataTableOutput("gamlss_table_lms")),
             
             tabPanel("Discrete Reference Intervals", plotOutput("gamlss_plot", height = "500px"),
-                     downloadButton("Download_deviation_gamlss", "Table with discrete Reference Intervals"),
-                     DT::dataTableOutput("gamlss_split"))
-            )
+                     
+              downloadButton("Download_deviation_gamlss", "Table with discrete Reference Intervals"),
+              DT::dataTableOutput("gamlss_split"))
           )
         )
-      ),
+      )
+    ),
     
     ############################### GAMLSS - Residuals ##############################
     
     tabPanel("4. Residuals", 
-             
-      sidebarLayout(      
-      sidebarPanel(width = 3,
+      sidebarLayout(  
+        ### Sidebar - GAMLSS ###
+        sidebarPanel(width = 3,
                             
-        helpText("Improvement from the GAMLSS models by deleting high Residuals:"),
-        numericInput("error", "Value for the maximal Residuals:", 1.5, min = 0.75, max = 10),
-        actionButton("button_residuals", "Delete high Residuals and refit the GAMLSS", icon("calculator")), hr(), 
-        htmlOutput("helptext_residuals")),
-               
-      mainPanel(width = 9,
-           
-        tabsetPanel(               
-          tabPanel("Overview", 
-            p("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
-            outliers from the model and refit the model. High residuals values are in red, low in blue", 
-            strong("This must not be equal to the real outliers of the data!"),"."),
-            plotOutput("outlier", height="900px")),
+          helpText("Improvement from the GAMLSS models by deleting high residuals:"),
+          numericInput("error", "Value for the maximal Residuals:", 1.5, min = 0.75, max = 10),
+          actionButton("button_residuals", "Delete high Residuals and refit the GAMLSS", icon("calculator")), hr(), 
+          htmlOutput("helptext_residuals")),
+          
+        ### MainPanel - GAMLSS ###      
+        mainPanel(width = 9,
+          tabsetPanel(               
+            tabPanel("Overview", 
+                     
+              p("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
+              outliers from the model and refit the model. High residuals values are in red, low in blue", 
+              strong("This must not be equal to the real outliers of the data!"),"."),
+              plotOutput("outlier", height="900px")),
                              
-        tabPanel("Refit GAMLSS models", 
-            plotOutput("gamlss_outlier", height="900px"), 
+            tabPanel("Refit GAMLSS models", 
+                     
+              plotOutput("gamlss_outlier", height="900px"), 
                                     
-            p("GAMLSS with P-Splines"), plotOutput("outlier_term_pb"),
-            p("GAMLSS with Cubic Splines"), plotOutput("outlier_term_cs"),
-            p("GAMLSS with Polynomial (Degree 3)"), plotOutput("outlier_term_poly"),
-            p("GAMLSS with Polynomial (Degree 4)"), plotOutput("outlier_term_poly4"),
-            p("GAMLSS with Neural Network"), plotOutput("outlier_term_nn"), 
-            p("GAMLSS with Decision Tree"), plotOutput("outlier_term_tr")),
+              p("GAMLSS with P-Splines"), plotOutput("outlier_term_pb"),
+              p("GAMLSS with Cubic Splines"), plotOutput("outlier_term_cs"),
+              p("GAMLSS with Polynomial (Degree 3)"), plotOutput("outlier_term_poly"),
+              p("GAMLSS with Polynomial (Degree 4)"), plotOutput("outlier_term_poly4"),
+              p("GAMLSS with Neural Network"), plotOutput("outlier_term_nn"), 
+              p("GAMLSS with Decision Tree"), plotOutput("outlier_term_tr")),
       
-        tabPanel("", icon = icon("table"), 
+            tabPanel("", icon = icon("table"), 
                                     
-            p("Tables with the Prediction Tables, can be downloaded and be used like another dataset for this Shiny App!"),
-            downloadButton("Download_pb_residuals", "GAMLSS with P-Splines"),
-            DT::dataTableOutput("gamlss_residuals_pb"), 
-            downloadButton("Download_cs_residuals", "GAMLSS with Cubic Splines"),
-            DT::dataTableOutput("gamlss_residuals_cs"),
-            downloadButton("Download_poly_residuals", "GAMLSS with Polynomial Regression with Degree 3"),
-            DT::dataTableOutput("gamlss_residuals_poly"),
-            downloadButton("Download_poly4_residuals", "GAMLSS with Polynomial Regression with Degree 4"),
-            DT::dataTableOutput("gamlss_residuals_poly4"),
-            downloadButton("Download_nn_residuals", "GAMLSS with Neural Network"),
-            DT::dataTableOutput("gamlss_residuals_nn"),
-            downloadButton("Download_tr_residuals", "GAMLSS with Decision Tree"),
-            DT::dataTableOutput("gamlss_residuals_tr"))
-         )
-       )
-     )
-   )
- ))
+              p("Tables with the Prediction Tables, can be downloaded and be used like another dataset for this Shiny App!"),
+              downloadButton("Download_pb_residuals", "GAMLSS with P-Splines"),
+              DT::dataTableOutput("gamlss_residuals_pb"), 
+              downloadButton("Download_cs_residuals", "GAMLSS with Cubic Splines"),
+              DT::dataTableOutput("gamlss_residuals_cs"),
+              downloadButton("Download_poly_residuals", "GAMLSS with Polynomial Regression with Degree 3"),
+              DT::dataTableOutput("gamlss_residuals_poly"),
+              downloadButton("Download_poly4_residuals", "GAMLSS with Polynomial Regression with Degree 4"),
+              DT::dataTableOutput("gamlss_residuals_poly4"),
+              downloadButton("Download_nn_residuals", "GAMLSS with Neural Network"),
+              DT::dataTableOutput("gamlss_residuals_nn"),
+              downloadButton("Download_tr_residuals", "GAMLSS with Decision Tree"),
+              DT::dataTableOutput("gamlss_residuals_tr"))
+          )
+        )
+      )
+    )
+  )
+  )
 )
 
 ####################################### SERVER ####################################################
@@ -632,7 +719,7 @@ server <- function(input, output, session) {
     if(input$window_age <= 1){
       days <- input$window_agedays}
     
-    window_method(data_analyte(), days, input$method_window)
+    window_method(data_analyte(), days, input$method_window_regular)
     
     on.exit(progress$close())
   })
@@ -648,7 +735,7 @@ server <- function(input, output, session) {
     splits <- data.frame(rpart_$splits)
   
     split <- round(c(0,sort(splits$index), max(data_analyte()$age_days)))
-    window_method_split(data_analyte(), split, input$method_window, FALSE)
+    window_method_split(data_analyte(), split, input$method_window_tree, FALSE)
     
     on.exit(progress$close())
   })
@@ -661,7 +748,7 @@ server <- function(input, output, session) {
     progress$set(message = "Calculate Sliding Window RI...", detail = "", value = 2)
     
     req(input$sliding_width, input$sliding_by)
-    slide <- sliding_window(data_analyte(), input$sliding_width, input$sliding_by, outliers = input$window_select)
+    slide <- sliding_window(data_analyte(), input$sliding_width, input$sliding_by, outliers = input$window_select_window)
 
     on.exit(progress$close())
     slide
@@ -771,31 +858,35 @@ server <- function(input, output, session) {
 
     ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]") 
     
-    if(input$fast == FALSE){
-      fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, color = ~sex, colors = c("cornflowerblue", "indianred"),
+    #if(input$fast == FALSE){
+      fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, 
                    text = ~ paste('</br>Patient: ', patient,
                                   '</br>Station: ', code,
                                   '</br>Age [Years]: ', age,
                                   '</br>Age [Days]: ', age_days,
                                   '</br>Value: ', value),
                    type = "scatter",
+                   symbol = ~sex,
+                   symbols = c(17,'circle'),
+                   color = ~sex,
+                   colors = c("cornflowerblue", "indianred"),
                    mode = "markers",
-                   marker = list(size = 5)) %>%
+                   marker = list(size = 10)) %>%
           layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
-                 yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))}
-    else{
-      fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, color = ~sex, colors = c("cornflowerblue", "indianred"),
-                     text = ~ paste('</br>Patient: ', patient,
-                                    '</br>Station: ', code,
-                                    '</br>Age [Years]: ', age,
-                                    '</br>Age [Days]: ', age_days,
-                                    '</br>Value: ', value),
-                     type = "scattergl",
-                     mode = "markers",
-                     marker = list(size = 5)) %>%
-        layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
-               yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))
-      }
+                 yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))#}
+    # else{
+    #   fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, color = ~sex, colors = c("cornflowerblue", "indianred"),
+    #                  text = ~ paste('</br>Patient: ', patient,
+    #                                 '</br>Station: ', code,
+    #                                 '</br>Age [Years]: ', age,
+    #                                 '</br>Age [Days]: ', age_days,
+    #                                 '</br>Value: ', value),
+    #                  type = "scattergl",
+    #                  mode = "markers",
+    #                  marker = list(size = 5)) %>%
+    #     layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
+    #            yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))
+    #   }
   })
   
   # Barplot with the distribution of the sex
@@ -872,7 +963,7 @@ server <- function(input, output, session) {
     window_reactive()
     
     # Show plot with outliers and deleted outlier with the modified.tukey()
-    if(input$window_select == "all"){
+    if(input$window_select_regular == "all"){
    
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
            ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -889,7 +980,7 @@ server <- function(input, output, session) {
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
     
     # No Outlierdetection
-    if(input$window_select == "none"){
+    if(input$window_select_regular == "none"){
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
            ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -899,7 +990,7 @@ server <- function(input, output, session) {
       points(window_data$age_days, window_data$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)}
      
     # Modified Tukey-method 
-    if(input$window_select == "tukey"){ 
+    if(input$window_select_regular == "tukey"){ 
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
            ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -938,7 +1029,7 @@ server <- function(input, output, session) {
     build_rpart()
     windowtree()
 
-    if(input$window_select == "all"){
+    if(input$window_select_tree == "all"){
     
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -954,7 +1045,7 @@ server <- function(input, output, session) {
       legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
     
-    if(input$window_select == "none"){
+    if(input$window_select_tree == "none"){
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -963,7 +1054,7 @@ server <- function(input, output, session) {
       points(window_data_rpart$age_days, window_data_rpart$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
       points(window_data_rpart$age_days, window_data_rpart$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5) }
     
-    if(input$window_select == "tukey"){    
+    if(input$window_select_tree == "tukey"){    
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -993,7 +1084,7 @@ server <- function(input, output, session) {
     split <- round(c(0,sort(splits$index), max(data_analyte()$age_days)))
     par(mfrow=c(1,length(split)-1))
     
-    window_method_split(data_analyte(), split, input$method_window, TRUE)
+    window_method_split(data_analyte(), split, input$method_window_tree, TRUE)
   })
   
   # Tables to the Window-method with Decision Tree - Without Outlierdetection
@@ -1025,7 +1116,7 @@ server <- function(input, output, session) {
   
     slidingwindow()
     
-    if(input$window_select == "all"){
+    if(input$window_select_sliding == "all"){
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -1041,7 +1132,7 @@ server <- function(input, output, session) {
       legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
     
-    if(input$window_select == "none"){
+    if(input$window_select_sliding == "none"){
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -1050,7 +1141,7 @@ server <- function(input, output, session) {
       points(slidingwindow()[,2], slidingwindow()[,4], type="s", col= "indianred", lty=6, lwd = 1.5)
       points(slidingwindow()[,2], slidingwindow()[,5], type="s", col= "indianred", lty=6, lwd = 1.5)}
     
-    if(input$window_select == "tukey"){    
+    if(input$window_select_sliding == "tukey"){    
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -1136,11 +1227,11 @@ server <- function(input, output, session) {
     splits <- data.frame(index = lis*365)
     
     split <- round(c(0,sort(splits[,1])))
-    window_method_lis(data_analyte(), split, input$method_window, FALSE)
+    window_method_lis(data_analyte(), split, input$method_window_lis, FALSE)
     
     on.exit(progress$close())
     
-    if(input$window_select == "all"){
+    if(input$window_select_lis == "all"){
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -1156,7 +1247,7 @@ server <- function(input, output, session) {
       legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
     
-    if(input$window_select == "none"){
+    if(input$window_select_lis == "none"){
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -1165,7 +1256,7 @@ server <- function(input, output, session) {
       points(window_data_lis$age_days, window_data_lis$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
       points(window_data_lis$age_days, window_data_lis$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5) }
     
-    if(input$window_select == "tukey"){    
+    if(input$window_select_lis == "tukey"){    
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
            xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
@@ -1189,7 +1280,7 @@ server <- function(input, output, session) {
     splits <- data.frame(index = lis*365)
     
     split <- round(c(0,sort(splits[,1])))
-    window_method_lis(data_analyte(), split, input$method_window, FALSE)
+    window_method_lis(data_analyte(), split, input$method_window_lis, FALSE)
     
     on.exit(progress$close())
     
@@ -1212,7 +1303,7 @@ server <- function(input, output, session) {
     splits <- data.frame(index = lis*365)
     
     split <- round(c(0,sort(splits[,1])))
-    window_method_lis(data_analyte(), split, input$method_window, FALSE)
+    window_method_lis(data_analyte(), split, input$method_window_lis, FALSE)
     
     on.exit(progress$close())
     
@@ -1288,7 +1379,7 @@ server <- function(input, output, session) {
     print("Your LMS model is ready!")
   })
   
-  # Centiles Plot with gamlss models (P-Splines, Cubic Splines,  Polynomials Degree 3 and 4) ######
+  # Centiles Plot with gamlss models (P-Splines, Cubic Splines, Polynomials Degree 3 and 4) ######
   output$gamlss_models <- renderPlot({
     
     build_gamlss_model()
