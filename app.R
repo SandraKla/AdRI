@@ -10,7 +10,6 @@ source("R/window.R")
 
 ####################################### Libraries #################################################
 
-
 if("boot" %in% rownames(installed.packages())){
   library(boot)} else{
     install.packages("boot")}
@@ -71,7 +70,10 @@ ui <- fluidPage(
                    
         selectInput("dataset", "Select preinstalled dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
           
-        fileInput("dataset_file", "Upload own dataset:", accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")), hr(),
+        #fileInput("dataset_file", "Upload own dataset:", accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")), hr(),
+        uiOutput("dataset_file"),
+        
+        actionButton('reset', 'Reset Input'), hr(),
           
         selectInput("days_or_years", "Unit for the Age:", choices = list("Year" = "age", "Day "= "age_days")), 
           
@@ -84,7 +86,7 @@ ui <- fluidPage(
         conditionalPanel(condition = "input.days_or_years == 'age_days'", 
                          numericInput("age_input", "to:", 100, min = 1, max = 100*365)), hr(),
           
-        selectInput("sex", "Select the Sex:", choices = list("Male + Female" = "t", "Male" = "m", "Female" = "w")), 
+        selectInput("sex", "Select the Sex:", choices = list("Male + Female" = "t", "Male" = "m", "Female" = "f")), 
           
         textInput("text_unit", "Unit of the Analyte:", value = "Unit"), hr(),
           
@@ -119,7 +121,7 @@ ui <- fluidPage(
             
         tabPanel("Barplots", 
                  
-          p("Distribution of the", strong("SEX"),"across the ages and", strong("Stations (EINSCODE)"),":"),
+          p("Distribution of the", strong("SEX"),"across the ages and", strong("STATION"),":"),
           plotOutput("barplot_sex", height="500px"), 
           plotOutput("barplot_station", height="300px")),
           
@@ -190,8 +192,10 @@ ui <- fluidPage(
                                                                                             "Tukey" = "tukey")),
           selectInput("method_window_lis", "Calculation-method for the Reference Intervals:", 
                       choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
-          selectInput("lis_data", "Select preinstalled dataset:", choice = list.files(pattern = ".txt", recursive = TRUE)),
-          fileInput("lis_data_file", "Upload TXT File:", accept = ".txt")),
+          selectInput("lis_data", "Select preinstalled dataset:", choice = list.files(pattern = "txt", recursive = TRUE)),
+          #fileInput("lis_data_file", "Upload TXT File:", accept = ".txt")),
+          uiOutput("lis_data_file"),
+          actionButton('reset_lis', 'Reset Input')), 
             
         ### MainPanel - LIS Window-Method ###   
         mainPanel(width = 9,
@@ -368,8 +372,8 @@ ui <- fluidPage(
             checkboxInput("checkbox", "Distribution from the LMS-Method", value = FALSE),
             actionButton("button_gamlss", "Make GAMLSS-Models", icon("calculator")),
             actionButton("button_lms", "Make LMS-Model", icon("calculator")), 
-            htmlOutput("buttons_gamlss"), htmlOutput("buttons_lms"), 
-            hr(), htmlOutput("helptext_gamlss")
+            htmlOutput("buttons_gamlss"), htmlOutput("buttons_lms")#, 
+            #hr(), htmlOutput("helptext_gamlss")
           ),
         
         ### MainPanel - GAMLSS ###        
@@ -449,8 +453,9 @@ ui <- fluidPage(
           textOutput("prediction_gamlss"), hr(),
           helpText("To make discrete Reference Intervals from the continuous models the upper or the lower percentiles are compared 
           and split in two age groups when a specific change over the threshold (deviation) occurs:"),
-          numericInput("deviation", " Deviation in %:", 10, min = 1, max = 100), hr(),
-          htmlOutput("helptext_prediction")),
+          numericInput("deviation", " Deviation in %:", 10, min = 1, max = 100) #, hr(),
+          #htmlOutput("helptext_prediction")
+          ),
                
         ### MainPanel - GAMLSS ###
         mainPanel(width = 9,
@@ -495,8 +500,9 @@ ui <- fluidPage(
                             
           helpText("Improvement from the GAMLSS models by deleting high residuals:"),
           numericInput("error", "Value for the maximal Residuals:", 1.5, min = 0.75, max = 10),
-          actionButton("button_residuals", "Delete high Residuals and refit the GAMLSS", icon("calculator")), hr(), 
-          htmlOutput("helptext_residuals")),
+          actionButton("button_residuals", "Delete high Residuals and refit the GAMLSS", icon("calculator")) #, hr(), 
+          #htmlOutput("helptext_residuals")
+          ),
           
         ### MainPanel - GAMLSS ###      
         mainPanel(width = 9,
@@ -554,6 +560,60 @@ server <- function(input, output, session) {
   ########### Data is subset with the function select_data() with the given age interval ##########
   #################################################################################################
   
+  values <- reactiveValues(
+    upload_state = NULL
+  )
+  
+  observeEvent(input$dataset_file1, {
+    values$upload_state <- 'uploaded'
+  })
+  
+  observeEvent(input$reset, {
+    values$upload_state <- 'reset'
+  })
+  
+  dataset_input <- reactive({
+    if (is.null(values$upload_state)) {
+      return(NULL)
+    } else if (values$upload_state == 'uploaded') {
+      return(input$dataset_file1)
+    } else if (values$upload_state == 'reset') {
+      return(NULL)
+    }
+  })
+  
+  output$dataset_file <- renderUI({
+    input$reset ## Create a dependency with the reset button
+    fileInput('dataset_file1', label = NULL)
+  })
+  
+  values_lis <- reactiveValues(
+    upload_state_lis = NULL
+  )
+  
+  observeEvent(input$dataset_file1, {
+    values_lis$upload_state_lis <- 'uploaded'
+  })
+  
+  observeEvent(input$reset, {
+    values_lis$upload_state_lis <- 'reset'
+  })
+  
+  dataset_input_lis <- reactive({
+    if (is.null(values_lis$upload_state_lis)) {
+      return(NULL)
+    } else if (values_lis$upload_state_lis == 'uploaded') {
+      return(input$dataset_file2)
+    } else if (values_lis$upload_state_lis == 'reset') {
+      return(NULL)
+    }
+  })
+  
+  output$lis_data_file <- renderUI({
+    input$reset_lis ## Create a dependency with the reset button
+    fileInput('dataset_file2', label = NULL)
+  })
+  
   data_analyte <- reactive({
     
     progress <- shiny::Progress$new()
@@ -566,11 +626,11 @@ server <- function(input, output, session) {
     residuals_ready <<- FALSE  # Check if the residuals are calculated
     
     # Read the data (from the CALIPER study or from the generator)
-    if(is.null(input$dataset_file)){
+    if(is.null(dataset_input())){
     data_data <- read.csv2(input$dataset, header = TRUE, 
                            stringsAsFactors = FALSE, sep = ";", dec = ",", na.strings = "")}
-    if(!is.null(input$dataset_file))
-    {data_data <- read.csv2(input$dataset_file[["datapath"]], header = TRUE, 
+    if(!is.null(dataset_input()))
+    {data_data <- read.csv2(dataset_input()[["datapath"]], header = TRUE, 
                             stringsAsFactors = FALSE, sep = ";", dec = ",", na.strings = "")}
     ################################### Age is given by days ######################################
     if(input$days_or_years == "age_days"){
@@ -582,7 +642,7 @@ server <- function(input, output, session) {
       
       rows_table_ <- nrow(data_analyte) 
       
-      # Take only the first and unique samples from the data if PATISTAMMNR is given
+      # Take only the first and unique samples from the data if ID is given
       if(input$unique == TRUE){
         
         data_analyte <- 
@@ -810,10 +870,10 @@ server <- function(input, output, session) {
   
   ##################################### Information (Current selected dataset) ####################
   
-  helptext <- reactive({
-    text <- HTML(paste("Selected dataset:", input$dataset))
-    text
-  })
+  # helptext <- reactive({
+  #   text <- HTML(paste("Selected dataset:", input$dataset))
+  #   text
+  # })
   
   ##################################### Obeserve Event ############################################
   # Update Slider by Window method with the selected age range from the dataset ###################
@@ -827,21 +887,21 @@ server <- function(input, output, session) {
   ##################################### Output ####################################################
   
   ##################################### Help-Text with the selected dataset #######################
-  output$helptext_gamlss <- renderUI({
-    helptext()
-  })
-  
-  output$helptext_window <- renderUI({
-    helptext()
-  })
-  
-  output$helptext_prediction <- renderUI({
-    helptext()
-  })
-  
-  output$helptext_residuals <- renderUI({
-    helptext()
-  })
+  # output$helptext_gamlss <- renderUI({
+  #   helptext()
+  # })
+  # 
+  # output$helptext_window <- renderUI({
+  #   helptext()
+  # })
+  # 
+  # output$helptext_prediction <- renderUI({
+  #   helptext()
+  # })
+  # 
+  # output$helptext_residuals <- renderUI({
+  #   helptext()
+  # })
 
   ##################################### Overview ##################################################
   
@@ -867,9 +927,9 @@ server <- function(input, output, session) {
                                   '</br>Value: ', value),
                    type = "scatter",
                    symbol = ~sex,
-                   symbols = c(17,'circle'),
+                   symbols = c('circle', 17),
                    color = ~sex,
-                   colors = c("cornflowerblue", "indianred"),
+                   colors = c("indianred", "cornflowerblue"),
                    mode = "markers",
                    marker = list(size = 10)) %>%
           layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
@@ -892,7 +952,7 @@ server <- function(input, output, session) {
   # Barplot with the distribution of the sex
   output$barplot_sex <- renderPlot({
 
-    hist_data_w <- subset(data_analyte(), sex == "W", select = age)
+    hist_data_w <- subset(data_analyte(), sex == "F", select = age)
     hist_data_m <- subset(data_analyte(), sex == "M", select = age)
   
     hist_w <- hist(hist_data_w$age, breaks=seq(min(data_analyte()[,3])-1,max(data_analyte()[,3]),by=1))$counts
@@ -1215,16 +1275,15 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
     progress$set(message = "Make groups with the given intervals from the LIS...", detail = "", value = 2)
     
-    if(is.null(input$lis_data_file)){
-      lis_data <- read.delim2(input$lis_data)}
-    if(!is.null(input$lis_data_file))
-    {lis_data <- read.delim2(input$lis_data_file[["datapath"]])}
+    if(is.null(dataset_input_lis())){
+      lis_data <<- read.delim2(input$lis_data)}
+    if(!is.null(dataset_input_lis()))
+    {lis_data <<- read.delim2(dataset_input_lis()[["datapath"]])}
     
-
-    lis <- subset(lis_data, to <= input$age_input)
+    lis <- subset(lis_data, AGE_TO <= input$age_input)
 
     lis <- data.frame(lis_data[,2])
-    splits <- data.frame(index = lis*365)
+    splits <- data.frame(index = lis)
     
     split <- round(c(0,sort(splits[,1])))
     window_method_lis(data_analyte(), split, input$method_window_lis, FALSE)
@@ -2546,42 +2605,42 @@ server <- function(input, output, session) {
     filename = function() {
       paste0(Sys.Date(),"_Resdiuals_P_Splines.csv")},
     content = function(file) {
-      colnames(outlierfree_pb) <- c("PATISTAMMNR","SEX","ALTER","ALTERTAG","ERGEBNIST1","RESIDUALS","CODE1")
+      colnames(outlierfree_pb) <- c("ID","SEX","AGE_YEARS","AGE_DAYS","VALUE","RESIDUALS","ANALYTE")
       write.csv2(outlierfree_pb, file, row.names = FALSE)})
   
   output$Download_cs_residuals <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_Residuals_Cubic_Splines.csv")},
     content = function(file) {
-      colnames(outlierfree_cs) <- c("PATISTAMMNR","SEX","ALTER","ALTERTAG","ERGEBNIST1","RESIDUALS","CODE1")
+      colnames(outlierfree_cs) <- c("ID","SEX","AGE_YEARS","AGE_DAYS","VALUE","RESIDUALS","ANALYTE")
       write.csv2(outlierfree_cs, file, row.names = FALSE)})
   
   output$Download_poly_residuals <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_Resdiuals_Poly3.csv")},
     content = function(file) {
-      colnames(outlierfree_poly) <- c("PATISTAMMNR","SEX","ALTER","ALTERTAG","ERGEBNIST1","RESIDUALS","CODE1")
+      colnames(outlierfree_poly) <- c("ID","SEX","AGE_YEARS","AGE_DAYS","VALUE","RESIDUALS","ANALYTE")
       write.csv2(outlierfree_poly, file, row.names = FALSE)})
   
   output$Download_poly4_residuals <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_Residuals_Poly4.csv")},
     content = function(file) {
-      colnames(outlierfree_poly4) <- c("PATISTAMMNR","SEX","ALTER","ALTERTAG","ERGEBNIST1","RESIDUALS","CODE1")
+      colnames(outlierfree_poly4) <- c("ID","SEX","AGE_YEARS","AGE_DAYS","VALUE","RESIDUALS","ANALYTE")
       write.csv2(outlierfree_poly4, file, row.names = FALSE)})
   
   output$Download_tr_residuals <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_Residuals_Tree.csv")},
     content = function(file) {
-      colnames(outlierfree_tr) <- c("PATISTAMMNR","SEX","ALTER","ALTERTAG","ERGEBNIST1","RESIDUALS","CODE1")
+      colnames(outlierfree_tr) <- c("ID","SEX","AGE_YEARS","AGE_DAYS","VALUE","RESIDUALS","ANALYTE")
       write.csv2(outlierfree_tr, file, row.names = FALSE)})
   
   output$Download_nn_residuals <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_Residuals_Neural_Net.csv")},
     content = function(file) {
-      colnames(outlierfree_nn) <- c("PATISTAMMNR","SEX","ALTER","ALTERTAG","ERGEBNIST1","RESIDUALS","CODE1")
+      colnames(outlierfree_nn) <- c("ID","SEX","AGE_YEARS","AGE_DAYS","VALUE","RESIDUALS","ANALYTE")
       write.csv2(outlierfree_nn, file, row.names = FALSE)})
   
   ##################################### Comparison ################################################

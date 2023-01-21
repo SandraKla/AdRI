@@ -12,24 +12,24 @@
 #' @param sex Selected sex
 select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){  
 
-  # Fill PATISTAMMNR (patient) and EINSCODE (station) when not given in the dataset
-  if(is.null(data_$PATISTAMMNR) || is.null(data_$EINSCODE)) {
-    if(is.null(data_$PATISTAMMNR)){
-      data_$PATISTAMMNR <- seq(1:nrow(data_))
+  # Fill ID (patient) and STATION (station) when not given in the dataset
+  if(is.null(data_$ID) || is.null(data_$STATION)) {
+    if(is.null(data_$ID)){
+      data_$ID <- seq(1:nrow(data_))
     }
-    if(is.null(data_$EINSCODE)){
-      data_$EINSCODE <- "NA"
+    if(is.null(data_$STATION)){
+      data_$STATION <- "NA"
     }
   }
 
   # Important informations from the data
-  suppressWarnings(data_analyte <- data.frame(patient = data_$PATISTAMMNR, 
+  suppressWarnings(data_analyte <- data.frame(patient = data_$ID, 
                                               sex = data_$SEX, 
-                                              age = as.integer(data_$ALTER), 
-                                              age_days = as.integer(data_$ALTERTAG), 
-                                              value = as.numeric(data_$ERGEBNIST1), # Non-Numeric Values are NA and deleted later
-                                              code = data_$EINSCODE, 
-                                              name = data_$CODE1))
+                                              age = as.integer(data_$AGE_YEARS), 
+                                              age_days = as.integer(data_$AGE_DAYS), 
+                                              value = as.numeric(data_$VALUE), # Non-Numeric Values are NA and deleted later
+                                              code = data_$STATION, 
+                                              name = data_$ANALYTE))
     
   rows_table_ <- nrow(data_analyte) 
 
@@ -51,7 +51,7 @@ select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){
 
   # Separate data on the basis of the sex
   if(sex == "m"){data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}
-  if(sex == "w"){data_analyte <- subset(data_analyte, sex == "W", select = c(patient, sex, age, age_days, value, code, name))}
+  if(sex == "f"){data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, code, name))}
 
   return(data_analyte)}
 
@@ -64,24 +64,24 @@ select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){
 #' @param sex Selected sex
 select_data_days <- function(data_, age_begin = 0, age_end, sex = "t"){  
   
-  # Fill PATISTAMMNR (patient) and EINSCODE (station) when not given in the dataset
-  if(is.null(data_$PATISTAMMNR) || is.null(data_$EINSCODE)) {
-    if(is.null(data_$PATISTAMMNR)){
-      data_$PATISTAMMNR <- seq(1:nrow(data_))
+  # Fill ID (patient) and STATION (station) when not given in the dataset
+  if(is.null(data_$ID) || is.null(data_$STATION)) {
+    if(is.null(data_$ID)){
+      data_$ID <- seq(1:nrow(data_))
     }
-    if(is.null(data_$EINSCODE)){
-      data_$EINSCODE <- "NA"
+    if(is.null(data_$STATION)){
+      data_$STATION <- "NA"
     }
   }
   
   # Important informations from the data
-  suppressWarnings(data_analyte <- data.frame(patient = data_$PATISTAMMNR, 
+  suppressWarnings(data_analyte <- data.frame(patient = data_$ID, 
                                               sex = data_$SEX, 
-                                              age = as.integer(data_$ALTER), 
-                                              age_days = as.integer(data_$ALTERTAG), 
-                                              value = as.numeric(data_$ERGEBNIST1), # Non-Numeric Values are NA and deleted later
-                                              code = data_$EINSCODE, 
-                                              name = data_$CODE1))
+                                              age = as.integer(data_$AGE_YEARS), 
+                                              age_days = as.integer(data_$AGE_DAYS), 
+                                              value = as.numeric(data_$VALUE), # Non-Numeric Values are NA and deleted later
+                                              code = data_$STATION, 
+                                              name = data_$ANALYTE))
   
   rows_table_ <- nrow(data_analyte) 
   
@@ -103,7 +103,7 @@ select_data_days <- function(data_, age_begin = 0, age_end, sex = "t"){
   
   # Separate data on the basis of the sex
   if(sex == "m"){data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}
-  if(sex == "w"){data_analyte <- subset(data_analyte, sex == "W", select = c(patient, sex, age, age_days, value, code, name))}
+  if(sex == "f"){data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, code, name))}
   
   return(data_analyte)}
 
