@@ -4,6 +4,24 @@
 
 ####################################### Statistics ################################################
 
+truncate.x <- function(x, qf){
+  #qf = quantile factor to derive qnorm(0.025) from qnorm(0.25)
+  Q <- quantile(x, c(0.25, 0.5, 0.75))
+  var1 <- Q[2] - Q[1]
+  var2 <- Q[3] - Q[2]
+  var <- min(var1, var2)
+  lim <- c(Q[2] - qf * var, Q[2] + qf * var)
+  return(subset(x, x >= lim[1] & x <= lim[2]))
+}
+
+
+print.progress <- function(x, i, log.mode = FALSE){
+  if (log.mode){x <- exp(x)}
+  x <- round(x, 2)
+  print(paste("cycle", i, "n =", length(x), "min =", min(x), "max =", max(x)))
+} #print.progress
+
+
 #' Calculate the central 95% of a normal distribution performs algorithm until length of vector does not change anymore
 #' Modification of John W. Tukey’s box plot algorithm
 #'
@@ -12,49 +30,23 @@
 #' @param log.mode When the data is lognormal distributed
 #' @param print.cycles print the cycles 
 #' @param plot.it Plot the modified Tukey
-modified.tukey <- function(x, perc = 2.5, log.mode = FALSE, print.cycles = FALSE, plot.it = TRUE){
-  
-  if(log.mode){
-    x <- log(x)}
-  
-  # Truncate.x: Modified Tukey
-  truncate.x <- function(x, i){
-    # i = cycle index
-    # i = 1: standard quartile factor = qnorm(0.025)/qnorm(0.25)  
-    # i > 1: truncated quartile factor = qnorm(0.025)/qnorm(0.2625) 
-    qf <- ifelse(i==1, 
-                 qnorm(perc/100)/qnorm(0.25), 
-                 qnorm(perc/100)/qnorm(0.25*(1-perc/50) + perc/100))
-    var1 <- median(x) - quantile(x, 0.25) # the lower half of the box
-    var2 <- quantile(x, 0.75) - median(x) # the upper half of the box
-    var <- min(var1, var2)                # the smaller half of the box
-    lim <- c(median(x) - qf * var, median(x) + qf * var) # two truncation points
-    return(subset(x, x >= lim[1] & x <= lim[2]))
-  }
-  
-  print.progress <- function(x, i, log.mode = FALSE){
-    if (log.mode){
-      x <- exp(x)}
-    x <- round(x, 2)
-    print(paste("cycle", i, "n =", length(x), "min =", min(x), "max =", max(x))) 
-  } 
-  
+#' 
+#' 
+iBoxplot95 <- function(x, lognorm = FALSE, plot.it = TRUE){
+  #sets starting parameters
   n0 <- 1
   n1 <- 0
-  i  <- 0
-  
-  if(print.cycles){print.progress(x, i, log.mode = log.mode)}
-  
+  qf <- 2.906 #qnorm(0.025) / qnorm(0.25)
+  i <- 1
+  if(lognorm){x <- log(x)}
+  #truncates x repeatedly until no more outliers are detected
   while (n0 > n1){
-    i <- i + 1
     n0 <- length(x)
-    x <- truncate.x(x, i)
+    x <- truncate.x(x, qf = qf)
     n1 <- length(x)
-    if(print.cycles){
-      print.progress(x, i, log.mode = log.mode)}
+    qf <- 3.083 #qnorm(0.025)/qnorm(0.25 * 0.95 + 0.025) = qtruncnorm(0.025)/qtruncnorm(0.25)
   }
-  
-  if (log.mode){x <- round(exp(x), 2)}
+  if (lognorm){x <- exp(x)}
   
   if (plot.it){
     d <- density(x)
@@ -75,57 +67,78 @@ modified.tukey <- function(x, perc = 2.5, log.mode = FALSE, print.cycles = FALSE
 #' @param log.mode When the data is lognormal distributed
 #' @param print.cycles print the cycles 
 #' @param plot.it Plot the QQ-Plot
-modified.qqplot <- function(x, perc = 2.5, n.dots = NULL, log.mode = FALSE, plot.it = TRUE, 
-                            main = "Q-Q plot", xlab = "Theoretical Quantiles", ylab = "Sample Quantiles"){
-
+#' 
+reflim <- function(x, log.mode = NULL, n.quantiles = 100, n.min = 200, plot.it = TRUE,
+                   main = "Q-Q plot", xlab = "Theoretical Quantiles", ylab = "Sample Quantiles"){
   
-  #digits <- get.decimals(median(x))
-  if (log.mode){x <- log(x)}
-  digits <- 3
-  #calculates quantiles for Q-Q plot
-  if (is.null(n.dots)){n.dots = length(x)}
+  xx <- na.omit(x)
+  if(!is.numeric(xx)){stop("(reflim) x must be numeric.")}
+  if(min(xx) < 0){stop("(reflim) only positive values allowed.")}
+  if(length(xx) < n.min){return(rep(NA, 4))}
+  digits <- 2 - floor(log10(median(xx)))
+  if(digits < 1){digits <- 1}
   
-  p1 <- seq(from = perc / 100, to = 1 - perc / 100, length.out = n.dots)    #x.axis
-  p2 <- seq(from = 0, to = 1, length.out = n.dots)                          #y.axis
-  x.ax <- qnorm(p1)        #quantiles of standard normal distribution
-  y.ax <-quantile(x, p2)   #quantiles of sample distribution
+  if(is.null(log.mode)){
+    log.mode <- def.distribution(xx)$lognormal
+  }
+  if(log.mode){xx <- log(xx)}
+  
+  # truncates xx
+  ## Note that log.mode must be FALSE here
+  x.trunc <- iBoxplot(xx, log.mode = F, n.min = n.quantiles, print.cycles = F)$trunc
+  
+  p1 <- seq(from = 0.025, to = 0.975, length.out = n.quantiles)   #x.axis
+  p2 <- seq(from = 0, to = 1, length.out = n.quantiles)           #y.axis
+  x.ax <- qnorm(p1)             #quantiles of standard normal distribution
+  y.ax <-quantile(x.trunc, p2)  #quantiles of sample distribution
   
   #calulates linear regression coefficients from the central 50% of the curve
-  central.part <- floor((0.25 * n.dots) : ceiling(0.75 * n.dots))
-  coeff <- lm(y.ax[central.part] ~ x.ax[central.part])  
-  result <- data.frame(rep(0, 4))
-  colnames(result) <- "results"
-  rownames(result) <- c("mean", "sd", "lower limit", "upperlimit")
-  if(log.mode){rownames(result)[1 : 2] <- paste0(rownames(result)[1 : 2],"log")}
-  result[1 : 2, 1] <- coeff$coefficients[1 : 2]
-  result[3, 1] <- result[1, 1] - 1.96 * result[2, 1]
-  result[4, 1] <- result[1, 1] + 1.96 * result[2, 1]
+  central.part <- floor((0.25 * n.quantiles) : ceiling(0.75 * n.quantiles))
+  reg <- lm(y.ax[central.part] ~ x.ax[central.part])
+  a <- reg$coefficients[2]
+  b <- reg$coefficients[1]
+  result <- c(b, a, b - 1.96 * a, b + 1.96 * a)
+  result <- setNames(result, c("mean", "sd", "lower.lim", "upper.lim"))
   if(log.mode){
-    result[1 : 2, 1] <- round(result[1 : 2, 1], 3)
-    result[3 : 4, 1] <- exp(result[3 : 4, 1])
+    names(result)[1 : 2] <- paste0(names(result)[1 : 2], "log")
+    result[1 : 2] <- round(result[1 : 2], 3)
+    result[3 : 4] <- round(exp(result[3 : 4]), digits)
+  } else {
+    result <- round(result, digits)
   }
-  result[3 : 4, 1] <- round(result[3 : 4, 1], digits)
-  if(result[3, 1] < 0){result[3, 1] <- 0}
+  if(result[3] < 0){result[3] <- 0}
   
+  # draws Q-Q plot
   if (plot.it){
     if(!log.mode){
-      plot(y.ax ~ x.ax, xlim = c(-3, 3), ylim = c(0.8 * min(y.ax), 1.2 * max(y.ax)), 
+      ll <- result[3]
+      ul <- result[4]
+      diff <- ul - ll
+      plot(y.ax ~ x.ax, xlim = c(-3, 3),
+           ylim = c(ll - 0.2 * diff, ul + 0.2 * diff),
            main = main, xlab = xlab, ylab = ylab)
     }else{
-      plot(y.ax ~ x.ax, yaxt = "n", xlim = c(-3, 3), ylim = c(0.8 * min(y.ax), 1.2 * max(y.ax)), 
+      ll <- log(result[3])
+      ul <- log(result[4])
+      diff <- ul - ll
+      plot(y.ax ~ x.ax, yaxt = "n", xlim = c(-3, 3),
+           ylim = c(ll - 0.2 * diff, ul + 0.2 * diff),
            main = main, xlab = xlab, ylab = ylab)
       y.pos <- quantile(y.ax, c(0.01, 0.2, 0.5, 0.8, 0.99))
-      if (digits > 0){digits <- digits - 1}
-      axis(2, at = y.pos,labels  = round(exp(y.pos), digits))
+      axis(2, at = y.pos,labels  = round(exp(y.pos), digits - 1))
     }
     grid()
     abline(v = 0)
     abline(v = c(-1.96, 1.96), lty = 2)
-    abline(h = c(result[1, 1] - 1.96 * result[2, 1], result[1, 1] + 1.96 * result[2, 1]), 
+    abline(h = c(ll, ul),
            col = "green", lwd = 2)
-    abline(coeff, lwd = 2, col = "blue")
-    legend("topright", paste(result[3, 1], "-", result[4, 1]))
+    abline(reg$coefficients, lwd = 2, col = "blue")
+    legend("topleft",
+           paste(formatC(result[3], digits - 1, format = "f"), "-",
+                 formatC(result[4], digits - 1, format = "f")),
+           bty = "n", cex = 1.5)
   }
+  
   return(result)
 }
 
@@ -184,14 +197,9 @@ numeric.data <- function(x, no.zero = FALSE){
 #' @param x Expects a vector x
 #' @param alpha threshold
 #' @param digits Value to round the Bowley skewness
-bowley <- function(x, alpha=0.25, digits=3){
-  xx <- numeric.data(x, no.zero = TRUE)
-  if (length(xx) < 10){stop ("The minimum number of values is 10.")}
-  q1 <- quantile(xx, alpha)
-  q2 <- quantile(xx, 0.5)
-  q3 <- quantile(xx, 1-alpha)
-  bs <- (q1 - 2 * q2 + q3) / (q3 - q1)
-  return(round(bs, digits))
+bowley <- function(x, alpha = 0.25){
+  q <- quantile(x, c(alpha, 0.5, 1 - alpha))
+  return ((q[1] - 2 * q[2] + q[3]) / (q[3] - q[1]))
 }
 
 
@@ -202,28 +210,34 @@ bowley <- function(x, alpha=0.25, digits=3){
 #' @param cutoff threshold
 #' @param alpha threshold
 #' @param plot.it Plot the result
-def.lognorm <- function(x, cutoff = 0.05, alpha = 0.25, plot.it = TRUE,
-                        add.tx = "distribution", setvalues = NULL){
-  #xx <- x + 1  #shift avoids numbers < 1
-  s <- c(NA,NA)
-  s[1] <- bowley(x, alpha=alpha)
-  s[2] <- bowley(log(x), alpha=alpha)
+#' 
+def.distribution <- function(x, cutoff = 0.05, alpha = 0.25, digits = 3, plot.it = TRUE, add.tx = "distribution", setvalues = NULL,
+                             main = ""){
   
-  if(s[1] < 0){
-    logtype <- FALSE}
-  else{logtype <- (s[1] - s[2]) >= cutoff}
+  xx <- x[!is.na(x)]
+  
+  if(!is.numeric(xx)){stop("(def.distribution) x must be numeric.")}
+  if(length(xx) < 2){stop("(def.distribution) x must be a vector of at least 2 numeric values.")}
+  if(min(xx) <= 0){stop("(def.distribution) negative values not allowed.")}
+  
+  s <- rep(NA, 2)
+  s[1] <- bowley(xx, alpha)
+  s[2] <- bowley(log(xx), alpha)
+  if(s[1] < 0){lognorm <- FALSE} else {lognorm <- (s[1] - s[2]) >= cutoff}
+  names(s) <- c("normal", "lognormal")
+  if(!is.na(digits)){s <- round(s, digits)}
   
   if (plot.it){
     d <- density(x)
-    hist(x, freq = FALSE, ylim = c(0, max(d$y) * 1.2), xlab = "x", ylab = "Density", col = "lightgrey", main = "")
+    hist(x, freq = FALSE, ylim = c(0, max(d$y) * 1.2), xlab = "x", ylab = "Density", 
+         main = paste(ifelse(lognorm, paste("Lognormal-", add.tx), paste("Normal-", add.tx)), main))
     lines(d$x, d$y)
     if (!is.null(setvalues)){
       abline(v = setvalues, lty = 2)}
-    legend("topright", legend = ifelse(logtype, paste("Lognormal", add.tx), paste("Normal", add.tx)), pch = 20, col = "lightgrey")
   }
-  return(list("lognormal" = logtype, "BowleySkewness" = s))
-} 
-
+  
+  return(list("lognormal" = lognorm, "BowleySkewness" = s))
+}
 
 #' Round numeric values from a dataframe
 #' 
@@ -233,4 +247,10 @@ round_df <- function(x, digits) {
   numeric_columns <- sapply(x, mode) == 'numeric'
   x[numeric_columns] <-  round(x[numeric_columns], digits)
   return(x)
+}
+
+adjust.digits <- function(x){
+  digits <- 2 - floor(log10(x))
+  if(digits < 1){digits <- 1}
+  return(digits)
 }

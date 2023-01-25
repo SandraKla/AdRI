@@ -27,7 +27,7 @@ Boot_CI <- function(x, plot.it = FALSE){
 
 ####################################### Regular Window-method #####################################
 
-#' Regular Window-method with the modified.tukey() and three different calculation methods:
+#' Regular Window-method with the iBoxplot95() and three different calculation methods:
 #' Nonparametric with Bootstrapping, Parametric or with the Hoffmann-Method with QQ-Plots
 #' 
 #' @param data_ Given dataset:
@@ -77,10 +77,10 @@ window_method <- function(data_, window, method){
     n <- nrow(age_data_ready)
     
     normal_log <- FALSE
-    try(normal_log <- def.lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
+    try(normal_log <- def.distribution(age_data_ready$value, plot.it = FALSE)$lognorm)
     
-    if(normal_log == TRUE){outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE, log.mode = TRUE)}
-    else{outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)}
+    if(normal_log == TRUE){outliers_tukey <- iBoxplot95(age_data_ready$value, plot.it = FALSE, lognorm = TRUE)}
+    else{outliers_tukey <- iBoxplot95(age_data_ready$value, plot.it = FALSE)}
     
     n_data <- rbind(n_data,nrow(age_data_ready))
     n_data_tukey <- rbind(n_data_tukey,length(outliers_tukey))
@@ -113,7 +113,7 @@ window_method <- function(data_, window, method){
     ##################################### QQ-Plot #################################################
     if(method == "qqplot"){
    
-      modi_qq <- modified.qqplot(outliers_tukey, plot.it = FALSE)
+      modi_qq <- reflim(outliers_tukey, plot.it = FALSE)
        
       newx <- c(-1.96,0,1.96)
     
@@ -202,7 +202,7 @@ window_method <- function(data_, window, method){
                              quantile1 = c(quantiles_with_outliers[,1],tail(quantiles_with_outliers[,1], n=1)),
                              quantile2 = c(quantiles_with_outliers[,2],tail(quantiles_with_outliers[,2], n=1)))
   
-  # Window-Data with the modified.tukey()
+  # Window-Data with the iBoxplot95()
   window_data_tukey <<- data.frame(age_days = seq(min(data_[,4]), age_code, by = window), 
                                    mean = c(mean_with_tukey[,1], tail(mean_with_tukey[,1], n=1)), 
                                    quantile1 = c(quantiles_with_tukey[,1],tail(quantiles_with_tukey[,1], n=1)),
@@ -282,7 +282,7 @@ window_method <- function(data_, window, method){
 #' 
 #' @param split Age group
 #' @param method Nonparametric with Bootstrapping, Parametric or with the Hoffmann-Method
-#' @param plot_log Plot the function def.lognorm() of each age groups
+#' @param plot_log Plot the function def.distribution() of each age groups
 window_method_split <- function(data_window_split, split, method, plot_log = FALSE){
   
   ##################################### Mean/Median ###############################################
@@ -317,7 +317,7 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
     if(!nrow(age_data_ready) == 0){
       if(plot_log){
         # Plot the distribution of each group to check for normally distribution
-        try(def.lognorm(age_data_ready$value, plot.it = TRUE))}
+        try(def.distribution(age_data_ready$value, plot.it = TRUE, main = paste("between", split[i-1], "and", split[i], "days")))}
         
         # Box-Cox Powertransformation
         # age_data_ready_box <<- age_data_ready
@@ -325,13 +325,13 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
         # boxcox_groups <- rbind(boxcox_groups, boxcox_$x[which.max(boxcox_$y)])
     }
     
-    # Outlier-Detection with modified.tukey()
+    # Outlier-Detection with iBoxplot95()
     
     normal_log <- FALSE
-    try(normal_log <- def.lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
+    try(normal_log <- def.distribution(age_data_ready$value, plot.it = FALSE)$lognorm)
     
-    if(normal_log == TRUE){outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE, log.mode = TRUE)}
-    else{outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)}
+    if(normal_log == TRUE){outliers_tukey <- iBoxplot95(age_data_ready$value, plot.it = FALSE, lognorm = TRUE)}
+    else{outliers_tukey <- iBoxplot95(age_data_ready$value, plot.it = FALSE)}
     
     n_data <- rbind(n_data,nrow(age_data_ready))
     n_data_tukey <- rbind(n_data_tukey,length(outliers_tukey))
@@ -402,7 +402,7 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
       
       newx <- c(-1.96,0,1.96)
       
-      modi_qq <- modified.qqplot(outliers_tukey, plot.it = FALSE)
+      modi_qq <- reflim(outliers_tukey, plot.it = FALSE)
       
       qqdata <- qqnorm(age_data_ready$value, plot.it = FALSE)
       lm_qqline <- lm(y~ x, data = qqdata)
@@ -442,7 +442,7 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
                                    quantile1 = c(quantiles_with_outliers[,1], tail(quantiles_with_outliers[,1], n=1)),
                                    quantile2 = c(quantiles_with_outliers[,2], tail(quantiles_with_outliers[,2], n=1)))
   
-  # Window-Data with modified.tukey()
+  # Window-Data with iBoxplot95()
   window_data_tukey_rpart <<- data.frame(age_days = split, mean = c(mean_with_tukey[,1],tail(mean_with_outliers[,1], n=1) ),
                                          quantile1 = c(quantiles_with_tukey[,1],  tail(quantiles_with_outliers[,1], n=1)),
                                          quantile2 = c(quantiles_with_tukey[,2], tail(quantiles_with_outliers[,2], n=1)))
@@ -509,7 +509,7 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
 #' @param data_window_split Selected data
 #' @param split Age group from the LIS
 #' @param method Nonparametric with Bootstrapping, Parametric or with the Hoffmann-Method
-#' @param plot_log Plot the function def.lognorm() of each age groups
+#' @param plot_log Plot the function def.distribution() of each age groups
 window_method_lis <- function(data_window_split, split, method, plot_log = FALSE){
   
   ##################################### Mean/Median ###############################################
@@ -545,7 +545,7 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
     if(!nrow(age_data_ready) == 0){
       if(plot_log){
         # Plot the distribution of each group to check for normally distribution
-        try(def.lognorm(age_data_ready$value, plot.it = TRUE))}
+        try(def.distribution(age_data_ready$value, plot.it = TRUE))}
       
       # Box-Cox Powertransformation
       # age_data_ready_box <<- age_data_ready
@@ -555,10 +555,10 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
     
    
     normal_log <- FALSE
-    try(normal_log <- def.lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
+    try(normal_log <- def.distribution(age_data_ready$value, plot.it = FALSE)$lognorm)
     
-    if(normal_log == TRUE){outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE, log.mode = TRUE)}
-    else{outliers_tukey <- modified.tukey(age_data_ready$value, plot.it = FALSE)}
+    if(normal_log == TRUE){outliers_tukey <- iBoxplot95(age_data_ready$value, plot.it = FALSE, lognorm = TRUE)}
+    else{outliers_tukey <- iBoxplot95(age_data_ready$value, plot.it = FALSE)}
     
     n_data <- rbind(n_data,nrow(age_data_ready))
     n_data_tukey <- rbind(n_data_tukey,length(outliers_tukey))
@@ -629,7 +629,7 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
 
       newx <- c(-1.96,0,1.96)
       
-      modi_qq <- modified.qqplot(outliers_tukey, plot.it = FALSE)
+      modi_qq <- reflim(outliers_tukey, plot.it = FALSE)
       
       qqdata <- qqnorm(age_data_ready$value, plot.it = FALSE)
       lm_qqline <- lm(y~ x, data = qqdata)
@@ -669,7 +669,7 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
                                    quantile1 = c(quantiles_with_outliers[,1], tail(quantiles_with_outliers[,1], n=1)),
                                    quantile2 = c(quantiles_with_outliers[,2], tail(quantiles_with_outliers[,2], n=1)))
   
-  # Window-Data with modified.tukey()
+  # Window-Data with iBoxplot95()
   window_data_tukey_lis <<- data.frame(age_days = split, mean = c(mean_with_tukey[,1],tail(mean_with_outliers[,1], n=1) ),
                                          quantile1 = c(quantiles_with_tukey[,1],  tail(quantiles_with_outliers[,1], n=1)),
                                          quantile2 = c(quantiles_with_tukey[,2], tail(quantiles_with_outliers[,2], n=1)))
@@ -791,10 +791,10 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
   for (i in seq(1,nrow(sliding_tukey_data))){ 
 
     normal_log <- FALSE
-    try(normal_log <- def.lognorm(sliding_tukey_data[i,], plot.it = FALSE)$lognorm)
+    try(normal_log <- def.distribution(sliding_tukey_data[i,], plot.it = FALSE)$lognorm)
     
-    if(normal_log == TRUE){sliding_tukey <- modified.tukey(sliding_tukey_data[i,], plot.it = FALSE, log.mode = TRUE)}
-    else{sliding_tukey <- modified.tukey(sliding_tukey_data[i,], plot.it = FALSE)}
+    if(normal_log == TRUE){sliding_tukey <- iBoxplot95(sliding_tukey_data[i,], plot.it = FALSE, lognorm = TRUE)}
+    else{sliding_tukey <- iBoxplot95(sliding_tukey_data[i,], plot.it = FALSE)}
     
     # 95% Confidence Interval
 

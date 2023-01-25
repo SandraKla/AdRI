@@ -94,7 +94,7 @@ ui <- fluidPage(
       
         checkboxInput("unique", "First Unique values", value = TRUE),
       
-        checkboxInput("checkboxtukey", "Modified Tukey-method coupled with a Decision Tree", value = FALSE),
+        checkboxInput("checkboxtukey", "RefLim coupled with a Decision Tree", value = FALSE),
       
         helpText("Hyperparameter for the Decision Tree (minbucket): Minimum number of observations in a leaf node (age group).
                  According to CLSI 120 patients must be available for Reference Intervals (RI)!"),
@@ -149,7 +149,7 @@ ui <- fluidPage(
                      
           selectInput("window_select_regular", "Show outlierdetection in plot:", choices = list("All" = "all",
                                                                                                 "None" = "none",
-                                                                                                "Tukey" = "tukey")),
+                                                                                                "RefLim" = "tukey")),
           selectInput("method_window_regular", "Calculation-method for the Reference Intervals:", 
                       choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
           sliderInput("window_age", "Regular Window for the Subgroups in years:", 1, 10, 10),
@@ -161,20 +161,20 @@ ui <- fluidPage(
           tabsetPanel(
             tabPanel("Plot",
                            
-              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
+              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the RefLim! But the for the calculation
                        use the nonparametric if it is a Lognormal-distribution."), br(),  br(),
                        "This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
                        so it is only recommended for small changes through the age. Available for the calculation for the reference intervals a 
                        nonparametric, parametric and the Hoffmann-Method (Without visual recognition of the linear range, it is important to know whether 
-                       there is a mixed distribution and to use the modified tukey before!) for the calculation from the reference intervals and 
-                       the modified Tukey-Method for Outlierdetection."),
+                       there is a mixed distribution and to use the RefLim before!) for the calculation from the reference intervals and 
+                       the RefLim for Outlierdetection."),
               plotOutput("window", height="600px")),
 
             tabPanel("Table", icon = icon("table"), 
                      
                      downloadButton("Download_window_data_all_outlier", "Table with Reference intervals without Outlierdetection"),
                      DT::dataTableOutput("windowtable_o"), 
-                     downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with modified Tukey-method"),
+                     downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with RefLim"),
                      DT::dataTableOutput("windowtable_t"))
           )
         )
@@ -189,7 +189,7 @@ ui <- fluidPage(
 
           selectInput("window_select_lis", "Show outlierdetection in plot:", choices = list("All" = "all",
                                                                                             "None" = "none",
-                                                                                            "Tukey" = "tukey")),
+                                                                                            "RefLim" = "tukey")),
           selectInput("method_window_lis", "Calculation-method for the Reference Intervals:", 
                       choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
           selectInput("lis_data", "Select preinstalled dataset:", choice = list.files(pattern = "txt", recursive = TRUE)),
@@ -202,7 +202,7 @@ ui <- fluidPage(
           tabsetPanel(
             tabPanel("Plot",
                          
-              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
+              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the RefLim! But the for the calculation
               use the nonparametric if it is a Lognormal-distribution"), br(),br(), "Load a TXT file on the left with the age groups from your laboratory information system (LIS)
               and the Reference Intervals will be calculated."),
               
@@ -226,7 +226,7 @@ ui <- fluidPage(
             
           selectInput("window_select_tree", "Show outlierdetection in plot:", choices = list("All" = "all",
                                                                                              "None" = "none",
-                                                                                             "Tukey" = "tukey")),
+                                                                                             "RefLim" = "tukey")),
           selectInput("method_window_tree", "Calculation-method for the Reference Intervals:", 
                       choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot"))),
       
@@ -235,7 +235,7 @@ ui <- fluidPage(
           tabsetPanel(
             tabPanel("Plot",
                      
-              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
+              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the RefLim! But the for the calculation
                 use the nonparametric if it is a Lognormal-distribution"), br(),br(), "Decision Trees are used for machine learning. It can be used for classification (supervised learning), but also
                 for clustering (unsupervised learning). Here it used to cluster the data into subgroups with similar values.
                 The Decision is from the package rpart and is visualized with rpart.plot. The subgroups according to the Decision Tree
@@ -254,7 +254,7 @@ ui <- fluidPage(
                      
               downloadButton("Download_window_data_split_outlier","Table with Reference Intervals without Outlierdetection"),
               DT::dataTableOutput("tree_windowtable_o"),
-              downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with modified Tukey-method"), 
+              downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with RefLim"), 
               DT::dataTableOutput("tree_windowtable_t")))
         )
       )
@@ -267,7 +267,7 @@ ui <- fluidPage(
                 
             selectInput("window_select_sliding", "Show outlierdetection in plot:", choices = list("All" = "all",
                                                                                                   "None" = "none",
-                                                                                                  "Tukey" = "tukey")),
+                                                                                                  "RefLim" = "tukey")),
             selectInput("method_window_sliding", "Calculation-method for the Reference Intervals:", 
                         choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
                             
@@ -279,7 +279,7 @@ ui <- fluidPage(
           tabsetPanel(
             tabPanel("Plot",
                   
-              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the Tukey-Method! But the for the calculation
+              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the RefLim! But the for the calculation
               use the nonparametric if it is a Lognormal-distribution"), br(),br(), "Sliding Window-method goes through the data with a window calculates the mean and reference intervals and goes then
               with a window-steps further through the data to the end. Only nonparametric method available for the reference intervals
               This method is not yet validated, caution when using it for meaningful reference intervals."), 
@@ -289,7 +289,7 @@ ui <- fluidPage(
                      
               downloadButton("Download_sliding", "Table with Reference Intervals without Outlierdetection"),
               DT::dataTableOutput("sliding"),
-              downloadButton("Download_sliding_tukey", "Table with Reference Intervals with modified Tukey-method"), 
+              downloadButton("Download_sliding_tukey", "Table with Reference Intervals with RefLim"), 
               DT::dataTableOutput("sliding_tukey"))
           )
         )
@@ -668,7 +668,7 @@ server <- function(input, output, session) {
         
         split <- round(c(0,sort(splits$index), max(data_analyte$age_days))) 
         
-        # Select each range of the splits and delete outliers with the modified.tukey()
+        # Select each range of the splits and delete outliers with the iBoxplot95()
         for (i in 2:length(split)){
           
           data_analyte_split <- subset(data_analyte, age_days <= split[i], select = c(patient, sex, age, age_days, value, code, name)) 
@@ -678,10 +678,10 @@ server <- function(input, output, session) {
             data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days >= split[i-1])}
           
           normal_log <- FALSE
-          try(normal_log <- def.lognorm(data_analyte_subset$value, plot.it = FALSE)$lognorm)
+          try(normal_log <- def.distribution(data_analyte_subset$value, plot.it = FALSE)$lognorm)
           
-          if(normal_log == TRUE){modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE, log.mode = TRUE)}
-          else{modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE)}
+          if(normal_log == TRUE){modi <- iBoxplot95(data_analyte_subset$value, plot.it = FALSE, lognorm = TRUE)}
+          else{modi <- iBoxplot95(data_analyte_subset$value, plot.it = FALSE)}
           
           data_analyte_save <- data_analyte_subset[data_analyte_subset$value %in% modi,]
           data_analyte_tukey <- rbind(data_analyte_tukey, data_analyte_save)}
@@ -689,7 +689,7 @@ server <- function(input, output, session) {
         data_analyte <- data_analyte_tukey
         
         if(!(rows_table_ == nrow(data_analyte))){
-          cat(paste("Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the modfied Tukey-Method. \n"))}
+          cat(paste("Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the RefLim. \n"))}
       })
     } 
     
@@ -730,7 +730,7 @@ server <- function(input, output, session) {
         
         split <- round(c(0,sort(splits$index), max(data_analyte$age_days)))
 
-        # Select each range of the splits and delete outliers with the modified.tukey()
+        # Select each range of the splits and delete outliers with the iBoxplot95()
         for (i in 2:length(split)){
           
           data_analyte_split <- subset(data_analyte, age_days <= split[i], select = c(patient, sex, age, age_days, value, code, name)) 
@@ -740,10 +740,10 @@ server <- function(input, output, session) {
             data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days >= split[i-1])}
           
           normal_log <- FALSE
-          try(normal_log <- def.lognorm(data_analyte_subset$value, plot.it = FALSE)$lognorm)
+          try(normal_log <- def.distribution(data_analyte_subset$value, plot.it = FALSE)$lognorm)
           
-          if(normal_log == TRUE){modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE, log.mode = TRUE)}
-          else{modi <- modified.tukey(data_analyte_subset$value, plot.it = FALSE)}
+          if(normal_log == TRUE){modi <- iBoxplot95(data_analyte_subset$value, plot.it = FALSE, lognorm = TRUE)}
+          else{modi <- iBoxplot95(data_analyte_subset$value, plot.it = FALSE)}
           
           data_analyte_save <- data_analyte_subset[data_analyte_subset$value %in% modi,] 
           data_analyte_tukey <- rbind(data_analyte_tukey, data_analyte_save)}
@@ -751,7 +751,7 @@ server <- function(input, output, session) {
         data_analyte <- data_analyte_tukey
         
         if(!(rows_table_ == nrow(data_analyte))){
-          cat(paste("Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the modfied Tukey-method. \n"))}
+          cat(paste("Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the RefLim. \n"))}
       })
     }
     
@@ -979,7 +979,7 @@ server <- function(input, output, session) {
   
   # Bowley and Lognormfunction
   output$lognorm <- renderPlot({
-    try(def.lognorm(data_analyte()[,5]))
+    try(def.distribution(data_analyte()[,5]))
   })
   
   #Hexbin for the Data with the package hexbin
@@ -1011,8 +1011,9 @@ server <- function(input, output, session) {
   
   # Data-Table
   output$datatable <- DT::renderDataTable({
-    DT::datatable(data_analyte(), rownames= FALSE, options = list(pageLength = 15),
-    caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset'))
+    DT::datatable(data_analyte(), extensions = 'Buttons', rownames= FALSE, 
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')),
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset'))
   })
   
   ##################################### Window-Methods ############################################
@@ -1022,7 +1023,7 @@ server <- function(input, output, session) {
     
     window_reactive()
     
-    # Show plot with outliers and deleted outlier with the modified.tukey()
+    # Show plot with outliers and deleted outlier with the iBoxplot95()
     if(input$window_select_regular == "all"){
    
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
@@ -1036,7 +1037,7 @@ server <- function(input, output, session) {
       points(window_data_tukey$age_days, window_data_tukey$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
       points(window_data_tukey$age_days, window_data_tukey$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
     
-      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
+      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the RefLim"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
     
     # No Outlierdetection
@@ -1049,7 +1050,7 @@ server <- function(input, output, session) {
       points(window_data$age_days, window_data$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
       points(window_data$age_days, window_data$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)}
      
-    # Modified Tukey-method 
+    # RefLim
     if(input$window_select_regular == "tukey"){ 
       
       plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
@@ -1065,19 +1066,21 @@ server <- function(input, output, session) {
     
     window_reactive()
 
-    DT::datatable(window_data_all_outlier, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Regular Window-Method without Outlierdetection')) %>%
+    DT::datatable(window_data_all_outlier, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Regular Window-Method without Outlierdetection')) %>%
     DT::formatStyle(columns = c(1,2), backgroundColor = "indianred") %>% 
     DT::formatRound(c(3:length(window_data_all_outlier)), 2)
   })
   
-  # Tables to the regular windowmethod - Without modified Tukey-Method
+  # Tables to the regular windowmethod - With RefLim
   output$windowtable_t <- DT::renderDataTable({
     
     window_reactive()
     
-    DT::datatable(window_data_all_tukey, rownames= FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Regular Window-Method With modified Tukey-Method')) %>%
+    DT::datatable(window_data_all_tukey, rownames= FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Regular Window-Method With RefLim')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
       DT::formatRound(c(3:length(window_data_all_tukey)), 2)
   })
@@ -1102,7 +1105,7 @@ server <- function(input, output, session) {
       points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
       points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
     
-      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
+      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the RefLim"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
     
     if(input$window_select_tree == "none"){
@@ -1153,20 +1156,22 @@ server <- function(input, output, session) {
     build_rpart()  
     windowtree()
              
-    DT::datatable(window_data_split_outlier, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Window-Method with Decision Tree without Outlierdetection')) %>%
+    DT::datatable(window_data_split_outlier, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Window-Method with Decision Tree without Outlierdetection')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "indianred") %>% 
       DT::formatRound(c(3:length(window_data_split_outlier)), 2)
   })
   
-  # Tables to the Window-method with Decision Tree - Without modified Tukey-Method
+  # Tables to the Window-method with Decision Tree - With RefLim
   output$tree_windowtable_t <- DT::renderDataTable({
   
     build_rpart()  
     windowtree()
     
-    DT::datatable(window_data_split_tukey, rownames= FALSE, caption = htmltools::tags$caption(
-      style ='caption-side: bottom; text-align: center;','Table: Window Method with Decision Tree with modified Tukey Method')) %>%
+    DT::datatable(window_data_split_tukey, rownames= FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: Window Method with Decision Tree with RefLim')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
       DT::formatRound(c(3:length(window_data_split_tukey)), 2)
   })
@@ -1189,7 +1194,7 @@ server <- function(input, output, session) {
       points(slide_tukey[,2], slide_tukey[,4], type="s", col= "seagreen3", lty=6, lwd = 1.5)
       points(slide_tukey[,2], slide_tukey[,5], type="s", col= "seagreen3", lty=6, lwd = 1.5)
       
-      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
+      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with RefLim"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
     
     if(input$window_select_sliding == "none"){
@@ -1216,8 +1221,9 @@ server <- function(input, output, session) {
     
     slidingwindow()
 
-    DT::datatable(slide, rownames= FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Slding Window-Method')) %>%
+    DT::datatable(slide, rownames= FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Slding Window-Method')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "indianred") %>% 
       DT::formatRound(c(3:length(slide)), 2)
   })
@@ -1226,8 +1232,9 @@ server <- function(input, output, session) {
     
     slidingwindow()
     
-    DT::datatable(slide_tukey, rownames= FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Slding Window-Method with modified Tukey-Method')) %>%
+    DT::datatable(slide_tukey, rownames= FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Slding Window-Method with RefLim')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
       DT::formatRound(c(3:length(slide_tukey)), 2)
   })
@@ -1245,8 +1252,8 @@ server <- function(input, output, session) {
     rmse_window <- rmse_window()
     r_test <- r_window()
 
-    rsquared_table <<- data.frame("Method" = c("Regular Window (No Outlierdetction)","Regular Window (Modified Tukey-Method)", 
-                                                "Decision Tree Window (No Outlierdetction)", "Decision Tree Window (Modified Tukey-Method)"),
+    rsquared_table <<- data.frame("Method" = c("Regular Window (No Outlierdetction)","Regular Window (RefLim)", 
+                                                "Decision Tree Window (No Outlierdetction)", "Decision Tree Window (RefLim)"),
                                   MAE = c(mae_window),
                                   MSE = c(mse_window),
                                   RMSE = c(rmse_window),
@@ -1262,7 +1269,8 @@ server <- function(input, output, session) {
     smallest_mse <- rsquared_table[which.min(rsquared_table$MSE),]$MSE
     smallest_rmse <- rsquared_table[which.min(rsquared_table$RMSE),]$RMSE
     
-    DT::datatable(rsquared_table, rownames= FALSE) %>%
+    DT::datatable(rsquared_table, rownames= FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print'))) %>%
       DT:: formatStyle(columns = "R2", background = styleEqual(biggest_r2, "lavender")) %>%
       DT:: formatStyle(columns = "MAE", background = styleEqual(smallest_mae, "lavender")) %>%
       DT:: formatStyle(columns = "MSE", background = styleEqual(smallest_mse, "lavender")) %>%
@@ -1303,7 +1311,7 @@ server <- function(input, output, session) {
       points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
       points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
       
-      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the modified Tukey-method"), 
+      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the RefLim"), 
              col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
     
     if(input$window_select_lis == "none"){
@@ -1333,30 +1341,31 @@ server <- function(input, output, session) {
     progress$set(message = "Make groups with the given intervals from the LIS...", detail = "", value = 2)
     
     lis_data <- read.delim2(input$lis_data)
-    lis <- subset(lis_data, to <= input$age_input)
+    lis <- subset(lis_data, AGE_TO <= input$age_input)
     
     lis <- data.frame(lis_data[,2])
-    splits <- data.frame(index = lis*365)
+    splits <- data.frame(index = lis)
     
     split <- round(c(0,sort(splits[,1])))
     window_method_lis(data_analyte(), split, input$method_window_lis, FALSE)
     
     on.exit(progress$close())
     
-    DT::datatable(window_data_lis_outlier, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: LIS Window-Method without Outlierdetection')) %>%
+    DT::datatable(window_data_lis_outlier, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: LIS Window-Method without Outlierdetection')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "indianred") %>% 
       DT::formatRound(c(3:length(window_data_lis_outlier)), 2)
   })
   
-  # Tables to the Window-method with Decision Tree - Without modified Tukey-Method
+  # Tables to the Window-method with Decision Tree - With RefLim
   output$lis_table_t <- DT::renderDataTable({
     
     progress <- shiny::Progress$new()
     progress$set(message = "Make groups with the given intervals from the LIS...", detail = "", value = 2)
     
     lis_data <- read.delim2(input$lis_data)
-    lis <- subset(lis_data, to <= input$age_input)
+    lis <- subset(lis_data, AGE_TO <= input$age_input)
     
     lis <- data.frame(lis_data[,2])
     splits <- data.frame(index = lis*365)
@@ -1366,8 +1375,9 @@ server <- function(input, output, session) {
     
     on.exit(progress$close())
     
-    DT::datatable(window_data_lis_tukey, rownames= FALSE, caption = htmltools::tags$caption(
-      style ='caption-side: bottom; text-align: center;','Table: LIS Window-Method with modified Tukey Method')) %>%
+    DT::datatable(window_data_lis_tukey, rownames= FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: LIS Window-Method with RefLim')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
       DT::formatRound(c(3:length(window_data_lis_tukey)), 2)
   })
@@ -1785,7 +1795,8 @@ server <- function(input, output, session) {
     
     compare_models <<- compare_models
   
-    DT::datatable(compare_models, rownames = FALSE) %>%
+    DT::datatable(compare_models, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print'))) %>%
       DT:: formatStyle(columns = "AIC", background = styleEqual(row_smallest_aic, "cornflowerblue")) %>%
       DT:: formatStyle(columns = "GAIC", background = styleEqual(row_smallest_gaic, "indianred")) %>%
       DT:: formatStyle(columns = "BIC", background = styleEqual(row_smallest_bic, "seagreen")) %>%
@@ -1891,8 +1902,9 @@ server <- function(input, output, session) {
     if(exists("pb_ri")){
     table_pb_ri <- data.frame(pb_ri)
     colnames(table_pb_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_pb_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the P-Splines'))}
+    DT::datatable(table_pb_ri, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the P-Splines'))}
   })
   
   # Table for prediction for the Cubic Splines
@@ -1903,8 +1915,9 @@ server <- function(input, output, session) {
     if(exists("cs_ri")){
     table_cs_ri <- data.frame(cs_ri)
     colnames(table_cs_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_cs_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the Cubic Splines'))}
+    DT::datatable(table_cs_ri, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the Cubic Splines'))}
   })
   
   # Table for prediction for the  Polynomials (Degree 3)
@@ -1915,8 +1928,9 @@ server <- function(input, output, session) {
     if(exists("poly_ri")){
     table_poly_ri <- data.frame(poly_ri)
     colnames(table_poly_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_poly_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the  Polynomials (Degree 3)'))}
+    DT::datatable(table_poly_ri, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the  Polynomials (Degree 3)'))}
   })
   
   # Table for prediction for the  Polynomials (Degree 4)
@@ -1927,8 +1941,9 @@ server <- function(input, output, session) {
     if(exists("poly4_ri")){
     table_poly4_ri <- data.frame(poly4_ri)
     colnames(table_poly4_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_poly4_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the  Polynomials (Degree 4)'))}
+    DT::datatable(table_poly4_ri, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the  Polynomials (Degree 4)'))}
   })
   
   # Table for prediction for the Neural Network
@@ -1939,8 +1954,9 @@ server <- function(input, output, session) {
     if(exists("nn_ri")){
     table_nn_ri <- data.frame(nn_ri)
     colnames(table_nn_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_nn_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Neural Network'))}
+    DT::datatable(table_nn_ri, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Neural Network'))}
   })
   
   # Table for prediction for the Decision Tree
@@ -1951,8 +1967,9 @@ server <- function(input, output, session) {
     if(exists("tr_ri")){
     table_tr_ri <- data.frame(tr_ri)
     colnames(table_tr_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_tr_ri, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Decision Tree'))}
+    DT::datatable(table_tr_ri, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Decision Tree'))}
   })
   
   # Table for prediction with the LMS model
@@ -1965,8 +1982,9 @@ server <- function(input, output, session) {
       if(exists("lms_ri")){
       table_lms_ri <- data.frame(lms_ri)
       colnames(table_lms_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-      DT::datatable(table_lms_ri, rownames = FALSE, caption = htmltools::tags$caption(
-        style = 'caption-side: bottom; text-align: center;','Table: Prediction of the LMS'))}}
+      DT::datatable(table_lms_ri, rownames = FALSE, extensions = 'Buttons',
+                    options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                    caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the LMS'))}}
   })
   
   # Tool to predict reference intervals for the different gamlss models
@@ -2068,8 +2086,9 @@ server <- function(input, output, session) {
     colnames(deviation_gamlss) <- c("Age-range from", "to [Days]","Age from", "to [Years]",
                                     "2.5% Percentil","50% Percentil","97.5% Percentil")
     deviation_gamlss <<- deviation_gamlss
-    DT::datatable(deviation_gamlss, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Prediction of the GAMLSS Models with', text_model)) %>%
+    DT::datatable(deviation_gamlss, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the GAMLSS Models with', text_model)) %>%
     DT::formatRound(c(3:length(deviation_gamlss)), 2)
   })
   
@@ -2236,8 +2255,9 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
-    DT::datatable(outlierfree_pb, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Dataset without the Residuals of the P-Splines'))
+    DT::datatable(outlierfree_pb, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Dataset without the Residuals of the P-Splines'))
   })
   
   # Table for prediction for the Cubic Splines
@@ -2246,8 +2266,9 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
-    DT::datatable(outlierfree_cs, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Cubic Splines'))
+    DT::datatable(outlierfree_cs, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Cubic Splines'))
   })
   
   # Table for prediction for the Polynomials (Degree 3)
@@ -2256,8 +2277,9 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
-    DT::datatable(outlierfree_poly, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Polynomial Degree 3'))
+    DT::datatable(outlierfree_poly, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Polynomial Degree 3'))
   })
   
   # Table for prediction for the Polynomials (Degree 4)
@@ -2266,8 +2288,9 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
-    DT::datatable(outlierfree_poly4, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Polynomial Degree 4'))
+    DT::datatable(outlierfree_poly4, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Polynomial Degree 4'))
   })
   
   # Table for prediction for the Neural Network
@@ -2276,8 +2299,9 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
-    DT::datatable(outlierfree_nn, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Neural Network'))
+    DT::datatable(outlierfree_nn, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Neural Network'))
   })
   
   # Table for prediction for the Decision Tree
@@ -2286,8 +2310,9 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
-    DT::datatable(outlierfree_tr, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Decision Tree'))
+    DT::datatable(outlierfree_tr, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Decision Tree'))
   })
 
   ##################################### Regressionen ##############################################
@@ -2410,7 +2435,8 @@ server <- function(input, output, session) {
     smallest_mse <- regression_table[which.min(regression_table$MSE),]$MSE
     smallest_rmse <- regression_table[which.min(regression_table$RMSE),]$RMSE
     
-    DT::datatable(regression_table, rownames = FALSE) %>%
+    DT::datatable(regression_table, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), ) %>%
       DT:: formatStyle(columns = "AIC", background = styleEqual(smallest_aic, "cornflowerblue")) %>%
       DT:: formatStyle(columns = "BIC", background = styleEqual(smallest_bic, "seagreen")) %>%
       DT:: formatStyle(columns = "R2", background = styleEqual(biggest_r2, "lavender")) %>%
@@ -2452,8 +2478,9 @@ server <- function(input, output, session) {
     regression_ <- data.frame(regression_pred, reg_p)
     
     colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
-    DT::datatable(regression_, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Linear Regression'))
+    DT::datatable(regression_, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Linear Regression'))
   })
   
   output$regression_poly10 <- DT::renderDataTable({
@@ -2463,8 +2490,9 @@ server <- function(input, output, session) {
     regression_ <- data.frame(regression_pred, reg_p)
     
     colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
-    DT::datatable(regression_, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (10)'))
+    DT::datatable(regression_, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (10)'))
   })
   
   output$regression_poly2 <- DT::renderDataTable({
@@ -2474,8 +2502,9 @@ server <- function(input, output, session) {
     regression_ <- data.frame(regression_pred, reg_p)
     
     colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
-    DT::datatable(regression_, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (2)'))
+    DT::datatable(regression_, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (2)'))
   })
   
   output$regression_poly3 <- DT::renderDataTable({
@@ -2485,8 +2514,9 @@ server <- function(input, output, session) {
     regression_ <- data.frame(regression_pred, reg_p)
     
     colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
-    DT::datatable(regression_, rownames = FALSE, caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (3)'))
+    DT::datatable(regression_, rownames = FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (3)'))
   })
   
   ##################################### Download ##################################################
@@ -2498,10 +2528,10 @@ server <- function(input, output, session) {
     content = function(file) {
       write.csv2(window_data_all_outlier, file, row.names = FALSE)})
 
-  # Regular Window with modified Tukey-Method
+  # Regular Window with RefLim
   output$Download_window_data_all_tukey <- downloadHandler(
     filename = function() {
-      paste0(Sys.Date(),"_Regular_Window_With_Tukey.csv")},
+      paste0(Sys.Date(),"_Regular_Window_With_RefLim.csv")},
     content = function(file) {
       write.csv2(window_data_all_tukey, file, row.names = FALSE)})
 
@@ -2512,10 +2542,10 @@ server <- function(input, output, session) {
     content = function(file) {
       write.csv2(window_data_split_outlier, file, row.names = FALSE)})
 
-  # Regular Window coupled Decision Tree with modified Tukey-Method
+  # Regular Window coupled Decision Tree with RefLim
   output$Download_window_data_split_tukey <- downloadHandler(
     filename = function() {
-      paste0(Sys.Date(),"_Windowtree_With_Tukey.csv")},
+      paste0(Sys.Date(),"_Windowtree_With_RefLim.csv")},
     content = function(file) {
       write.csv2(window_data_split_tukey, file, row.names = FALSE)})
 
@@ -2526,10 +2556,10 @@ server <- function(input, output, session) {
     content = function(file) {
       write.csv2(slide, file, row.names = FALSE)})
   
-  # Regular Window coupled Decision Tree with modified Tukey-Method (Sliding-Windowmethod)
+  # Regular Window coupled Decision Tree with RefLim (Sliding-Windowmethod)
   output$Download_sliding_tukey <- downloadHandler(
     filename = function() {
-      paste0(Sys.Date(),"_SlidingWindow_With_Tukey.csv")},
+      paste0(Sys.Date(),"_SlidingWindow_With_RefLim.csv")},
     content = function(file) {
       write.csv2(slide_tukey, file, row.names = FALSE)})
   
@@ -2540,10 +2570,10 @@ server <- function(input, output, session) {
     content = function(file) {
       write.csv2(window_data_lis_outlier, file, row.names = FALSE)})
   
-  # LIS Window-Method with modified Tukey-Method
+  # LIS Window-Method with RefLim
   output$Download_lis_table_t <- downloadHandler(
     filename = function() {
-      paste0(Sys.Date(),"_LIS_With_Tukey.csv")},
+      paste0(Sys.Date(),"_LIS_With_RefLim.csv")},
     content = function(file) {
       write.csv2(window_data_lis_tukey, file, row.names = FALSE)})
   
