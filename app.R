@@ -73,7 +73,7 @@ ui <- fluidPage(
         #fileInput("dataset_file", "Upload own dataset:", accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")), hr(),
         uiOutput("dataset_file"),
         
-        actionButton('reset', 'Reset Input'), hr(),
+        actionButton('reset', 'Reset Input', icon = icon("trash")), hr(),
           
         selectInput("days_or_years", "Unit for the Age:", choices = list("Year" = "age", "Day "= "age_days")), 
           
@@ -195,7 +195,7 @@ ui <- fluidPage(
           selectInput("lis_data", "Select preinstalled dataset:", choice = list.files(pattern = "txt", recursive = TRUE)),
           #fileInput("lis_data_file", "Upload TXT File:", accept = ".txt")),
           uiOutput("lis_data_file"),
-          actionButton('reset_lis', 'Reset Input')), 
+          actionButton('reset_lis', 'Reset Input', icon = icon("trash"))), 
             
         ### MainPanel - LIS Window-Method ###   
         mainPanel(width = 9,
@@ -307,7 +307,7 @@ ui <- fluidPage(
   
     ############################## Quant sheets ####################################
     
-    # tabPanel("Quant Sheets", icon = icon("table"), plotOutput("quantsheets", height = "600px")),
+    tabPanel("Quant Sheets", icon = icon("table"), plotOutput("quantsheets", height = "600px")),
     
     ############################## Regression ######################################
     
@@ -353,25 +353,25 @@ ui <- fluidPage(
   
     navbarMenu("GAMLSS", icon = icon("chart-line"),
     
-      tabPanel("1. Models",
+      tabPanel("GAMLSS- and LMS-Models",
         sidebarLayout( 
           ### Sidebar - GAMLSS ###
           sidebarPanel(width = 3,
             
-            selectInput("method", "GAMLSS Algorithm:", choices = list("Rigby and Stasinopoulos algorithm (RS)" = "RS",
-                                                                      "Cole and Green algorithm (CG)" = "CG")),
+            # selectInput("method", "GAMLSS Algorithm:", choices = list("Rigby and Stasinopoulos algorithm (RS)" = "RS",
+            #                                                           "Cole and Green algorithm (CG)" = "CG")),
             sliderInput("epochs", "Number of Epochs:", 5 , 250, 30),
-            selectInput("distribtion_gamlss", "Distribution:", choices = list("Normal distribution" = "NO", 
-                                                                              "Log-Normal distribution" = "LOGNO",
+            selectInput("distribtion_gamlss", "GAMLSS-Distribution:", choices = list("Normal distribution" = "NO", 
+                                                                                     "Log-Normal distribution" = "LOGNO",
                                                                 "Box-Cox" = c("Box-Cole Green Distrubtion" = "BCCG", 
                                                                               "Box-Cole Green Distrubtion (orginal)" = "BCCGo",
                                                                               "Box-Cole Green Exp. Distrubtion" = "BCPE",
                                                                               "Box-Cole Green Exp. Distrubtion (orginal)" = "BCPEo", 
                                                                               "Box-Cole Green T-Distribution" = "BCT", 
                                                                               "Box-Cole Green T-Distribution (orginal)" = "BCTo"))),
-            checkboxInput("checkbox", "Distribution from the LMS-Method", value = FALSE),
-            actionButton("button_gamlss", "Make GAMLSS-Models", icon("calculator")),
-            actionButton("button_lms", "Make LMS-Model", icon("calculator")), 
+            checkboxInput("checkbox", "Distribution proposed by the LMS", value = FALSE),
+            actionButton("button_gamlss", "GAMLSS-Models", icon("calculator"), onclick = "$(tabs).removeClass('disabled')"),
+            actionButton("button_lms", "LMS-Model", icon("calculator"), onclick = "$(tab).removeClass('disabled')"), 
             htmlOutput("buttons_gamlss"), htmlOutput("buttons_lms")#, 
             #hr(), htmlOutput("helptext_gamlss")
           ),
@@ -387,37 +387,46 @@ ui <- fluidPage(
               downloadButton("download_gamlss", "GAMLSS-Plot in .EPS"),
               downloadButton("download_gamlss_jpeg", "GAMLSS-Plot in .JPEG")),
             
-            tabPanel("GAMLSS with Splines and Polynomials", 
-              
-              plotOutput("gamlss_models", height="1000px"), verbatimTextOutput("gamlss_text")), 
+            tabPanel("LMS", value = "nav_lms",
+                     
+              plotOutput("lms", height="500px"), p("LMS - Analysis:"), verbatimTextOutput("lms_text"), 
+              plotOutput("lms_plot"), plotOutput("lms_fitted", height = "500px"), plotOutput("lms_wormplots")),
             
-            tabPanel("GAMLSS with Splines and Polynomial - Analysis", 
-                    
+            tabPanel("GAMLSS with Splines", value = "nav_gamlss",
+              
+              plotOutput("gamlss_models_splines", height="500px"), verbatimTextOutput("gamlss_text_splines")), 
+            
+            tabPanel("GAMLSS with Splines - Analysis", value = "nav_gamlss", 
+                     
               p("GAMLSS with P-Splines:"), plotOutput("gamlss_term_pb"), plotOutput("gamlss_fitted_pb_"),
               p("GAMLSS with Cubic-Splines:"),plotOutput("gamlss_term_cs"), plotOutput("gamlss_fitted_cs_"),
+              p("Wormplots for GAMLSS with the P-Splines and Cubic Splines:"), 
+              plotOutput("wormplots_splines", height="500px")),
+            
+            tabPanel("GAMLSS with Polynomials", value = "nav_gamlss",
+                     
+              plotOutput("gamlss_models_poly", height="500px"), verbatimTextOutput("gamlss_text_poly")), 
+            
+            tabPanel("GAMLSS with Polynomial - Analysis", value = "nav_gamlss", 
+                    
               p("GAMLSS with Polynomial Degree 3:"), plotOutput("gamlss_term_poly"), plotOutput("gamlss_fitted_poly_"),
               p("GAMLSS with Polynomial Degree 4:"), plotOutput("gamlss_term_poly4"), plotOutput("gamlss_fitted_poly4_"),
-              p("Wormplots for GAMLSS with the P-Splines, Cubic Splines and Polynomial Degree 3 and 4:"), 
-              plotOutput("wormplots", height="500px")),
+              p("Wormplots for GAMLSS with the Polynomial Degree 3 and 4:"), 
+              plotOutput("wormplots_poly", height="500px")),
             
-            tabPanel("GAMLSS with Neural Network", 
+            tabPanel("GAMLSS with Neural Network", value = "nav_gamlss",
                    
               plotOutput("gamlss_net", height="500px"), verbatimTextOutput("net_text"), p("Neural Network - Analysis:"), 
               # Plot neural network with term.plot(nn_)
               plotOutput("network_term"), plotOutput("network_fitted", height="500px"), plotOutput("nn_wormplots")),
           
-            tabPanel("GAMLSS with Decision Tree", 
+            tabPanel("GAMLSS with Decision Tree", value = "nav_gamlss",
                    
               plotOutput("gamlss_tree", height="500px"), verbatimTextOutput("tree_text"), p("Decision Tree - Analysis:"), 
               plotOutput("rpart_tree"),  plotOutput("tree_term"), plotOutput("tree_fitted", height="500px"), 
-              plotOutput("tr_wormplots")),
-          
-            tabPanel("LMS", 
-                  
-              plotOutput("lms", height="500px"), p("LMS - Analysis:"), verbatimTextOutput("lms_text"), 
-              plotOutput("lms_plot"), plotOutput("lms_fitted", height = "500px"), plotOutput("lms_wormplots"))
-          )
-        )
+              plotOutput("tr_wormplots"))
+          ),
+          tags$script( src = 'tabs_enabled.js')),
         )
       ),
       
@@ -820,7 +829,7 @@ server <- function(input, output, session) {
   
   build_gamlss_model <- eventReactive(input$button_gamlss, {
     
-    req(input$dataset, input$age_end, input$distribtion_gamlss, input$epochs, input$method)
+    req(input$dataset, input$age_end, input$distribtion_gamlss, input$epochs, "RS")
     
     progress <- shiny::Progress$new()
     progress$set(message = "Calculate Percentiles with GAMLSS-Models...", detail = "", value = 2)
@@ -829,10 +838,10 @@ server <- function(input, output, session) {
     if(input$checkbox == TRUE){
       validate(need(lms_ready == TRUE, 
       "Please make first the LMS-Method to get the proposed distribution!"))
-      gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], lms_$family[1], input$epochs, input$method)} 
+      gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], lms_$family[1], input$epochs, "RS")} 
 
     else{gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], input$distribtion_gamlss, input$epochs, 
-                                          input$method)}
+                                          "RS")}
     
     # Save global value to check later if the models are already calculated
     modelsprediction <<- TRUE
@@ -862,7 +871,7 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
     progress$set(message = "Refit the GAMLSS Models...", detail = "", value = 2)
     
-    outliers_residuals(data_analyte(), input$distribtion_gamlss, input$epochs, input$method, input$error)
+    outliers_residuals(data_analyte(), input$distribtion_gamlss, input$epochs, "RS", input$error)
 
     residuals_ready <<- TRUE
     on.exit(progress$close())
@@ -1384,16 +1393,16 @@ server <- function(input, output, session) {
   
   ################################ Quant Sheets ####################################
   
-  # output$quantsheets <- renderPlot({
-  #   
-  #   data_analyte()
-  #   
-  #   # Check transformation for x
-  #   data_power <- findPower(data_analyte_short[,3],data_analyte_short[,4])
-  #   # Make Quant sheets with the power of the transformation
-  #   quantsheets <<- quantSheets(value, age_days, data = data_analyte_short,
-  #                      cent = c(2.5, 50, 97.5), power = data_power)
-  # })
+  output$quantsheets <- renderPlot({
+
+    data_analyte()
+
+    # Check transformation for x
+    data_power <- findPower(data_analyte_short[,3],data_analyte_short[,4])
+    # Make Quant sheets with the power of the transformation
+    quantsheets <<- quantSheets(value, age_days, data = data_analyte_short,
+                       cent = c(2.5, 50, 97.5), power = data_power)
+  })
   
   ################################ LMS #############################################
   
@@ -1448,11 +1457,11 @@ server <- function(input, output, session) {
     print("Your LMS model is ready!")
   })
   
-  # Centiles Plot with gamlss models (P-Splines, Cubic Splines, Polynomials Degree 3 and 4) ######
-  output$gamlss_models <- renderPlot({
+  # Centiles Plot with gamlss models (P-Splines, Cubic Splines) ######
+  output$gamlss_models_splines <- renderPlot({
     
     build_gamlss_model()
-    par(mfrow=c(2,2))
+    par(mfrow=c(1,2))
     
     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", 
              ylab = ylab_, pch = 20, cex = 0.75, col.cent=c("indianred","black","cornflowerblue"), 
@@ -1460,6 +1469,14 @@ server <- function(input, output, session) {
     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", 
              ylab = ylab_, pch = 20, cex = 0.75, col.cent=c("indianred","black","cornflowerblue"), 
              lty.centiles=c(3,1,3), lwd.centiles = 1.5, legend = FALSE, col = "lightgrey")
+  })
+  
+  # Centiles Plot with gamlss models (Polynomials Degree 3 and 4) ######
+  output$gamlss_models_poly <- renderPlot({
+    
+    build_gamlss_model()
+    par(mfrow=c(1,2))
+ 
     centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
              ylab = ylab_, pch = 20, cex = 0.75, col.cent=c("indianred","black","cornflowerblue"), 
              lty.centiles=c(3,1,3), lwd.centiles = 1.5, legend = FALSE, col = "lightgrey")
@@ -1497,7 +1514,7 @@ server <- function(input, output, session) {
   })
   
   # GAMLSS - Analysis Text
-  output$gamlss_text <- renderPrint({
+  output$gamlss_text_splines <- renderPrint({
      
     build_gamlss_model()
     
@@ -1507,6 +1524,13 @@ server <- function(input, output, session) {
     print("GAMLSS with Cubic splines")
     centiles(cs_, cent=c(2.5,50,97.5), plot=FALSE) 
     #summary(cs_)
+  })
+  
+  # GAMLSS - Analysis Text
+  output$gamlss_text_poly <- renderPrint({
+    
+    build_gamlss_model()
+    
     print("GAMLSS with Polynomials (Degree 3)")
     centiles(poly_,cent=c(2.5,50,97.5), plot=FALSE)
     #summary(poly_)
@@ -1551,14 +1575,22 @@ server <- function(input, output, session) {
                                   col.lab = "black", pch = 20, cex = 0.5, cex.lab = 1.5, cex.axis = 1, cex.main = 1.5))) 
   })
   
-  # Wormplots from P-Splines, Cubic Splines and  Polynomials Degree 3 and 4
-  output$wormplots <- renderPlot({
+  # Wormplots from P-Splines and Cubic Splines
+  output$wormplots_splines <- renderPlot({
     
     build_gamlss_model()
     par(mfrow = c(2,2))
     
     try(wp(pb_, ylim.all  = 3, col = "cornflowerblue"))
     try(wp(cs_, ylim.all = 3, col = "cornflowerblue"))
+  })
+  
+  # Wormplots from Polynomials Degree 3 and 4
+  output$wormplots_ploy <- renderPlot({
+    
+    build_gamlss_model()
+    par(mfrow = c(2,2))
+    
     try(wp(poly_, ylim.all = 3, col = "cornflowerblue"))
     try(wp(poly4_, ylim.all = 3, col = "cornflowerblue"))
   })
@@ -1809,17 +1841,19 @@ server <- function(input, output, session) {
     build_gamlss_model()
     if(lms_ready == TRUE){lms_reactive()}
     
+    par(mar = c(12, 3, 3, 3))
     par(mfrow = c(1,2))
 
     barplot(rbind(compare_models[,2],compare_models[,3],compare_models[,4]), ylab = "Value", 
-            ylim = c(min(rbind(compare_models[,2],compare_models[,3],compare_models[,4])), 
-                     max(rbind(compare_models[,2],compare_models[,3],compare_models[,4]))),
-            xpd = FALSE, beside = TRUE, las = 1, names.arg=c(compare_models[,1]), col = c("cornflowerblue","indianred","seagreen3"))
+            ylim = c(min(rbind(compare_models[,2],compare_models[,3],compare_models[,4])) - min(rbind(compare_models[,2],compare_models[,3],compare_models[,4])/100), 
+                     max(rbind(compare_models[,2],compare_models[,3],compare_models[,4])) + max(rbind(compare_models[,2],compare_models[,3],compare_models[,4])/100)),
+            xpd = FALSE, beside = TRUE, las = 2, names.arg=c(compare_models[,1]), col = c("cornflowerblue","indianred","seagreen3"))
     legend("topright", legend = c("AIC","GAIC","BIC"),
            col = c("cornflowerblue","indianred","seagreen3"), pch = 20)
     
-    barplot(compare_models[,5], ylab = "Value",  ylim = c(0, 1), las = 1,
-         main = "Pseudo R^2", names.arg=c(compare_models[,1]), col = c("lavender"))
+    barplot(compare_models[,5], ylab = "Value",  ylim = c(0, 1), las = 2,
+         names.arg=c(compare_models[,1]), col = c("lavender"))
+    legend("topright", legend = c("Pseudo R^2"),col = c("lavender"), pch = 20)
   })
   
   ##################################### Prediction ################################################
