@@ -68,14 +68,18 @@ ui <- fluidPage(
     ### Sidebar - Analysis ###
       sidebarPanel(width = 3,
                    
+        helpText("Data Upload:"),
+                              
         selectInput("dataset", "Select preinstalled dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
           
         #fileInput("dataset_file", "Upload own dataset:", accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")), hr(),
         uiOutput("dataset_file"),
         
         actionButton('reset', 'Reset Input', icon = icon("trash")), hr(),
+        
+        helpText("Data Preprocessing:"),
           
-        selectInput("days_or_years", "Unit for the Age:", choices = list("Year" = "age", "Day "= "age_days")), 
+        radioButtons("days_or_years", "Unit for the Age:", c("year" = "age", "day "= "age_days")),
           
         conditionalPanel(condition = "input.days_or_years == 'age'", 
                          sliderInput("age_end", "Select age-range:", min = 0 , max = 100, value = c(0,18))),
@@ -84,22 +88,21 @@ ui <- fluidPage(
                          numericInput("age_input_min", "Select age-range from:", 0, min = 0, max = 100*365)), 
       
         conditionalPanel(condition = "input.days_or_years == 'age_days'", 
-                         numericInput("age_input", "to:", 100, min = 1, max = 100*365)), hr(),
+                         numericInput("age_input", "to:", 100, min = 1, max = 100*365)),
           
         selectInput("sex", "Select the Sex:", choices = list("Male + Female" = "t", "Male" = "m", "Female" = "f")), 
           
-        textInput("text_unit", "Unit of the Analyte:", value = "Unit"), hr(),
+        textInput("text_unit", "Unit of the Analyte:", value = "Unit"), 
+        
+        checkboxInput("unique", "First Unique values", value = TRUE), hr(),
           
-        helpText("Outlierdetection:"), 
+        helpText("Outlierdetection (Beta version):"), 
       
-        checkboxInput("unique", "First Unique values", value = TRUE),
+        checkboxInput("checkboxtukey", "iBoxplot95 coupled with a Decision Tree", value = FALSE),
       
-        checkboxInput("checkboxtukey", "RefLim coupled with a Decision Tree", value = FALSE),
+        helpText("Hyperparameter for the Decision Tree (minbucket): Minimum number of observations in an age group (leaf node)."),
       
-        helpText("Hyperparameter for the Decision Tree (minbucket): Minimum number of observations in a leaf node (age group).
-                 According to CLSI 120 patients must be available for Reference Intervals (RI)!"),
-      
-        selectInput("tree_minsplit", "Setting for the Decision Tree:", 
+        selectInput("tree_minsplit", "", 
                     choices = list("Each group with > 120 patients (for RI according to CLSI)" = 360,
                                    "> 40 patients" = 120, 
                                    "> 20 patients" = 60))),
@@ -109,31 +112,27 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("Overview", icon = icon("home"),
                  
-          p(strong("Shiny App for calculating Age-dependent Reference Intervals!"), br(), br(),
+          p(strong("Shiny App for calculating Age-dependent Reference Intervals! (Beta version)"), br(), br(),
           "This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods: 
           LMS, GAMLSS, Window-Methods and Regression.", br(), "For further information visit our", 
           a("Wiki", href="https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki"),"!"), 
           plotlyOutput("scatterplot_plotly", height="700px")),
             
-        tabPanel("Dataset", 
+        tabPanel("Dataset", icon = icon("table"),
                  
-          DT::dataTableOutput("datatable"), verbatimTextOutput("summary")),
+          DT::dataTableOutput("datatable")),
             
-        tabPanel("Barplots", 
+        tabPanel("Barplots", icon = icon("chart-bar"),
                  
-          p("Distribution of the", strong("SEX"),"across the ages and", strong("STATION"),":"),
-          plotOutput("barplot_sex", height="500px"), 
-          plotOutput("barplot_station", height="300px")),
+          plotOutput("barplot_sex", height="400px"), 
+          plotOutput("barplot_station_and_age", height="400px")),
           
         #tabPanel("2D Density Plot", plotlyOutput("hexbinplotly", height="600px")),
             
-        tabPanel("Statistics", 
+        tabPanel("Statistics", icon = icon("calculator"),
           
-          p("QQ-Plots (Quantile-Quantile plot)"), 
           plotOutput("qqplot", height="400px"),
-          p("Density plot to check if the data is normally or log-normally distributed with the help of the Bowley Skewness 
-            (see Frank Klawonn et al. (2020)):"),
-          plotOutput("lognorm", height="375px"))
+          plotOutput("lognorm", height="400px"))
         )
     ))),
   
@@ -307,7 +306,7 @@ ui <- fluidPage(
   
     ############################## Quant sheets ####################################
     
-    tabPanel("Quant Sheets", icon = icon("table"), plotOutput("quantsheets", height = "600px")),
+    # tabPanel("Quant Sheets", icon = icon("table"), plotOutput("quantsheets", height = "600px")),
     
     ############################## Regression ######################################
     
@@ -968,14 +967,26 @@ server <- function(input, output, session) {
     hist_m <- hist(hist_data_m$age, breaks=seq(min(data_analyte()[,3])-1,max(data_analyte()[,3]),by=1))$counts
   
     barplot(rbind(hist_m,hist_w), col = c("cornflowerblue","indianred"),
-          names.arg=seq(min(data_analyte()[,3]), max(data_analyte()[,3]), by=1), xlab = "Age [Years]", las = 1)
+          names.arg=seq(min(data_analyte()[,3]), max(data_analyte()[,3]), by=1), xlab = "AGE_YEARS", las = 1)
     abline(h=0)
-    legend("topright", legend = c("Men","Women"), col = c("cornflowerblue","indianred"), pch = 20)
+    legend("topright", legend = c(paste0("Men: ", nrow(hist_data_m)), paste0("Female: ", nrow(hist_data_w))), col = c("cornflowerblue","indianred"), pch = c(17, 20))
   })
 
   # Barplot with the distribution of the stations
-  output$barplot_station <- renderPlot({
-    barplot(table(data_analyte()[,6]), las=2, col = "grey")
+  output$barplot_station_and_age <- renderPlot({
+    
+    par(mfrow=c(1,2))
+    
+    # Barplot Stations
+    barplot(table(data_analyte()[,6]), las=1, col = "grey", xlab = "STATION")
+    abline(h=0)
+    
+    # Boxplot Age
+    if(input$days_or_years == 'age'){
+      boxplot(data_analyte()[,3], col = "grey", xlab = "AGE_YEARS")
+    } else{
+      boxplot(data_analyte()[,4], col = "grey", xlab = "AGE_DAYS")
+    }
     abline(h=0)
   })
   
@@ -998,31 +1009,30 @@ server <- function(input, output, session) {
   #   try(plot(hexbin(hexbin_data$value ~ hexbin_data$age_days, ylab = ylab_, xlab = "Age [Days]", shape = 0.5, xbins = 100)))
   # })
   
-  output$hexbinplotly <- renderPlotly({
-    
-    hexbin_data <- data_analyte()
-    s <- subplot(
-      plot_ly(data_analyte(), x = ~age_days, type = "histogram", nbinsx = 100),
-      plotly_empty(type = "scatter", mode = "markers"),
-      plot_ly(data_analyte(), x = ~age_days, y = ~value, type = "histogram2dcontour", nbinsx = 100) %>%
-        layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
-               yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15))),
-      plot_ly(data_analyte(), y = ~value, type = "histogram", nbinsx = 100),
-      nrows = 2, heights = c(0.2, 0.8), widths = c(0.8, 0.2), margin = 0,
-      shareX = TRUE, shareY = TRUE)
-    fig <- layout(s, showlegend = FALSE)
-  })
-  
-  # Summary of the data for a short overview
-  output$summary <- renderPrint({
-    print(summary(data_analyte()))
-  })
+  # output$hexbinplotly <- renderPlotly({
+  #   
+  #   hexbin_data <- data_analyte()
+  #   s <- subplot(
+  #     plot_ly(data_analyte(), x = ~age_days, type = "histogram", nbinsx = 100),
+  #     plotly_empty(type = "scatter", mode = "markers"),
+  #     plot_ly(data_analyte(), x = ~age_days, y = ~value, type = "histogram2dcontour", nbinsx = 100) %>%
+  #       layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
+  #              yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15))),
+  #     plot_ly(data_analyte(), y = ~value, type = "histogram", nbinsx = 100),
+  #     nrows = 2, heights = c(0.2, 0.8), widths = c(0.8, 0.2), margin = 0,
+  #     shareX = TRUE, shareY = TRUE)
+  #   fig <- layout(s, showlegend = FALSE)
+  # })
   
   # Data-Table
   output$datatable <- DT::renderDataTable({
-    DT::datatable(data_analyte(), extensions = 'Buttons', rownames= FALSE, 
+    
+    data_table <- data_analyte()
+    colnames(data_table) <- c("ID", "SEX", "AGE_YEARS", "AGE_DAYS", "VALUE", "STATION", "ANALYTE")
+    
+    DT::datatable(data_table, extensions = 'Buttons', rownames= FALSE, 
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')),
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset'))
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Overview from Dataset'))
   })
   
   ##################################### Window-Methods ############################################
@@ -1393,16 +1403,16 @@ server <- function(input, output, session) {
   
   ################################ Quant Sheets ####################################
   
-  output$quantsheets <- renderPlot({
-
-    data_analyte()
-
-    # Check transformation for x
-    data_power <- findPower(data_analyte_short[,3],data_analyte_short[,4])
-    # Make Quant sheets with the power of the transformation
-    quantsheets <<- quantSheets(value, age_days, data = data_analyte_short,
-                       cent = c(2.5, 50, 97.5), power = data_power)
-  })
+  # output$quantsheets <- renderPlot({
+  # 
+  #   data_analyte()
+  # 
+  #   # Check transformation for x
+  #   data_power <- findPower(data_analyte_short[,3],data_analyte_short[,4])
+  #   # Make Quant sheets with the power of the transformation
+  #   quantsheets <<- quantSheets(value, age_days, data = data_analyte_short,
+  #                      cent = c(2.5, 50, 97.5), power = data_power)
+  # })
   
   ################################ LMS #############################################
   
