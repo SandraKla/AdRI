@@ -71,8 +71,7 @@ ui <- fluidPage(
         helpText("Data Upload:"),
                               
         selectInput("dataset", "Select preinstalled dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
-          
-        #fileInput("dataset_file", "Upload own dataset:", accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")), hr(),
+        
         uiOutput("dataset_file"),
         
         actionButton('reset', 'Reset Input', icon = icon("trash")), hr(),
@@ -138,81 +137,64 @@ ui <- fluidPage(
   
   ################################### Window-Methods ############################################
 
-  navbarMenu("Window-method", icon = icon("align-center"),
+  navbarMenu("Window-Methods", icon = icon("align-center"),
       
     ##### Regular Window-Method #####        
-    tabPanel("Regular Window-Method",
+    tabPanel("Regular", icon = icon("chart-bar"),
       sidebarLayout(
         ### Sidebar - Regular Window ###
         sidebarPanel(width = 3,
                      
-          selectInput("window_select_regular", "Show outlierdetection in plot:", choices = list("All" = "all",
-                                                                                                "None" = "none",
-                                                                                                "RefLim" = "tukey")),
-          selectInput("method_window_regular", "Calculation-method for the Reference Intervals:", 
-                      choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
-          sliderInput("window_age", "Regular Window for the Subgroups in years:", 1, 10, 10),
+          sliderInput("window_age", "Regular Window-range for the age-subgroups in years:", 1, 10, 10),
           conditionalPanel(condition = "input.window_age <= 1", 
-                           numericInput("window_agedays", "Regular Window for the Subgroups in days:", 365, min = 1, max = 100*365))),
+                           numericInput("window_agedays", "Regular Window-range for the age-subgroups in days:", 365, min = 1, max = 100*365))),
               
         ### MainPanel - Regular Window ###
         mainPanel(width = 9,
           tabsetPanel(
-            tabPanel("Plot",
+            tabPanel("Plot",  icon = icon("chart-bar"),
                            
-              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the RefLim! But the for the calculation
-                       use the nonparametric if it is a Lognormal-distribution."), br(),  br(),
-                       "This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
-                       so it is only recommended for small changes through the age. Available for the calculation for the reference intervals a 
-                       nonparametric, parametric and the Hoffmann-Method (Without visual recognition of the linear range, it is important to know whether 
-                       there is a mixed distribution and to use the RefLim before!) for the calculation from the reference intervals and 
-                       the RefLim for Outlierdetection."),
+              p("This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
+                so it is only recommended for small changes through the age."),
+              
               plotOutput("window", height="600px")),
 
             tabPanel("Table", icon = icon("table"), 
                      
-                     downloadButton("Download_window_data_all_outlier", "Table with Reference intervals without Outlierdetection"),
-                     DT::dataTableOutput("windowtable_o"), 
-                     downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with RefLim"),
-                     DT::dataTableOutput("windowtable_t"))
+              DT::dataTableOutput("windowtable_t"),
+              downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with RefLim"))
           )
         )
       )
     ),
     
     ##### LIS Window-Method #####      
-    tabPanel("LIS Window-method",
+    tabPanel("Laboratory Information System (LIS)", icon = icon("chart-bar"),
       sidebarLayout(
         ### Sidebar - LIS Window-Method ###
         sidebarPanel(width = 3,
 
-          selectInput("window_select_lis", "Show outlierdetection in plot:", choices = list("All" = "all",
-                                                                                            "None" = "none",
-                                                                                            "RefLim" = "tukey")),
-          selectInput("method_window_lis", "Calculation-method for the Reference Intervals:", 
-                      choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
           selectInput("lis_data", "Select preinstalled dataset:", choice = list.files(pattern = "txt", recursive = TRUE)),
-          #fileInput("lis_data_file", "Upload TXT File:", accept = ".txt")),
           uiOutput("lis_data_file"),
           actionButton('reset_lis', 'Reset Input', icon = icon("trash"))), 
             
         ### MainPanel - LIS Window-Method ###   
         mainPanel(width = 9,
           tabsetPanel(
-            tabPanel("Plot",
+            tabPanel("Plot", icon = icon("chart-bar"),
                          
-              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the RefLim! But the for the calculation
-              use the nonparametric if it is a Lognormal-distribution"), br(),br(), "Load a TXT file on the left with the age groups from your laboratory information system (LIS)
+              p("Load a TXT file on the left with the age groups from your Laboratory Information System (LIS)
               and the Reference Intervals will be calculated."),
-              
               plotOutput("lis_window", height = "600px")),
-                           
+            
+            tabPanel("Laboratory Information System (LIS)", icon = icon("database"),
+                     
+                plotOutput("lis_window_analysis")),
+            
             tabPanel("Table", icon = icon("table"), 
                      
-              downloadButton("Download_lis_table_o","Table with Reference Intervals without Outlierdetection"),
-              DT::dataTableOutput("lis_table_o"),
-              downloadButton("Download_lis_table_t","Table with Reference Intervals without Outlierdetection"),
-              DT::dataTableOutput("lis_table_t")))
+              DT::dataTableOutput("lis_table_t"),
+              downloadButton("Download_lis_table_t","Table with Reference Intervals without Outlierdetection")))
         )
       )   
     ),
@@ -221,88 +203,68 @@ ui <- fluidPage(
     tabPanel("Decision Tree", icon = icon("tree"),
       sidebarLayout(
         ### Sidebar - Decision Tree Method ###
-        sidebarPanel(width = 3,
-            
-          selectInput("window_select_tree", "Show outlierdetection in plot:", choices = list("All" = "all",
-                                                                                             "None" = "none",
-                                                                                             "RefLim" = "tukey")),
-          selectInput("method_window_tree", "Calculation-method for the Reference Intervals:", 
-                      choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot"))),
+        sidebarPanel(width = 3,""),
       
         ### MainPanel - Decision Tree Method ###
         mainPanel(width = 9,
           tabsetPanel(
-            tabPanel("Plot",
+            tabPanel("Plot", icon = icon("chart-bar"),
                      
-              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the RefLim! But the for the calculation
-                use the nonparametric if it is a Lognormal-distribution"), br(),br(), "Decision Trees are used for machine learning. It can be used for classification (supervised learning), but also
+              p("Decision Trees are used for machine learning. It can be used for classification (supervised learning), but also
                 for clustering (unsupervised learning). Here it used to cluster the data into subgroups with similar values.
                 The Decision is from the package rpart and is visualized with rpart.plot. The subgroups according to the Decision Tree
-                are used to calculate the reference intervals (nonparametric, parametric or with the Hoffmann-Method)."),
+                are used to calculate the reference intervals."),
               plotOutput("tree_window", height = "600px")),
               
             tabPanel("Decision Tree", icon = icon("tree"),
                      
               p("Used Decision Tree and Analysis for each subgroup for Normal- or Lognormaldistribution with the 
                 Bowley-Skewness (see Frank Klawonn et al. (2020)):"),
-                downloadButton("download_tree", "Decision Tree"),
               plotOutput("tree_rpart", height = "500px"),
-              plotOutput("tree_window_analysis")),
+              plotOutput("tree_window_analysis"),
+              downloadButton("download_tree", "Decision Tree")),
                            
             tabPanel("Table", icon = icon("table"), 
-                     
-              downloadButton("Download_window_data_split_outlier","Table with Reference Intervals without Outlierdetection"),
-              DT::dataTableOutput("tree_windowtable_o"),
-              downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with RefLim"), 
-              DT::dataTableOutput("tree_windowtable_t")))
+              DT::dataTableOutput("tree_windowtable_t"),
+              downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with RefLim")))
         )
       )
     ),
     
-    tabPanel("Sliding Window",
+    tabPanel("Sliding Window", icon = icon("chart-bar"),
       sidebarLayout(
         ### Sidebar - Sliding Window
           sidebarPanel(width = 3,
-                
-            selectInput("window_select_sliding", "Show outlierdetection in plot:", choices = list("All" = "all",
-                                                                                                  "None" = "none",
-                                                                                                  "RefLim" = "tukey")),
-            selectInput("method_window_sliding", "Calculation-method for the Reference Intervals:", 
-                        choices = list("Nonparametric" = "nonpara", "Parametric" = "para", "Hoffmann-Method" = "qqplot")),
                             
-            numericInput("sliding_width", "Sliding Window-Method:", 500, min = 10, max = 10000),
+            numericInput("sliding_width", "Sliding Window-Method Width:", 500, min = 10, max = 10000),
             numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500)),
              
         ### MainPanel - Sliding Window
         mainPanel(width = 9,
           tabsetPanel(
-            tabPanel("Plot",
+            tabPanel("Plot", icon = icon("chart-bar"),
                   
-              p(strong("All Window-Methods differentiate between Normal- and Lognormal-distribution by the RefLim! But the for the calculation
-              use the nonparametric if it is a Lognormal-distribution"), br(),br(), "Sliding Window-method goes through the data with a window calculates the mean and reference intervals and goes then
-              with a window-steps further through the data to the end. Only nonparametric method available for the reference intervals
-              This method is not yet validated, caution when using it for meaningful reference intervals."), 
+              p("Sliding Window-method goes through the data with a window calculates the mean and reference intervals and goes then
+              with a window-steps further through the data to the end."), 
               plotOutput("slidingwindow", height = "600px")),
                        
             tabPanel("Table", icon = icon("table"), 
-                     
-              downloadButton("Download_sliding", "Table with Reference Intervals without Outlierdetection"),
-              DT::dataTableOutput("sliding"),
-              downloadButton("Download_sliding_tukey", "Table with Reference Intervals with RefLim"), 
-              DT::dataTableOutput("sliding_tukey"))
+
+              DT::dataTableOutput("sliding_tukey"),
+              downloadButton("Download_sliding_tukey", "Table with Reference Intervals with RefLim"))
           )
         )
       )
-    ),
+    )),
 
     ##### Comparison #####   
-    tabPanel("Comparison", icon = icon("balance-scale"),
-             
-      p("Compare the Regular Window-Method and the Window-Method coupled to
-      the Decision Tree with R-Squared (R2), Mean Absolute Error (MAE), 
-      Mean squared error (MSE), Root mean squared error (RMSE). Best models to each each metric are marked."),
-           
-      downloadButton("Download_rsquared_table", "Table with Metrics"), DT::dataTableOutput("rsquared_table"))),
+    # tabPanel("Comparison", icon = icon("balance-scale"),
+    #          
+    #   p("Compare the Window-Methods with R-Squared (R2), Mean Absolute Error (MAE), 
+    #   Mean squared error (MSE), Root mean squared error (RMSE). Best models to each each metric are marked."),
+    #        
+    #   DT::dataTableOutput("rsquared_table"),
+    #   downloadButton("Download_rsquared_table", "Table with Metrics"))),
   
     ############################## Quant sheets ####################################
     
@@ -787,7 +749,30 @@ server <- function(input, output, session) {
     if(input$window_age <= 1){
       days <- input$window_agedays}
     
-    window_method(data_analyte(), days, input$method_window_regular)
+    window_method(data_analyte(), days, "reflim")
+    
+    on.exit(progress$close())
+  })
+  
+  ##################################### Reactive LIS ##############################################
+  
+  window_lis <- reactive({
+    
+    progress <- shiny::Progress$new()
+    progress$set(message = "Make groups with the given intervals from the Laboratory Information System (LIS)...", detail = "", value = 2)
+    
+    if(is.null(dataset_input_lis())){
+      lis_data <<- read.delim2(input$lis_data)}
+    if(!is.null(dataset_input_lis()))
+    {lis_data <<- read.delim2(dataset_input_lis()[["datapath"]])}
+    
+    lis <- subset(lis_data, AGE_TO <= input$age_input)
+    
+    lis <- data.frame(lis_data[,2])
+    splits <- data.frame(index = lis)
+    
+    split <- round(c(0,sort(splits[,1])))
+    window_method_lis(data_analyte(), split, "reflim", FALSE)
     
     on.exit(progress$close())
   })
@@ -803,7 +788,7 @@ server <- function(input, output, session) {
     splits <- data.frame(rpart_$splits)
   
     split <- round(c(0,sort(splits$index), max(data_analyte()$age_days)))
-    window_method_split(data_analyte(), split, input$method_window_tree, FALSE)
+    window_method_split(data_analyte(), split, "reflim", FALSE)
     
     on.exit(progress$close())
   })
@@ -816,7 +801,7 @@ server <- function(input, output, session) {
     progress$set(message = "Calculate Sliding Window RI...", detail = "", value = 2)
     
     req(input$sliding_width, input$sliding_by)
-    slide <- sliding_window(data_analyte(), input$sliding_width, input$sliding_by, outliers = input$window_select_window)
+    slide <- sliding_window(data_analyte(), input$sliding_width, input$sliding_by, "reflim")
 
     on.exit(progress$close())
     slide
@@ -1041,55 +1026,33 @@ server <- function(input, output, session) {
   output$window <- renderPlot({
     
     window_reactive()
-    
-    # Show plot with outliers and deleted outlier with the iBoxplot95()
-    if(input$window_select_regular == "all"){
    
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
            ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-      points(window_data$age_days, window_data$mean, type="s", col= "indianred", lty=3, lwd = 1.5)
-      points(window_data$age_days, window_data$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
-      points(window_data$age_days, window_data$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)
+    x_lower <- window_data_tukey$age_days
+    y_lower <- window_data_tukey$quantile1
+      
+    segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
+    lowerlimit <- data.frame(x = x_lower, y = y_lower)
 
-      points(window_data_tukey$age_days, window_data_tukey$mean, type="s", col= "seagreen3", lty=3, lwd = 1.5)
-      points(window_data_tukey$age_days, window_data_tukey$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      points(window_data_tukey$age_days, window_data_tukey$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
-    
-      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the RefLim"), 
-             col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
-    
-    # No Outlierdetection
-    if(input$window_select_regular == "none"){
+    x_upper <- window_data_tukey$age_days
+    y_upper <- window_data_tukey$quantile2
       
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
-           ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
+    segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
+    upperlimit <- data.frame(x = x_upper, y = y_upper)
       
-      points(window_data$age_days, window_data$mean, type="s", col= "black", lty=3, lwd = 1.5)
-      points(window_data$age_days, window_data$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
-      points(window_data$age_days, window_data$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)}
-     
-    # RefLim
-    if(input$window_select_regular == "tukey"){ 
-      
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
-           ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-      
-      points(window_data_tukey$age_days, window_data_tukey$mean, type="s", col= "black", lty=3, lwd = 1.5)
-      points(window_data_tukey$age_days, window_data_tukey$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      points(window_data_tukey$age_days, window_data_tukey$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)}
-  })
-  
-  # Tables to the regular windowmethod - Without Outlierdetction
-  output$windowtable_o <- DT::renderDataTable({
-    
-    window_reactive()
-
-    DT::datatable(window_data_all_outlier, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Regular Window-Method without Outlierdetection')) %>%
-    DT::formatStyle(columns = c(1,2), backgroundColor = "indianred") %>% 
-    DT::formatRound(c(3:length(window_data_all_outlier)), 2)
+    for (i in 1: (nrow(lowerlimit)-1)){
+        
+      age <- c(lowerlimit$x[i+1], lowerlimit$x[i], lowerlimit$x[i], lowerlimit$x[i+1])
+        
+      lowerlimit_polygon <- c(lowerlimit$y[i], lowerlimit$y[i])
+      upperlimit_polygon <- c(upperlimit$y[i], upperlimit$y[i])
+      if(length(lowerlimit_polygon > 1)){
+        polygon(age, c(upperlimit_polygon[2], upperlimit_polygon[1], lowerlimit_polygon[1], lowerlimit_polygon[2]), 
+            col = rgb(red = 0 , green = 0, blue = 0, alpha = 0.25), border = NA)
+      }
+    }
   })
   
   # Tables to the regular windowmethod - With RefLim
@@ -1104,6 +1067,72 @@ server <- function(input, output, session) {
       DT::formatRound(c(3:length(window_data_all_tukey)), 2)
   })
   
+  
+  # LIS-Method
+  output$lis_window <- renderPlot({
+    
+    window_lis()
+    
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
+         xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
+    
+    x_lower <- window_data_tukey_lis$age_days
+    y_lower <- window_data_tukey_lis$quantile1
+    
+    segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
+    lowerlimit <- data.frame(x = x_lower, y = y_lower)
+    
+    x_upper <- window_data_tukey_lis$age_days
+    y_upper <- window_data_tukey_lis$quantile2
+    
+    segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
+    upperlimit <- data.frame(x = x_upper, y = y_upper)
+    
+    for (i in 1: (nrow(lowerlimit)-1)){
+      
+      age <- c(lowerlimit$x[i+1], lowerlimit$x[i], lowerlimit$x[i], lowerlimit$x[i+1])
+      
+      lowerlimit_polygon <- c(lowerlimit$y[i], lowerlimit$y[i])
+      upperlimit_polygon <- c(upperlimit$y[i], upperlimit$y[i])
+      if(length(lowerlimit_polygon > 1)){
+        polygon(age, c(upperlimit_polygon[2], upperlimit_polygon[1], 
+                       lowerlimit_polygon[1], lowerlimit_polygon[2]), 
+                col = rgb(red = 0 , green = 0, blue = 0, alpha = 0.25), border = NA)
+      }
+    }
+  })
+  
+  # Window-Method coupled to a Decision Tree - Analysis for Normal- and Lognormaldistribution
+  output$lis_window_analysis <- renderPlot({
+    
+    if(is.null(dataset_input_lis())){
+      lis_data <<- read.delim2(input$lis_data)}
+    if(!is.null(dataset_input_lis()))
+    {lis_data <<- read.delim2(dataset_input_lis()[["datapath"]])}
+    
+    lis <- subset(lis_data, AGE_TO <= input$age_input)
+    
+    lis <- data.frame(lis_data[,2])
+    splits <- data.frame(index = lis)
+    
+    split <- round(c(0,sort(splits[,1])))
+    
+    par(mfrow=c(1,length(split)-1))
+    window_method_lis(data_analyte(), split, "reflim", TRUE)
+  })
+  
+  # Tables to the Window-method with Decision Tree - With RefLim
+  output$lis_table_t <- DT::renderDataTable({
+    
+    window_lis()
+    
+    DT::datatable(window_data_lis_tukey, rownames= FALSE, extensions = 'Buttons',
+                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
+                  caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: Laboratory Information System (LIS)-Method with RefLim')) %>%
+      DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
+      DT::formatRound(c(3:length(window_data_lis_tukey)), 2)
+  })
+  
   # Window-Method coupled to a Decision Tree
   output$tree_window <- renderPlot({
     
@@ -1111,39 +1140,32 @@ server <- function(input, output, session) {
     build_rpart()
     windowtree()
 
-    if(input$window_select_tree == "all"){
-    
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
-           xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-    
-      points(window_data_rpart$age_days, window_data_rpart$mean, type="s", col= "red", lty=3, lwd = 1.5)
-      points(window_data_rpart$age_days, window_data_rpart$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
-      points(window_data_rpart$age_days, window_data_rpart$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)
-    
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$mean, type="s", col= "green", lty=3, lwd = 1.5)
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
-    
-      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the RefLim"), 
-             col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
-    
-    if(input$window_select_tree == "none"){
-      
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
-           xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-      
-      points(window_data_rpart$age_days, window_data_rpart$mean, type="s", col= "black", lty=3, lwd = 1.5)
-      points(window_data_rpart$age_days, window_data_rpart$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
-      points(window_data_rpart$age_days, window_data_rpart$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5) }
-    
-    if(input$window_select_tree == "tukey"){    
-      
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
-           xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-      
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$mean, type="s", col= "black", lty=3, lwd = 1.5)
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      points(window_data_tukey_rpart$age_days, window_data_tukey_rpart$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)}
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
+         xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
+         
+    x_lower <- window_data_tukey_rpart$age_days
+    y_lower <- window_data_tukey_rpart$quantile1
+         
+    segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
+    lowerlimit <- data.frame(x = x_lower, y = y_lower)
+         
+    x_upper <- window_data_tukey_rpart$age_days
+    y_upper <- window_data_tukey_rpart$quantile2
+         
+    segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
+    upperlimit <- data.frame(x = x_upper, y = y_upper)
+         
+    for (i in 1: (nrow(lowerlimit)-1)){
+           
+      age <- c(lowerlimit$x[i+1], lowerlimit$x[i], lowerlimit$x[i], lowerlimit$x[i+1])
+           
+      lowerlimit_polygon <- c(lowerlimit$y[i], lowerlimit$y[i])
+      upperlimit_polygon <- c(upperlimit$y[i], upperlimit$y[i])
+      if(length(lowerlimit_polygon > 1)){
+          polygon(age, c(upperlimit_polygon[2], upperlimit_polygon[1], lowerlimit_polygon[1], lowerlimit_polygon[2]), 
+                  col = rgb(red = 0 , green = 0, blue = 0, alpha = 0.25), border = NA)
+      }
+    }         
   })
   
   # Plot used Decision Tree
@@ -1159,27 +1181,13 @@ server <- function(input, output, session) {
     
     # Build Decision Tree
     build_rpart()
-    
     windowtree()
     
     splits <- data.frame(rpart_$splits)
     split <- round(c(0,sort(splits$index), max(data_analyte()$age_days)))
     par(mfrow=c(1,length(split)-1))
     
-    window_method_split(data_analyte(), split, input$method_window_tree, TRUE)
-  })
-  
-  # Tables to the Window-method with Decision Tree - Without Outlierdetection
-  output$tree_windowtable_o <- DT::renderDataTable({
-    
-    build_rpart()  
-    windowtree()
-             
-    DT::datatable(window_data_split_outlier, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Window-Method with Decision Tree without Outlierdetection')) %>%
-      DT::formatStyle(columns = c(1,2), backgroundColor = "indianred") %>% 
-      DT::formatRound(c(3:length(window_data_split_outlier)), 2)
+    window_method_split(data_analyte(), split, "reflim", TRUE)
   })
   
   # Tables to the Window-method with Decision Tree - With RefLim
@@ -1199,208 +1207,84 @@ server <- function(input, output, session) {
   output$slidingwindow <- renderPlot({
   
     slidingwindow()
+   
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey",
+         xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
     
-    if(input$window_select_sliding == "all"){
-      
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
-           xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-      
-      points(slidingwindow()[,2], slidingwindow()[,3], type="s", col= "red", lty=3, lwd = 1.5)
-      points(slidingwindow()[,2], slidingwindow()[,4], type="s", col= "indianred", lty=6, lwd = 1.5)
-      points(slidingwindow()[,2], slidingwindow()[,5], type="s", col= "indianred", lty=6, lwd = 1.5)
-      
-      points(slide_tukey[,2], slide_tukey[,3], type="s", col= "green", lty=3, lwd = 1.5)
-      points(slide_tukey[,2], slide_tukey[,4], type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      points(slide_tukey[,2], slide_tukey[,5], type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      
-      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with RefLim"), 
-             col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
+    x_lower <- slide_tukey[,2]
+    y_lower <- slide_tukey[,5]
     
-    if(input$window_select_sliding == "none"){
-      
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
-           xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-      
-      points(slidingwindow()[,2], slidingwindow()[,3], type="s", col= "black", lty=3, lwd = 1.5)
-      points(slidingwindow()[,2], slidingwindow()[,4], type="s", col= "indianred", lty=6, lwd = 1.5)
-      points(slidingwindow()[,2], slidingwindow()[,5], type="s", col= "indianred", lty=6, lwd = 1.5)}
+    segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
+    lowerlimit <- data.frame(x = x_lower, y = y_lower)
     
-    if(input$window_select_sliding == "tukey"){    
-      
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
-           xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-      
-      points(slide_tukey[,2], slide_tukey[,3], type="s", col= "green", lty=3, lwd = 1.5)
-      points(slide_tukey[,2], slide_tukey[,4], type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      points(slide_tukey[,2], slide_tukey[,5], type="s", col= "seagreen3", lty=6, lwd = 1.5)}
-    })
-  
-  # Sliding Window-Method - Table
-  output$sliding <- DT::renderDataTable({
+    x_upper <- slide_tukey[,2]
+    y_upper <- slide_tukey[,6]
     
-    slidingwindow()
-
-    DT::datatable(slide, rownames= FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Slding Window-Method')) %>%
-      DT::formatStyle(columns = c(1,2), backgroundColor = "indianred") %>% 
-      DT::formatRound(c(3:length(slide)), 2)
+    segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
+    upperlimit <- data.frame(x = x_upper, y = y_upper)
+    
+    for (i in 1: (nrow(lowerlimit)-1)){
+      
+      age <- c(lowerlimit$x[i+1], lowerlimit$x[i], lowerlimit$x[i], lowerlimit$x[i+1])
+      
+      lowerlimit_polygon <- c(lowerlimit$y[i], lowerlimit$y[i])
+      upperlimit_polygon <- c(upperlimit$y[i], upperlimit$y[i])
+      if(length(lowerlimit_polygon > 1)){
+        polygon(age, c(upperlimit_polygon[2], upperlimit_polygon[1], lowerlimit_polygon[1], lowerlimit_polygon[2]), 
+                col = rgb(red = 0 , green = 0, blue = 0, alpha = 0.25), border = NA)
+      }
+    }
   })
   
+  # Tables to the Sliding Window-method - With RefLim
   output$sliding_tukey <- DT::renderDataTable({
     
     slidingwindow()
     
     DT::datatable(slide_tukey, rownames= FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Slding Window-Method with RefLim')) %>%
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Sliding Window-Method with RefLim')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
       DT::formatRound(c(3:length(slide_tukey)), 2)
   })
   
-  # Comparison Regular Window and Sliding Window
-  output$rsquared_table <- DT::renderDataTable({
-  
-    data_analyte()
-    window_reactive()
-    build_rpart()
-    windowtree()
-    
-    mae_window <- mae_window()
-    mse_window <- mse_window()
-    rmse_window <- rmse_window()
-    r_test <- r_window()
-
-    rsquared_table <<- data.frame("Method" = c("Regular Window (No Outlierdetction)","Regular Window (RefLim)", 
-                                                "Decision Tree Window (No Outlierdetction)", "Decision Tree Window (RefLim)"),
-                                  MAE = c(mae_window),
-                                  MSE = c(mse_window),
-                                  RMSE = c(rmse_window),
-                                  R2 = c(r_test), check.names = FALSE)
-    # Round the data
-    rsquared_table[2] <- round_df(rsquared_table[2], 3)
-    rsquared_table[3] <- round_df(rsquared_table[3], 3)
-    rsquared_table[4] <- round_df(rsquared_table[4], 3)
-    rsquared_table[5] <- round_df(rsquared_table[5], 3)
-    
-    biggest_r2 <- rsquared_table[which.max(rsquared_table$R2),]$R2
-    smallest_mae <- rsquared_table[which.min(rsquared_table$MAE),]$MAE
-    smallest_mse <- rsquared_table[which.min(rsquared_table$MSE),]$MSE
-    smallest_rmse <- rsquared_table[which.min(rsquared_table$RMSE),]$RMSE
-    
-    DT::datatable(rsquared_table, rownames= FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print'))) %>%
-      DT:: formatStyle(columns = "R2", background = styleEqual(biggest_r2, "lavender")) %>%
-      DT:: formatStyle(columns = "MAE", background = styleEqual(smallest_mae, "lavender")) %>%
-      DT:: formatStyle(columns = "MSE", background = styleEqual(smallest_mse, "lavender")) %>%
-      DT:: formatStyle(columns = "RMSE", background = styleEqual(smallest_rmse, "lavender"))
-  })
-  
-  # LIS-Method
-  output$lis_window <- renderPlot({
-    
-    progress <- shiny::Progress$new()
-    progress$set(message = "Make groups with the given intervals from the LIS...", detail = "", value = 2)
-    
-    if(is.null(dataset_input_lis())){
-      lis_data <<- read.delim2(input$lis_data)}
-    if(!is.null(dataset_input_lis()))
-    {lis_data <<- read.delim2(dataset_input_lis()[["datapath"]])}
-    
-    lis <- subset(lis_data, AGE_TO <= input$age_input)
-
-    lis <- data.frame(lis_data[,2])
-    splits <- data.frame(index = lis)
-    
-    split <- round(c(0,sort(splits[,1])))
-    window_method_lis(data_analyte(), split, input$method_window_lis, FALSE)
-    
-    on.exit(progress$close())
-    
-    if(input$window_select_lis == "all"){
-      
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
-           xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-      
-      points(window_data_lis$age_days, window_data_lis$mean, type="s", col= "red", lty=3, lwd = 1.5)
-      points(window_data_lis$age_days, window_data_lis$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
-      points(window_data_lis$age_days, window_data_lis$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5)
-      
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$mean, type="s", col= "green", lty=3, lwd = 1.5)
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      
-      legend("topright", legend = c("Without Outlierdetection", "Outlierdetection with the RefLim"), 
-             col = c("Indianred", "seagreen3"), pch = 20, cex = 1.25)}
-    
-    if(input$window_select_lis == "none"){
-      
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
-           xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-      
-      points(window_data_lis$age_days, window_data_lis$mean, type="s", col= "black", lty=3, lwd = 1.5)
-      points(window_data_lis$age_days, window_data_lis$quantile1, type="s", col= "indianred", lty=6, lwd = 1.5)
-      points(window_data_lis$age_days, window_data_lis$quantile2, type="s", col= "indianred", lty=6, lwd = 1.5) }
-    
-    if(input$window_select_lis == "tukey"){    
-      
-      plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
-           xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-      
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$mean, type="s", col= "black", lty=3, lwd = 1.5)
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile1, type="s", col= "seagreen3", lty=6, lwd = 1.5)
-      points(window_data_tukey_lis$age_days, window_data_tukey_lis$quantile2, type="s", col= "seagreen3", lty=6, lwd = 1.5)}
-    })
-  
-  
-  # Tables to the Window-method with Decision Tree - Without Outlierdetection
-  output$lis_table_o <- DT::renderDataTable({
-    
-    progress <- shiny::Progress$new()
-    progress$set(message = "Make groups with the given intervals from the LIS...", detail = "", value = 2)
-    
-    lis_data <- read.delim2(input$lis_data)
-    lis <- subset(lis_data, AGE_TO <= input$age_input)
-    
-    lis <- data.frame(lis_data[,2])
-    splits <- data.frame(index = lis)
-    
-    split <- round(c(0,sort(splits[,1])))
-    window_method_lis(data_analyte(), split, input$method_window_lis, FALSE)
-    
-    on.exit(progress$close())
-    
-    DT::datatable(window_data_lis_outlier, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: LIS Window-Method without Outlierdetection')) %>%
-      DT::formatStyle(columns = c(1,2), backgroundColor = "indianred") %>% 
-      DT::formatRound(c(3:length(window_data_lis_outlier)), 2)
-  })
-  
-  # Tables to the Window-method with Decision Tree - With RefLim
-  output$lis_table_t <- DT::renderDataTable({
-    
-    progress <- shiny::Progress$new()
-    progress$set(message = "Make groups with the given intervals from the LIS...", detail = "", value = 2)
-    
-    lis_data <- read.delim2(input$lis_data)
-    lis <- subset(lis_data, AGE_TO <= input$age_input)
-    
-    lis <- data.frame(lis_data[,2])
-    splits <- data.frame(index = lis*365)
-    
-    split <- round(c(0,sort(splits[,1])))
-    window_method_lis(data_analyte(), split, input$method_window_lis, FALSE)
-    
-    on.exit(progress$close())
-    
-    DT::datatable(window_data_lis_tukey, rownames= FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: LIS Window-Method with RefLim')) %>%
-      DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
-      DT::formatRound(c(3:length(window_data_lis_tukey)), 2)
-  })
-  
+  # # Comparison Regular Window and Sliding Window
+  # output$rsquared_table <- DT::renderDataTable({
+  # 
+  #   data_analyte()
+  #   window_reactive()
+  #   build_rpart()
+  #   windowtree()
+  #   
+  #   mae_window <- mae_window()
+  #   mse_window <- mse_window()
+  #   rmse_window <- rmse_window()
+  #   r_test <- r_window()
+  # 
+  #   rsquared_table <<- data.frame("Method" = c("Regular Window (RefLim)", "Decision Tree Window (RefLim)"),
+  #                                 MAE = c(mae_window),
+  #                                 MSE = c(mse_window),
+  #                                 RMSE = c(rmse_window),
+  #                                 R2 = c(r_test), check.names = FALSE)
+  #   # Round the data
+  #   rsquared_table[2] <- round_df(rsquared_table[2], 3)
+  #   rsquared_table[3] <- round_df(rsquared_table[3], 3)
+  #   rsquared_table[4] <- round_df(rsquared_table[4], 3)
+  #   rsquared_table[5] <- round_df(rsquared_table[5], 3)
+  #   
+  #   biggest_r2 <- rsquared_table[which.max(rsquared_table$R2),]$R2
+  #   smallest_mae <- rsquared_table[which.min(rsquared_table$MAE),]$MAE
+  #   smallest_mse <- rsquared_table[which.min(rsquared_table$MSE),]$MSE
+  #   smallest_rmse <- rsquared_table[which.min(rsquared_table$RMSE),]$RMSE
+  #   
+  #   DT::datatable(rsquared_table, rownames= FALSE, extensions = 'Buttons',
+  #                 options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print'))) %>%
+  #     DT:: formatStyle(columns = "R2", background = styleEqual(biggest_r2, "lavender")) %>%
+  #     DT:: formatStyle(columns = "MAE", background = styleEqual(smallest_mae, "lavender")) %>%
+  #     DT:: formatStyle(columns = "MSE", background = styleEqual(smallest_mse, "lavender")) %>%
+  #     DT:: formatStyle(columns = "RMSE", background = styleEqual(smallest_rmse, "lavender"))
+  # })
+ 
   ################################ Quant Sheets ####################################
   
   # output$quantsheets <- renderPlot({
@@ -2565,13 +2449,6 @@ server <- function(input, output, session) {
   
   ##################################### Download ##################################################
 
-  # Regular Window without Outlierdetection
-  output$Download_window_data_all_outlier <- downloadHandler(
-    filename = function() {
-      paste0(Sys.Date(),"_Regular_Window.csv")},
-    content = function(file) {
-      write.csv2(window_data_all_outlier, file, row.names = FALSE)})
-
   # Regular Window with RefLim
   output$Download_window_data_all_tukey <- downloadHandler(
     filename = function() {
@@ -2579,40 +2456,19 @@ server <- function(input, output, session) {
     content = function(file) {
       write.csv2(window_data_all_tukey, file, row.names = FALSE)})
 
-  # Regular Window coupled Decision Tree without Outlierdetection
-  output$Download_window_data_split_outlier <- downloadHandler(
-    filename = function() {
-      paste0(Sys.Date(),"_Windowtree.csv")},
-    content = function(file) {
-      write.csv2(window_data_split_outlier, file, row.names = FALSE)})
-
-  # Regular Window coupled Decision Tree with RefLim
+  # Window-Method coupled Decision Tree with RefLim
   output$Download_window_data_split_tukey <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_Windowtree_With_RefLim.csv")},
     content = function(file) {
       write.csv2(window_data_split_tukey, file, row.names = FALSE)})
-
-  # Regular Window coupled Decision Tree without Outlierdetection (Sliding-Windowmethod)
-  output$Download_sliding <- downloadHandler(
-    filename = function() {
-      paste0(Sys.Date(),"_SlidingWindow.csv")},
-    content = function(file) {
-      write.csv2(slide, file, row.names = FALSE)})
   
-  # Regular Window coupled Decision Tree with RefLim (Sliding-Windowmethod)
+  # Sliding-Windowmethod with RefLim
   output$Download_sliding_tukey <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_SlidingWindow_With_RefLim.csv")},
     content = function(file) {
       write.csv2(slide_tukey, file, row.names = FALSE)})
-  
-  # LIS Window-Method with no outlierdetection
-  output$Download_lis_table_o <- downloadHandler(
-    filename = function() {
-      paste0(Sys.Date(),"_LIS.csv")},
-    content = function(file) {
-      write.csv2(window_data_lis_outlier, file, row.names = FALSE)})
   
   # LIS Window-Method with RefLim
   output$Download_lis_table_t <- downloadHandler(
@@ -2719,11 +2575,11 @@ server <- function(input, output, session) {
   
   ##################################### Comparison ################################################
 
-  output$Download_rsquared_table <- downloadHandler(
-    filename = function(){
-      paste0(Sys.Date(),"_Window_Comparison.csv")},
-    content = function(file) {
-      write.csv2(rsquared_table, file, row.names = FALSE)})
+  # output$Download_rsquared_table <- downloadHandler(
+  #   filename = function(){
+  #     paste0(Sys.Date(),"_Window_Comparison.csv")},
+  #   content = function(file) {
+  #     write.csv2(rsquared_table, file, row.names = FALSE)})
 
   output$downloadData_comparison <- downloadHandler(
     filename = function(){

@@ -30,8 +30,6 @@ print.progress <- function(x, i, log.mode = FALSE){
 #' @param log.mode When the data is lognormal distributed
 #' @param print.cycles print the cycles 
 #' @param plot.it Plot the modified Tukey
-#' 
-#' 
 iBoxplot95 <- function(x, lognorm = FALSE, plot.it = TRUE){
   #sets starting parameters
   n0 <- 1
@@ -58,6 +56,56 @@ iBoxplot95 <- function(x, lognorm = FALSE, plot.it = TRUE){
   return(x)
 }
 
+
+#' iBoxplot
+#'
+#' @param x x
+#' @param log.mode log.mode
+#' @param perc perc
+#' @param n.min n.min
+#' @param print.cycles print.cycles
+iBoxplot <- function(x, log.mode = FALSE, perc = 2.5, n.min = 100, print.cycles = TRUE){
+  # expects a numeric vector x > 0
+  # returns a truncated vector together with the following statistics:
+  ## rough reference interval, quartiles and proportion of the assumed non-pathological values
+  
+  ## perc represents the percentage of values
+  ## to be removed from both ends of the assumed underlying normal distribution
+  ## perc = 2.5 means iBoxplot95
+  
+  xx <- na.omit(x)
+  if(!is.numeric(xx)){stop("(iBoxplot) x must be numeric.")}
+  if (length(xx) < n.min){stop(paste("(iBoxplot) the minimum number of values is", n.min, "."))}
+  
+  if (log.mode){
+    if(min(xx) <= 0){stop("(iBoxplot) only positive values allowed for lognormal distributions.")}
+    xx <- log(xx)
+  }
+  n <- length(xx)
+  
+  n0 <- 1
+  n1 <- 0
+  i <- 0
+  
+  if(print.cycles){print.progress(xx, i, log.mode = log.mode)}
+  
+  while (n0 > n1){
+    i <- i + 1
+    n0 <- length(xx)
+    xx <- truncate.x(xx, i)
+    n1 <- length(xx)
+    if(print.cycles){print.progress(xx, i, log.mode = log.mode)}
+  }
+  
+  if (log.mode){xx <- exp(xx)}
+  quant <- round(quantile(xx, c(0, (0.25-0.025)/0.95, 0.5, (0.75-0.025)/0.95, 1)), 2)
+  prop <- round(length(xx) / 0.95 / n, 2)
+  stats <- c(quant, prop)
+  names(stats) <- c("lower", "Q1",  "Q2",  "Q3", "upper", "prop")
+  return(list(trunc = xx, stats = stats))
+}
+
+
 #' Expects a numeric vector x without NAs (usually central 95% of normal distribution)
 #' Returns intercept and slope of a robust QQ-line plus calculated lower and upper limits of reference interval
 #'
@@ -67,7 +115,6 @@ iBoxplot95 <- function(x, lognorm = FALSE, plot.it = TRUE){
 #' @param log.mode When the data is lognormal distributed
 #' @param print.cycles print the cycles 
 #' @param plot.it Plot the QQ-Plot
-#' 
 reflim <- function(x, log.mode = NULL, n.quantiles = 100, n.min = 200, plot.it = TRUE,
                    main = "Q-Q plot", xlab = "Theoretical Quantiles", ylab = "Sample Quantiles"){
   
@@ -210,7 +257,6 @@ bowley <- function(x, alpha = 0.25){
 #' @param cutoff threshold
 #' @param alpha threshold
 #' @param plot.it Plot the result
-#' 
 def.distribution <- function(x, cutoff = 0.05, alpha = 0.25, digits = 3, plot.it = TRUE, add.tx = "distribution", setvalues = NULL,
                              main = ""){
   
@@ -239,6 +285,7 @@ def.distribution <- function(x, cutoff = 0.05, alpha = 0.25, digits = 3, plot.it
   return(list("lognormal" = lognorm, "BowleySkewness" = s))
 }
 
+
 #' Round numeric values from a dataframe
 #' 
 #' @param x Expects a dataframe
@@ -253,4 +300,37 @@ adjust.digits <- function(x){
   digits <- 2 - floor(log10(x))
   if(digits < 1){digits <- 1}
   return(digits)
+}
+
+
+#' ci.quant95
+#'
+#' @param n n
+#' @param lower.limit lower.limit
+#' @param upper.limit upper.limit
+#' @param lognorm lognorm
+#' @param apply.rounding apply.rounding
+ci.quant95 <- function(n, lower.limit, upper.limit, lognorm = TRUE, apply.rounding = TRUE){
+  if(upper.limit <= lower.limit){stop("(ci.quant95) upper limit must be higher than lower limit")}
+  if(lognorm){
+    lower.limit <- log(lower.limit)
+    upper.limit <- log(upper.limit)
+  }
+  sigma <- (upper.limit - lower.limit) / 3.92
+  result <- rep(0, 4)
+  names(result) <- c("low.lim.low", "low.lim.upp", "upp.lim.low", "upp.lim.upp")
+  
+  diff.outer <- sigma * 5.81 / (sqrt(n) + 0.66)
+  diff.inner <- sigma * 7.26 / (sqrt(n) - 5.58)
+  result[1] <- lower.limit - diff.outer
+  result[2] <- lower.limit + diff.inner
+  result[3] <- upper.limit - diff.inner
+  result[4] <- upper.limit + diff.outer
+  
+  if (lognorm){result <- exp(result)}
+  if(apply.rounding){
+    digits <- adjust.digits(result[1])
+    result = round(result, digits)
+  }
+  return(result)
 }
