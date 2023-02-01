@@ -290,24 +290,23 @@ ui <- fluidPage(
         
       tabPanel("Comparison", icon = icon("balance-scale"),
                
-        p("Compare the Regressions with Akaike Information Criterion (AIC), 
-        Bayesian Information Criterion (BIC) / Schwatz Bayesian Criterion (SBC),
-        R-Squared (R2), Mean absolute Error (MAE), Mean squared error (MSE), 
+        p("Compare the Regressions with R-Squared (R2), Akaike Information Criterion (AIC), 
+        Bayesian Information Criterion (BIC), Mean absolute Error (MAE), Mean squared error (MSE), 
         Root mean squared error (RMSE). Best model to each metric is marked"),
-        downloadButton("downloadData_regression_table", "Table with Metrics"),
-        DT::dataTableOutput("regression_table")),
+        DT::dataTableOutput("regression_table"),
+        downloadButton("downloadData_regression_table", "Table with Metrics")),
          
-      tabPanel("Analysis",
-               
-        p("Linear Regression:"), 
-        plotOutput("regression_stats_linear", height = "500px"),
-        p("Polynomials (Degree 10):"),
-        plotOutput("regression_stats_poly10", height = "500px"),
-        p("Polynomials (Degree 3):"), 
-        plotOutput("regression_stats_poly3", height = "500px"),
-        p("Polynomials (Degree 4):"), 
-        plotOutput("regression_stats_poly4", height = "500px")
-      )
+      # tabPanel("Analysis",
+      #          
+      #   p("Linear Regression:"), 
+      #   plotOutput("regression_stats_linear", height = "500px"),
+      #   p("Polynomials (Degree 10):"),
+      #   plotOutput("regression_stats_poly10", height = "500px"),
+      #   p("Polynomials (Degree 3):"), 
+      #   plotOutput("regression_stats_poly3", height = "500px"),
+      #   p("Polynomials (Degree 4):"), 
+      #   plotOutput("regression_stats_poly4", height = "500px")
+      # )
     ),
     
     ############################################# GAMLSS ##########################################
@@ -2373,39 +2372,39 @@ server <- function(input, output, session) {
       DT:: formatStyle(columns = "RMSE", background = styleEqual(smallest_rmse, "lavender"))
   }) 
   
-  # Analysis from the linear regression
-  output$regression_stats_linear <- renderPlot({
-    par(mfrow=c(2,2))
-    plot(linear_regression)
-  })
-  
-  # Analysis from the  Polynomials (Degree 2)
-  output$regression_stats_poly10 <- renderPlot({
-    par(mfrow=c(2,2))
-    plot(poly_2_regression)
-  })
-  
-  # Analysis from the  Polynomials (Degree 3)
-  output$regression_stats_poly3 <- renderPlot({
-    par(mfrow=c(2,2))
-    plot(poly_3_regression)
-  })
-  
-  # Analysis from the  Polynomials (Degree 4)
-  output$regression_stats_poly4 <- renderPlot({
-    par(mfrow=c(2,2))
-    plot(poly_4_regression)
-  })
+  # # Analysis from the linear regression
+  # output$regression_stats_linear <- renderPlot({
+  #   par(mfrow=c(2,2))
+  #   plot(linear_regression)
+  # })
+  # 
+  # # Analysis from the  Polynomials (Degree 2)
+  # output$regression_stats_poly10 <- renderPlot({
+  #   par(mfrow=c(2,2))
+  #   plot(poly_2_regression)
+  # })
+  # 
+  # # Analysis from the  Polynomials (Degree 3)
+  # output$regression_stats_poly3 <- renderPlot({
+  #   par(mfrow=c(2,2))
+  #   plot(poly_3_regression)
+  # })
+  # 
+  # # Analysis from the  Polynomials (Degree 4)
+  # output$regression_stats_poly4 <- renderPlot({
+  #   par(mfrow=c(2,2))
+  #   plot(poly_4_regression)
+  # })
    
-  
   # Table for the linear Regression
   output$regression_linear <- DT::renderDataTable({
 
     regression_pred <- seq(min(data_analyte()[,4]),max(data_analyte()[,4]))
     reg_p <- predict(linear_regression, newdata=data.frame(age_days=regression_pred), interval="prediction")
-    regression_ <- data.frame(regression_pred, reg_p)
+    regression_ <- data.frame(regression_pred, round(reg_p, 2))
+    regression_ <- regression_[,-2]
     
-    colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
+    colnames(regression_) <- c("Age [Days]", "2.5% Prediction Interval", "97.5% Prediction Interval")
     DT::datatable(regression_, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Linear Regression'))
@@ -2415,9 +2414,10 @@ server <- function(input, output, session) {
     
     regression_pred <- seq(min(data_analyte()[,4]),max(data_analyte()[,4]))
     reg_p <- predict(poly_4_regression, newdata=data.frame(age_days=regression_pred), interval="prediction")
-    regression_ <- data.frame(regression_pred, reg_p)
+    regression_ <- data.frame(regression_pred, round(reg_p, 2))
+    regression_ <- regression_[,-2]
     
-    colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
+    colnames(regression_) <- c("Age [Days]", "2.5% Prediction Interval", "97.5% Prediction Interval")
     DT::datatable(regression_, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (10)'))
@@ -2427,9 +2427,10 @@ server <- function(input, output, session) {
     
     regression_pred <- seq(min(data_analyte()[,4]),max(data_analyte()[,4]))
     reg_p <- predict(poly_2_regression, newdata=data.frame(age_days=regression_pred), interval="prediction")
-    regression_ <- data.frame(regression_pred, reg_p)
+    regression_ <- data.frame(regression_pred, round(reg_p, 2))
+    regression_ <- regression_[,-2]
     
-    colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
+    colnames(regression_) <- c("Age [Days]", "2.5% Prediction Interval", "97.5% Prediction Interval")
     DT::datatable(regression_, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (2)'))
@@ -2439,9 +2440,10 @@ server <- function(input, output, session) {
     
     regression_pred <- seq(min(data_analyte()[,4]),max(data_analyte()[,4]))
     reg_p <- predict(poly_3_regression, newdata=data.frame(age_days=regression_pred), interval="prediction")
-    regression_ <- data.frame(regression_pred, reg_p)
+    regression_ <- data.frame(regression_pred, round(reg_p, 2))
+    regression_ <- regression_[,-2]
     
-    colnames(regression_) <- c("Age [Days]", "50% Regression", "2.5% Prediction Interval", "97.5% Prediction Interval")
+    colnames(regression_) <- c("Age [Days]", "2.5% Prediction Interval", "97.5% Prediction Interval")
     DT::datatable(regression_, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (3)'))
