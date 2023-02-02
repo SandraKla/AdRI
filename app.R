@@ -7,6 +7,7 @@
 source("R/analysis.R")
 source("R/reflim.R")
 source("R/window.R")
+source("R/gamlss.R")
 
 ####################################### Libraries #################################################
 
@@ -313,26 +314,27 @@ ui <- fluidPage(
   
     navbarMenu("GAMLSS", icon = icon("chart-line"),
     
-      tabPanel("GAMLSS- and LMS-Models",
+      tabPanel("GAMLSS- and LMS-Models", icon = icon("chart-line"),
         sidebarLayout( 
           ### Sidebar - GAMLSS ###
           sidebarPanel(width = 3,
             
             # selectInput("method", "GAMLSS Algorithm:", choices = list("Rigby and Stasinopoulos algorithm (RS)" = "RS",
             #                                                           "Cole and Green algorithm (CG)" = "CG")),
-            sliderInput("epochs", "Number of Epochs:", 5 , 250, 30),
+            # sliderInput("epochs", "Number of Epochs:", 5 , 250, 30),
+            actionButton("button_lms", "LMS-Model", icon("calculator"), onclick = "$(tab).removeClass('disabled')"), 
+            htmlOutput("buttons_lms"), hr(),
             selectInput("distribtion_gamlss", "GAMLSS-Distribution:", choices = list("Normal distribution" = "NO", 
                                                                                      "Log-Normal distribution" = "LOGNO",
-                                                                "Box-Cox" = c("Box-Cole Green Distrubtion" = "BCCG", 
+                                                                "Box-Cox" = c(#"Box-Cole Green Distrubtion" = "BCCG", 
                                                                               "Box-Cole Green Distrubtion (orginal)" = "BCCGo",
-                                                                              "Box-Cole Green Exp. Distrubtion" = "BCPE",
+                                                                              #"Box-Cole Green Exp. Distrubtion" = "BCPE",
                                                                               "Box-Cole Green Exp. Distrubtion (orginal)" = "BCPEo", 
-                                                                              "Box-Cole Green T-Distribution" = "BCT", 
+                                                                              #"Box-Cole Green T-Distribution" = "BCT", 
                                                                               "Box-Cole Green T-Distribution (orginal)" = "BCTo"))),
             checkboxInput("checkbox", "Distribution proposed by the LMS", value = FALSE),
             actionButton("button_gamlss", "GAMLSS-Models", icon("calculator"), onclick = "$(tabs).removeClass('disabled')"),
-            actionButton("button_lms", "LMS-Model", icon("calculator"), onclick = "$(tab).removeClass('disabled')"), 
-            htmlOutput("buttons_gamlss"), htmlOutput("buttons_lms")#, 
+            htmlOutput("buttons_gamlss"), #, 
             #hr(), htmlOutput("helptext_gamlss")
           ),
         
@@ -340,49 +342,64 @@ ui <- fluidPage(
         mainPanel(width = 9, 
                   
           tabsetPanel( 
-            tabPanel("Overview", icon = icon("home"), includeHTML("www/gamlss.html"), 
-                     
-              downloadButton("download_lms", "LMS-Plot in .EPS"),
-              downloadButton("download_lms_jpeg", "LMS-Plot in .JPEG"),
-              downloadButton("download_gamlss", "GAMLSS-Plot in .EPS"),
-              downloadButton("download_gamlss_jpeg", "GAMLSS-Plot in .JPEG")),
+            # tabPanel("Overview", icon = icon("home"), includeHTML("www/gamlss.html"), 
+            #          
+            #   # downloadButton("download_lms", "LMS-Plot in .EPS"),
+            #   # downloadButton("download_lms_jpeg", "LMS-Plot in .JPEG"),
+            #   # downloadButton("download_gamlss", "GAMLSS-Plot in .EPS"),
+            #   # downloadButton("download_gamlss_jpeg", "GAMLSS-Plot in .JPEG")
+            #   ),
             
-            tabPanel("LMS", value = "nav_lms",
+            tabPanel("LMS", icon = icon("chart-line"), value = "nav_lms",
                      
-              plotOutput("lms", height="500px"), p("LMS - Analysis:"), verbatimTextOutput("lms_text"), 
+              plotOutput("lms", height="700px")),
+            
+            tabPanel("LMS", icon = icon("calculator"), value = "nav_lms",
+                     
+              verbatimTextOutput("lms_text"), 
               plotOutput("lms_plot"), plotOutput("lms_fitted", height = "500px"), plotOutput("lms_wormplots")),
             
-            tabPanel("GAMLSS with Splines", value = "nav_gamlss",
+            tabPanel("GAMLSS (Splines)", icon = icon("chart-line"), value = "nav_gamlss",
               
-              plotOutput("gamlss_models_splines", height="500px"), verbatimTextOutput("gamlss_text_splines")), 
+              plotOutput("gamlss_models_splines", height="700px")), 
             
-            tabPanel("GAMLSS with Splines - Analysis", value = "nav_gamlss", 
-                     
+            tabPanel("GAMLSS (Splines)",  icon = icon("calculator"), value = "nav_gamlss", 
+              
+              verbatimTextOutput("gamlss_text_splines"),
               p("GAMLSS with P-Splines:"), plotOutput("gamlss_term_pb"), plotOutput("gamlss_fitted_pb_"),
               p("GAMLSS with Cubic-Splines:"),plotOutput("gamlss_term_cs"), plotOutput("gamlss_fitted_cs_"),
               p("Wormplots for GAMLSS with the P-Splines and Cubic Splines:"), 
               plotOutput("wormplots_splines", height="500px")),
             
-            tabPanel("GAMLSS with Polynomials", value = "nav_gamlss",
+            tabPanel("GAMLSS (Polynomials)", icon = icon("chart-line"), value = "nav_gamlss",
                      
-              plotOutput("gamlss_models_poly", height="500px"), verbatimTextOutput("gamlss_text_poly")), 
+              plotOutput("gamlss_models_poly", height="700px")), 
             
-            tabPanel("GAMLSS with Polynomial - Analysis", value = "nav_gamlss", 
-                    
+            tabPanel("GAMLSS (Polynomials)", icon = icon("calculator"), value = "nav_gamlss", 
+              
+              verbatimTextOutput("gamlss_text_poly"),   
               p("GAMLSS with Polynomial Degree 3:"), plotOutput("gamlss_term_poly"), plotOutput("gamlss_fitted_poly_"),
               p("GAMLSS with Polynomial Degree 4:"), plotOutput("gamlss_term_poly4"), plotOutput("gamlss_fitted_poly4_"),
               p("Wormplots for GAMLSS with the Polynomial Degree 3 and 4:"), 
               plotOutput("wormplots_poly", height="500px")),
             
-            tabPanel("GAMLSS with Neural Network", value = "nav_gamlss",
+            tabPanel("GAMLSS (Neural Network)", icon = icon("brain"), value = "nav_gamlss",
                    
-              plotOutput("gamlss_net", height="500px"), verbatimTextOutput("net_text"), p("Neural Network - Analysis:"), 
+              plotOutput("gamlss_net", height="700px")),
+            
+            tabPanel("GAMLSS (Neural Network)", icon = icon("calculator"), value = "nav_gamlss",
+                     
+              verbatimTextOutput("net_text"), p("Neural Network - Analysis:"), 
               # Plot neural network with term.plot(nn_)
               plotOutput("network_term"), plotOutput("network_fitted", height="500px"), plotOutput("nn_wormplots")),
           
-            tabPanel("GAMLSS with Decision Tree", value = "nav_gamlss",
+            tabPanel("GAMLSS (Decision Tree)",  icon = icon("tree"), value = "nav_gamlss",
                    
-              plotOutput("gamlss_tree", height="500px"), verbatimTextOutput("tree_text"), p("Decision Tree - Analysis:"), 
+              plotOutput("gamlss_tree", height="700px")),
+            
+            tabPanel("GAMLSS (Decision Tree)",  icon = icon("calculator"), value = "nav_gamlss",
+                     
+              verbatimTextOutput("tree_text"), p("Decision Tree - Analysis:"), 
               plotOutput("rpart_tree"),  plotOutput("tree_term"), plotOutput("tree_fitted", height="500px"), 
               plotOutput("tr_wormplots"))
           ),
@@ -392,25 +409,25 @@ ui <- fluidPage(
       
     ##################################### GAMLSS - Comparison #####################################
       
-      tabPanel("2. Comparison", icon = icon("balance-scale"),
+      tabPanel("Comparison", icon = icon("balance-scale"),
                
         p("Models from the package gamlss can be compared visually or with the Akaike Information Criterion (AIC), 
-        Bayesian Information Criterion (BIC), Generalized Information Criterion (GAIC) 
+        Generalized Information Criterion (GAIC), Bayesian Information Criterion (BIC), 
         or Pseudo R-Squared (R^2). The model with the smallest value for AIC, BIC and GAIC is the best model for the data.
         The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored."), 
                
-        downloadButton("downloadData_comparison", "Comparison"),
         DT::dataTableOutput("table_compare"),
+        #downloadButton("downloadData_comparison", "Comparison"),
         plotOutput("metrics", height = "400px")),  
       
     ################################### GAMLSS - Prediction #######################################
     
-    tabPanel("3. Predict the Reference Intervals", 
+    tabPanel("Reference Intervals", icon = icon("table"),
       sidebarLayout(    
         ### Sidebar - GAMLSS ###
         sidebarPanel(width = 3,
                      
-          numericInput("prediction_age", "Prediction of the Reference Intervals for age [Days]:", 0, min = 0, max = 12*365),
+          #numericInput("prediction_age", "Prediction of the Reference Intervals for age [Days]:", 0, min = 0, max = 12*365),
           
           selectInput("select_model", "Select Model:", choices = list("Splines" = c("P-Splines" = "pb_ri",
                                                                                                   "Cubic Splines" = "cs_ri"),
@@ -419,42 +436,28 @@ ui <- fluidPage(
                                                                                                    "Polynomial (Degree 4)" = "poly4_ri"),
                                                                                     "Machine Learning" = c("Neural Network" = "nn_ri", 
                                                                                                            "Decision Tree" = "tr_ri"))),
-          textOutput("prediction_gamlss"), hr(),
-          helpText("To make discrete Reference Intervals from the continuous models the upper or the lower percentiles are compared 
-          and split in two age groups when a specific change over the threshold (deviation) occurs:"),
-          numericInput("deviation", " Deviation in %:", 10, min = 1, max = 100) #, hr(),
+          #textOutput("prediction_gamlss"), hr(),
+          numericInput("deviation", "Deviation in % for the discrete Reference Intervals:", 10, min = 1, max = 100) #, hr(),
           #htmlOutput("helptext_prediction")
           ),
                
         ### MainPanel - GAMLSS ###
         mainPanel(width = 9,
           tabsetPanel( 
-            tabPanel("Predicted Reference Intervals",
-                     
-              plotOutput("gamlss_prediction", height = "1200px"), 
-              plotOutput("gamlss_prediction_lms_plot", height = "400px")),
+            tabPanel("Reference Intervals", icon = icon("chart-line"),
+              
+              plotOutput("gamlss_prediction", height = "700px")),
            
-            tabPanel("", icon = icon("table"), 
+            tabPanel("Table", icon = icon("table"), 
                      
-              downloadButton("Download_pb_ri", "GAMLSS with P-Splines"),
-              DT::dataTableOutput("gamlss_table_pb"), 
-              downloadButton("Download_cs_ri", "GAMLSS with Cubic Splines"),
-              DT::dataTableOutput("gamlss_table_cs"),
-              downloadButton("Download_poly_ri", "GAMLSS with Polynomial Regerssion with Degree 3"),
-              DT::dataTableOutput("gamlss_table_poly"),
-              downloadButton("Download_poly4_ri", "GAMLSS with Polynomial Regerssion with Degree 4"),
-              DT::dataTableOutput("gamlss_table_poly4"),
-              downloadButton("Download_nn_ri", "GAMLSS with Neural Network"),
-              DT::dataTableOutput("gamlss_table_nn"),
-              downloadButton("Download_tr_ri", "GAMLSS with Decision Tree"),
-              DT::dataTableOutput("gamlss_table_tr"), 
-              downloadButton("Download_lms_ri", "LMS Model"),
-              DT::dataTableOutput("gamlss_table_lms")),
+              DT::dataTableOutput("gamlss_tables"), 
+              downloadButton("Download_ri", "Reference Intervals")),
             
-            tabPanel("Discrete Reference Intervals", plotOutput("gamlss_plot", height = "500px"),
+            tabPanel("Discrete Reference Intervals", 
                      
-              downloadButton("Download_deviation_gamlss", "Table with discrete Reference Intervals"),
-              DT::dataTableOutput("gamlss_split"))
+              plotOutput("gamlss_plot", height = "500px"),
+              DT::dataTableOutput("gamlss_split"),
+              downloadButton("Download_deviation_gamlss", "Table with discrete Reference Intervals"))
           )
         )
       )
@@ -462,54 +465,57 @@ ui <- fluidPage(
     
     ############################### GAMLSS - Residuals ##############################
     
-    tabPanel("4. Residuals", 
+    tabPanel("Residuals (Beta Version)", icon = icon("eraser"),
       sidebarLayout(  
         ### Sidebar - GAMLSS ###
         sidebarPanel(width = 3,
-                            
+          
           helpText("Improvement from the GAMLSS models by deleting high residuals:"),
-          numericInput("error", "Value for the maximal Residuals:", 1.5, min = 0.75, max = 10),
-          actionButton("button_residuals", "Delete high Residuals and refit the GAMLSS", icon("calculator")) #, hr(), 
+          selectInput("select_model_resi", "Select Model:", choices = list("Splines" = c("P-Splines" = "pb_",
+                                                                                      "Cubic Splines" = "cs_"),
+                                                                                      "Polynomial" = c("Polynomial (Degree 3)" = "poly_", 
+                                                                                                       "Polynomial (Degree 4)" = "poly4_"),
+                                                                                      "Machine Learning" = c("Neural Network" = "nn_", 
+                                                                                                      "Decision Tree" = "tr_"))),                
+          numericInput("error", "Maximum value for residuals:", 1.5, min = 0.75, max = 10),
+          actionButton("button_residuals", "Refit the Models", icon("calculator"), onclick = "$(tab_resi).removeClass('disabled')") #, hr(), 
           #htmlOutput("helptext_residuals")
           ),
           
         ### MainPanel - GAMLSS ###      
         mainPanel(width = 9,
           tabsetPanel(               
-            tabPanel("Overview", 
+            tabPanel("Optimization - GAMLSS", icon = icon("chart-line"),
                      
               p("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
               outliers from the model and refit the model. High residuals values are in red, low in blue", 
               strong("This must not be equal to the real outliers of the data!"),"."),
-              plotOutput("outlier", height="900px")),
+              plotOutput("outlier", height="700px")),
                              
-            tabPanel("Refit GAMLSS models", 
+            tabPanel("GAMLSS", icon = icon("chart-line"), value = "nav_resi",
                      
-              plotOutput("gamlss_outlier", height="900px"), 
-                                    
-              p("GAMLSS with P-Splines"), plotOutput("outlier_term_pb"),
-              p("GAMLSS with Cubic Splines"), plotOutput("outlier_term_cs"),
-              p("GAMLSS with Polynomial (Degree 3)"), plotOutput("outlier_term_poly"),
-              p("GAMLSS with Polynomial (Degree 4)"), plotOutput("outlier_term_poly4"),
-              p("GAMLSS with Neural Network"), plotOutput("outlier_term_nn"), 
-              p("GAMLSS with Decision Tree"), plotOutput("outlier_term_tr")),
+              plotOutput("gamlss_outlier", height="700px")),
+            
+            tabPanel("GAMLSS", icon = icon("calculator"), value = "nav_resi",
+                     
+              plotOutput("outlier_term_gamlss")),
       
-            tabPanel("", icon = icon("table"), 
+            tabPanel("Table", icon = icon("table"), value = "nav_resi",
                                     
               p("Tables with the Prediction Tables, can be downloaded and be used like another dataset for this Shiny App!"),
-              downloadButton("Download_pb_residuals", "GAMLSS with P-Splines"),
               DT::dataTableOutput("gamlss_residuals_pb"), 
-              downloadButton("Download_cs_residuals", "GAMLSS with Cubic Splines"),
+              downloadButton("Download_pb_residuals", "GAMLSS with P-Splines"),
               DT::dataTableOutput("gamlss_residuals_cs"),
-              downloadButton("Download_poly_residuals", "GAMLSS with Polynomial Regression with Degree 3"),
+              downloadButton("Download_cs_residuals", "GAMLSS with Cubic Splines"),
               DT::dataTableOutput("gamlss_residuals_poly"),
-              downloadButton("Download_poly4_residuals", "GAMLSS with Polynomial Regression with Degree 4"),
+              downloadButton("Download_poly_residuals", "GAMLSS with Polynomial Regression with Degree 3"),
               DT::dataTableOutput("gamlss_residuals_poly4"),
-              downloadButton("Download_nn_residuals", "GAMLSS with Neural Network"),
+              downloadButton("Download_poly4_residuals", "GAMLSS with Polynomial Regression with Degree 4"),
               DT::dataTableOutput("gamlss_residuals_nn"),
+              downloadButton("Download_nn_residuals", "GAMLSS with Neural Network"),
+              DT::dataTableOutput("gamlss_residuals_tr"),
               downloadButton("Download_tr_residuals", "GAMLSS with Decision Tree"),
-              DT::dataTableOutput("gamlss_residuals_tr"))
-          )
+            tags$script(src = 'tabs_enabled_resi.js')))
         )
       )
     )
@@ -812,7 +818,7 @@ server <- function(input, output, session) {
   
   build_gamlss_model <- eventReactive(input$button_gamlss, {
     
-    req(input$dataset, input$age_end, input$distribtion_gamlss, input$epochs, "RS")
+    req(input$dataset, input$age_end, input$distribtion_gamlss, 50, "RS")
     
     progress <- shiny::Progress$new()
     progress$set(message = "Calculate Percentiles with GAMLSS-Models...", detail = "", value = 2)
@@ -821,10 +827,9 @@ server <- function(input, output, session) {
     if(input$checkbox == TRUE){
       validate(need(lms_ready == TRUE, 
       "Please make first the LMS-Method to get the proposed distribution!"))
-      gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], lms_$family[1], input$epochs, "RS")} 
+      gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], lms_$family[1], 50, "RS")} 
 
-    else{gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], input$distribtion_gamlss, input$epochs, 
-                                          "RS")}
+    else{gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], input$distribtion_gamlss, 50, "RS")}
     
     # Save global value to check later if the models are already calculated
     modelsprediction <<- TRUE
@@ -854,7 +859,7 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
     progress$set(message = "Refit the GAMLSS Models...", detail = "", value = 2)
     
-    outliers_residuals(data_analyte(), input$distribtion_gamlss, input$epochs, "RS", input$error)
+    outliers_residuals(data_analyte(), input$distribtion_gamlss, 50, "RS", input$error)
 
     residuals_ready <<- TRUE
     on.exit(progress$close())
@@ -1754,200 +1759,101 @@ server <- function(input, output, session) {
   # Predict new values with the fitted models
   output$gamlss_prediction <- renderPlot({
     
-    par(mfrow = c(3,2))
+    build_gamlss_model()
     
+    if(input$select_model == "lms_ri"){
+      if(lms_ready == TRUE){
+        lms_reactive()
+        
+        # Create new x_values with all possible days in the age range
+        data_subset <- data_analyte()
+        subset_age_days <- max(subset(data_subset, age == max(data_subset$age), c(age_days)))
+        x_values <- seq(round(min(data_analyte()[,4]),1), subset_age_days, by=1)
+        
+        lms_ri <<- centiles.pred(lms_, xname="age_lms", xvalues=x_values, cent = c(2.5,50,97.5))}
+      else{validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
+        stop()}}
+
     # Create new x_values with all possible days in the age range
     data_subset <- data_analyte()
     subset_age_days <- max(subset(data_subset, age == max(data_subset$age), c(age_days)))
     x_values <- seq(round(min(data_analyte()[,4]),1), subset_age_days, by=1)
     
-    build_gamlss_model()
-    
     pb_ri <<- centiles.pred(pb_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(pb_ri$x, pb_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  main = "GAMLSS with P-Splines", type = "l",
-         col = "indianred", ylim = c(0,max(pb_ri$`97.5`)))
-    lines(pb_ri$x, pb_ri$`50`, cex = 0.5, lty = 1, col = "black")
-    lines(pb_ri$x, pb_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
-    
     cs_ri <<- centiles.pred(cs_, xname="age_days",  xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(cs_ri$x, cs_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  main = "GAMLSS with Cubic Splines", type = "l",
-         col = "indianred", ylim = c(0,max(cs_ri$`97.5`)))
-    lines(cs_ri$x, cs_ri$`50`, cex = 0.5, lty = 1, col = "black")
-    lines(cs_ri$x, cs_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
-    
     poly_ri <<- centiles.pred(poly_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(poly_ri$x, poly_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,
-         main = "GAMLSS with Polynomials (Degree 3)", type = "l", col = "indianred", ylim = c(0,max(poly_ri$`97.5`)))
-    lines(poly_ri$x, poly_ri$`50`, cex = 0.5, lty = 1, col = "black")
-    lines(poly_ri$x, poly_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
-    
     poly4_ri <<- centiles.pred(poly4_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(poly4_ri$x, poly4_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3,  type = "l",
-         main = "GAMLSS with Polynomials (Degree 4)", col = "indianred", ylim = c(0,max(poly4_ri$`97.5`)))
-    lines(poly4_ri$x, poly4_ri$`50`, cex = 0.5, lty = 1, col = "black")
-    lines(poly4_ri$x, poly4_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
-    
     nn_ri <<- centiles.pred(nn_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(nn_ri$x, nn_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
-         main = "GAMLSS with Neural Network", col = "indianred", ylim = c(0,max(nn_ri$`97.5`)))
-    lines(nn_ri$x, nn_ri$`50`, cex = 0.5, lty = 1, col = "black")
-    lines(nn_ri$x, nn_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
-    
     tr_ri <<- centiles.pred(tr_, xname="age_days", xvalues=x_values, cent = c(2.5,50,97.5))
-    plot(tr_ri$x, tr_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
-         main = "GAMLSS with Decision Tree", col = "indianred", ylim = c(0,max(tr_ri$`97.5`)))
-    lines(tr_ri$x, tr_ri$`50`, cex = 0.5, lty = 1, col = "black")
-    lines(tr_ri$x, tr_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
-  })
-      
-  # Predict new values with the fitted LMS model 
-  output$gamlss_prediction_lms_plot <- renderPlot({
     
-    data_subset <- data_analyte()
-    subset_age_days <- max(subset(data_subset, age == max(data_subset$age), c(age_days)))
+    model <- eval(parse(text = input$select_model))
     
-    lms_reactive()
-    x_values <- seq(round(min(data_analyte()[,4]),1), subset_age_days, by=1)
-    
-    if(lms_ready){
-      
-      lms_ri <<- centiles.pred(lms_, xname="age_lms", xvalues=x_values, cent = c(2.5,50,97.5))
-      
-      plot(lms_ri$x, lms_ri$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l",
-           main = "LMS", col = "indianred", ylim = c(0,max(lms_ri$`97.5`)))
-      lines(lms_ri$x, lms_ri$`50`, cex = 0.5, lty = 1, col = "black")
-      lines(lms_ri$x, lms_ri$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")}
+    plot(model$x, model$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l", col = "indianred", ylim = c(0,max(model$`97.5`)))
+    lines(model$x, model$`50`, cex = 0.5, lty = 1, col = "black")
+    lines(model$x, model$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
   })
 
   # Tables of the predicted values ################################################################
   
-  # Table for prediction for the P-Splines
-  output$gamlss_table_pb <- DT::renderDataTable({
+  # Table for prediction
+  output$gamlss_tables <- DT::renderDataTable({
     
     build_gamlss_model()
     
-    if(exists("pb_ri")){
-    table_pb_ri <- data.frame(pb_ri)
-    colnames(table_pb_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_pb_ri, rownames = FALSE, extensions = 'Buttons',
+    if(input$select_model == "lms_ri"){
+      if(lms_ready == TRUE){
+        lms_reactive()
+        
+        # Create new x_values with all possible days in the age range
+        data_subset <- data_analyte()
+        subset_age_days <- max(subset(data_subset, age == max(data_subset$age), c(age_days)))
+        x_values <- seq(round(min(data_analyte()[,4]),1), subset_age_days, by=1)
+        
+        lms_ri <<- centiles.pred(lms_, xname="age_lms", xvalues=x_values, cent = c(2.5,50,97.5))}
+      else{validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
+        stop()}}
+    
+    model <- eval(parse(text = input$select_model))
+    
+    if(exists(input$select_model)){
+      table_prediction <- data.frame(model)
+      colnames(table_prediction) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
+      DT::datatable(table_prediction, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the P-Splines'))}
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Reference Intervals')) %>%
+      DT::formatRound(c(2:4), 2)}
   })
   
-  # Table for prediction for the Cubic Splines
-  output$gamlss_table_cs <- DT::renderDataTable({
-    
-    build_gamlss_model()
-   
-    if(exists("cs_ri")){
-    table_cs_ri <- data.frame(cs_ri)
-    colnames(table_cs_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_cs_ri, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the Cubic Splines'))}
-  })
-  
-  # Table for prediction for the  Polynomials (Degree 3)
-  output$gamlss_table_poly <- DT::renderDataTable({
-    
-    build_gamlss_model()
-    
-    if(exists("poly_ri")){
-    table_poly_ri <- data.frame(poly_ri)
-    colnames(table_poly_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_poly_ri, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Prediction of the  Polynomials (Degree 3)'))}
-  })
-  
-  # Table for prediction for the  Polynomials (Degree 4)
-  output$gamlss_table_poly4 <- DT::renderDataTable({
-    
-    build_gamlss_model()
-    
-    if(exists("poly4_ri")){
-    table_poly4_ri <- data.frame(poly4_ri)
-    colnames(table_poly4_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_poly4_ri, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the  Polynomials (Degree 4)'))}
-  })
-  
-  # Table for prediction for the Neural Network
-  output$gamlss_table_nn <- DT::renderDataTable({
-    
-    build_gamlss_model()
-   
-    if(exists("nn_ri")){
-    table_nn_ri <- data.frame(nn_ri)
-    colnames(table_nn_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_nn_ri, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Neural Network'))}
-  })
-  
-  # Table for prediction for the Decision Tree
-  output$gamlss_table_tr <- DT::renderDataTable({
-    
-    build_gamlss_model()
-   
-    if(exists("tr_ri")){
-    table_tr_ri <- data.frame(tr_ri)
-    colnames(table_tr_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-    DT::datatable(table_tr_ri, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the Decision Tree'))}
-  })
-  
-  # Table for prediction with the LMS model
-  output$gamlss_table_lms <- DT::renderDataTable({
-    
-    if(lms_ready == TRUE){
-      build_gamlss_model()
-      lms_reactive()
-      
-      if(exists("lms_ri")){
-      table_lms_ri <- data.frame(lms_ri)
-      colnames(table_lms_ri) <- c("Age [Days]", "2.5% Percentile", "50% Percentile", "97.5% Percentile")
-      DT::datatable(table_lms_ri, rownames = FALSE, extensions = 'Buttons',
-                    options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                    caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the LMS'))}}
-  })
-  
-  # Tool to predict reference intervals for the different gamlss models
-  output$prediction_gamlss <- renderText({
-    
-    if(input$select_model == "lms_ri"){text_model <- "LMS"}
-    if(input$select_model == "pb_ri"){text_model <- "P-Splines"}
-    if(input$select_model == "cs_ri"){text_model <- "Cubic Splines"}
-    if(input$select_model == "poly_ri"){text_model <- " Polynomials (Degree 3)"}
-    if(input$select_model == "poly4_ri"){text_model <- "Polynomials (Degree 4)"}
-    if(input$select_model == "tr_ri"){text_model <- "Decsion Tree"}
-    if(input$select_model == "nn_ri"){text_model <- "Neural Network"}
-   
-    if(modelsprediction == TRUE){
-      if(input$select_model == "lms_ri" && lms_ready == FALSE){
-        prediction_text <- "First you need to make LMS Models, than you can predict with these!"
-      }
-    
-      else{
-        value <- eval(parse(text = input$select_model))[input$prediction_age+1,]
-        colnames(value) <- c("Age [Days]", "2.5% Percentile", "50% Prcentile", "97.5% Percentile")
-        prediction_text <- paste("The Reference Intervals for", input$prediction_age, "days for the dataset", 
-                                 input$dataset, "is for the GAMLSS Model", text_model,":", round(value[1,2], digits = 2),
-                                 "(2.5% Percentil) to", round(value[1,4], digits = 2),
-                                 "(97.5% Percentil) with the Median (50% Percentil):", round(value[1,3], digits = 2))}}
-    else{prediction_text <- "First you need to make GAMLSS models, than you can predict with these!"}
-  
-    prediction_text
-  })
+  # # Tool to predict reference intervals for the different gamlss models
+  # output$prediction_gamlss <- renderText({
+  #   
+  #   if(input$select_model == "lms_ri"){text_model <- "LMS"}
+  #   if(input$select_model == "pb_ri"){text_model <- "P-Splines"}
+  #   if(input$select_model == "cs_ri"){text_model <- "Cubic Splines"}
+  #   if(input$select_model == "poly_ri"){text_model <- " Polynomials (Degree 3)"}
+  #   if(input$select_model == "poly4_ri"){text_model <- "Polynomials (Degree 4)"}
+  #   if(input$select_model == "tr_ri"){text_model <- "Decsion Tree"}
+  #   if(input$select_model == "nn_ri"){text_model <- "Neural Network"}
+  #  
+  #   if(modelsprediction == TRUE){
+  #     if(input$select_model == "lms_ri" && lms_ready == FALSE){
+  #       prediction_text <- "First you need to make LMS Models, than you can predict with these!"
+  #     }
+  #   
+  #     else{
+  #       value <- eval(parse(text = input$select_model))[input$prediction_age+1,]
+  #       colnames(value) <- c("Age [Days]", "2.5% Percentile", "50% Prcentile", "97.5% Percentile")
+  #       prediction_text <- paste("The Reference Intervals for", input$prediction_age, "days for the dataset", 
+  #                                input$dataset, "is for the GAMLSS Model", text_model,":", round(value[1,2], digits = 2),
+  #                                "(2.5% Percentil) to", round(value[1,4], digits = 2),
+  #                                "(97.5% Percentil) with the Median (50% Percentil):", round(value[1,3], digits = 2))}}
+  #   else{prediction_text <- "First you need to make GAMLSS models, than you can predict with these!"}
+  # 
+  #   prediction_text
+  # })
 
   # Tables with the discrete values from the predicted GAMLSS models ##############################
   output$gamlss_split <- DT::renderDataTable({
-    
-    if(input$select_model == "lms_ri"){
-      if(lms_ready == TRUE){text_model <- "LMS"}
-      else{validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))}}
     
     if(input$select_model == "pb_ri"){text_model <- "P-Splines"}
     if(input$select_model == "cs_ri"){text_model <- "Cubic Splines"}
@@ -1989,6 +1895,14 @@ server <- function(input, output, session) {
       gamlss_97_5 <- data.frame()
       
       lms_reactive()
+      
+      # Create new x_values with all possible days in the age range
+      data_subset <- data_analyte()
+      subset_age_days <- max(subset(data_subset, age == max(data_subset$age), c(age_days)))
+      x_values <- seq(round(min(data_analyte()[,4]),1), subset_age_days, by=1)
+      
+      lms_ri <<- centiles.pred(lms_, xname="age_lms", xvalues=x_values, cent = c(2.5,50,97.5))
+      
       model <- eval(parse(text = "lms_ri"))
       
       for (i in seq(2,nrow(deviation_gamlss))){
@@ -2028,8 +1942,17 @@ server <- function(input, output, session) {
     build_gamlss_model()
    
     if(input$select_model == "lms_ri"){
-      validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
-    }
+      if(lms_ready == TRUE){
+        lms_reactive()
+        
+        # Create new x_values with all possible days in the age range
+        data_subset <- data_analyte()
+        subset_age_days <- max(subset(data_subset, age == max(data_subset$age), c(age_days)))
+        x_values <- seq(round(min(data_analyte()[,4]),1), subset_age_days, by=1)
+        
+        lms_ri <<- centiles.pred(lms_, xname="age_lms", xvalues=x_values, cent = c(2.5,50,97.5))}
+      else{validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
+        stop()}}
     
     plot(deviation_gamlss$`Age-range from`, deviation_gamlss$`97.5% Percentil`, type = "s", col = "cornflowerblue", xlab = "Age [Days]",
          ylab = ylab_, lwd = 2, ylim = c(min(deviation_gamlss$`2.5% Percentil`, na.rm = TRUE), max(deviation_gamlss$`97.5% Percentil`, na.rm = TRUE)))
@@ -2045,51 +1968,24 @@ server <- function(input, output, session) {
     build_gamlss_model()
     data_analyte <- data_analyte()
     
+    model <- eval(parse(text = input$select_model_resi))
+    
     # Make a dataframe with the residuals 
-    residuals_pb <- data.frame(value = data_analyte$value, age_days = data_analyte$age_days, 
-                               resid = pb_$residuals, patient = data_analyte$patient)
-    residuals_cs <- data.frame(value = data_analyte$value, age_days = data_analyte$age_days, 
-                               resid = cs_$residuals, patient = data_analyte$patient)
-    residuals_poly <- data.frame(value = data_analyte$value, age_days = data_analyte$age_days, 
-                                 resid = poly_$residuals, patient = data_analyte$patient)
-    residuals_poly4 <- data.frame(value = data_analyte$value, age_days = data_analyte$age_days, 
-                                  resid = poly4_$residuals, patient = data_analyte$patient)
-    residuals_nn <- data.frame(value = data_analyte$value, age_days = data_analyte$age_days, 
-                               resid = nn_$residuals, patient = data_analyte$patient)
-    residuals_tr <- data.frame(value = data_analyte$value, age_days = data_analyte$age_days, 
-                               resid = tr_$residuals, patient = data_analyte$patient)
+    residuals_gamlss <- data.frame(value = data_analyte$value, age_days = data_analyte$age_days, 
+                                   resid = model$residuals, patient = data_analyte$patient)
     
     # Delete possible very high values
-    residuals_pb <- residuals_pb[!is.infinite(residuals_pb$resid),]
-    residuals_cs <- residuals_cs[!is.infinite(residuals_cs$resid),]
-    residuals_poly <- residuals_poly[!is.infinite(residuals_poly$resid),]
-    residuals_poly4 <- residuals_poly4[!is.infinite(residuals_poly4$resid),]
-    residuals_nn <- residuals_nn[!is.infinite(residuals_nn$resid),]
-    residuals_tr <- residuals_tr[!is.infinite(residuals_tr$resid),]
+    residuals_gamlss <- residuals_gamlss[!is.infinite(residuals_gamlss$resid),]
     
-    value_max <- max(residuals_pb$resid, residuals_cs$resid, residuals_poly$resid,
-                     residuals_poly4$resid, residuals_nn$resid, residuals_tr$resid)
-    value_min <- min(residuals_pb$resid, residuals_cs$resid, residuals_poly$resid,
-                     residuals_poly4$resid, residuals_nn$resid, residuals_tr$resid)
+    value_max <- max(residuals_gamlss$resid)
+    value_min <- min(residuals_gamlss$resid)
     
     cat(paste("The maximal values for the Residuals is for all models:", round_df(value_max,3), round_df(value_min, 3), "\n"))
     
-    par(mfrow = c(2,3))
     palette <- colorRampPalette(c("indianred","seagreen3","cornflowerblue","seagreen3","indianred"))(50)
     
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_pb$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
-         xlab = "Age [Days]", ylab = ylab_, main = "Residuals from P-Splines")
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_cs$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
-         xlab = "Age [Days]", ylab = ylab_, main = "Residuals from Cubic Splines")
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_poly$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
-         xlab = "Age [Days]", ylab = ylab_, main = "Residuals from  Polynomials (Degree 3)")
-    
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_poly4$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
-         xlab = "Age [Days]", ylab = ylab_, main = "Residuals from  Polynomials (Degree 4)")
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_nn$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
-         xlab = "Age [Days]", ylab = ylab_, main = "Residuals from Neural Network")
-    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_tr$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
-         xlab = "Age [Days]", ylab = ylab_, main = "Residuals from Decision Tree")
+    plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_gamlss$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
+         xlab = "Age [Days]", ylab = ylab_, main = "Residuals")
   })
   
   # Plot the centiles from the cutted dataset with a small residual
@@ -2098,79 +1994,21 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
 
-    par(mfrow=c(2,3))
+    model <- eval(parse(text = paste0("o", input$select_model_resi)))
     
-    centiles(opb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+    centiles(model, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), legend = FALSE, lwd.centiles = 1.5)
-    centiles(ocs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), legend = FALSE, lwd.centiles = 1.5)
-    centiles(opoly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, lwd.centiles = 1.5,
-             pch = 20, cex = 0.75, col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), legend = FALSE)
-    centiles(opoly4_, main = "GAMLSS with Polynomials (Degree 4)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, lwd.centiles = 1.5,
-             pch = 20, cex = 0.75, col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), legend = FALSE)
-    centiles(onn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75, lwd.centiles = 1.5,
-             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), legend = FALSE)
-    centiles(otr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75, lwd.centiles = 1.5,
-             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), legend = FALSE)
   })
   
   # Plot the changed terms from refitted model with P-Splines  
-  output$outlier_term_pb <- renderPlot({
+  output$outlier_term_gamlss <- renderPlot({
     
     build_gamlss_model()
     build_outlier()
     
-    plot(opb_,parameters = par(mfrow = c(2,2), mar = par("mar") + c(0,1,0,0), col.axis = "black", col = "grey", col.main = "black",
-                              col.lab = "black", pch = 20, cex = 0.5, cex.lab = 1.5, cex.axis = 1, cex.main = 1.5))
-    })
-  
-  # Plot the changed terms from refitted model with Cubic Splines
-  output$outlier_term_cs <- renderPlot({
-      
-    build_gamlss_model()
-    build_outlier()
+    model <- eval(parse(text = paste0("o", input$select_model_resi)))
     
-    plot(ocs_,parameters = par(mfrow = c(2,2), mar = par("mar") + c(0,1,0,0), col.axis = "black", col = "grey", col.main = "black",
-                              col.lab = "black", pch = 20, cex = 0.5, cex.lab = 1.5, cex.axis = 1, cex.main = 1.5))
-    })
-    
-  # Plot the changed terms from refitted model with  Polynomials (Degree 3)
-  output$outlier_term_poly <- renderPlot({
-      
-    build_gamlss_model()
-    build_outlier()
-      
-    plot(opoly_,parameters = par(mfrow = c(2,2), mar = par("mar") + c(0,1,0,0), col.axis = "black", col = "grey", col.main = "black",
-                                col.lab = "black", pch = 20, cex = 0.5, cex.lab = 1.5, cex.axis = 1, cex.main = 1.5))
-  })
-  
-  # Plot the changed terms from refitted model with  Polynomials (Degree 4)
-  output$outlier_term_poly4 <- renderPlot({
-      
-    build_gamlss_model()
-    build_outlier()
-    
-    plot(opoly4_,parameters = par(mfrow = c(2,2), mar = par("mar") + c(0,1,0,0), col.axis = "black", col = "grey", col.main = "black",
-                                 col.lab = "black", pch = 20, cex = 0.5, cex.lab = 1.5, cex.axis = 1, cex.main = 1.5))
-  })
-    
-  # Plot the changed terms from refitted model with Neural Network
-  output$outlier_term_nn <- renderPlot({
-      
-    build_gamlss_model()
-    build_outlier()
-    
-    plot(onn_,parameters = par(mfrow = c(2,2), mar = par("mar") + c(0,1,0,0), col.axis = "black", col = "grey", col.main = "black",
-                              col.lab = "black", pch = 20, cex = 0.5, cex.lab = 1.5, cex.axis = 1, cex.main = 1.5))
-  })
-    
-  # Plot the changed terms from refitted model with Decision Tree
-  output$outlier_term_tr <- renderPlot({
-      
-    build_gamlss_model()
-    build_outlier()
-    
-    plot(otr_,parameters = par(mfrow = c(2,2), mar = par("mar") + c(0,1,0,0), col.axis = "black", col = "grey", col.main = "black",
+    plot(model, parameters = par(mfrow = c(2,2), mar = par("mar") + c(0,1,0,0), col.axis = "black", col = "grey", col.main = "black",
                               col.lab = "black", pch = 20, cex = 0.5, cex.lab = 1.5, cex.axis = 1, cex.main = 1.5))
   })
   
@@ -2182,9 +2020,12 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
+    colnames(outlierfree_pb) <- c("ID", "SEX", "AGE_YEARS", "AGE_DAYS", "VALUE", "RESIDUALS", "ANALYTE")
+    
     DT::datatable(outlierfree_pb, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Dataset without the Residuals of the P-Splines'))
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Dataset without the Residuals of the P-Splines')) %>%
+    DT::formatRound(6, 2)
   })
   
   # Table for prediction for the Cubic Splines
@@ -2193,9 +2034,12 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
+    colnames(outlierfree_cs) <- c("ID", "SEX", "AGE_YEARS", "AGE_DAYS", "VALUE", "RESIDUALS", "ANALYTE")
+    
     DT::datatable(outlierfree_cs, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Cubic Splines'))
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Cubic Splines')) %>%
+    DT::formatRound(6, 2)
   })
   
   # Table for prediction for the Polynomials (Degree 3)
@@ -2204,9 +2048,12 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
+    colnames(outlierfree_poly) <- c("ID", "SEX", "AGE_YEARS", "AGE_DAYS", "VALUE", "RESIDUALS", "ANALYTE")
+    
     DT::datatable(outlierfree_poly, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Polynomial Degree 3'))
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Polynomial Degree 3')) %>%
+    DT::formatRound(6, 2)
   })
   
   # Table for prediction for the Polynomials (Degree 4)
@@ -2215,9 +2062,12 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
+    colnames(outlierfree_poly4) <- c("ID", "SEX", "AGE_YEARS", "AGE_DAYS", "VALUE", "RESIDUALS", "ANALYTE")
+    
     DT::datatable(outlierfree_poly4, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Polynomial Degree 4'))
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Polynomial Degree 4')) %>%
+    DT::formatRound(6, 2)
   })
   
   # Table for prediction for the Neural Network
@@ -2226,9 +2076,12 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
+    colnames(outlierfree_nn) <- c("ID", "SEX", "AGE_YEARS", "AGE_DAYS", "VALUE", "RESIDUALS", "ANALYTE")
+    
     DT::datatable(outlierfree_nn, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Neural Network'))
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Neural Network')) %>%
+    DT::formatRound(6, 2)
   })
   
   # Table for prediction for the Decision Tree
@@ -2237,9 +2090,12 @@ server <- function(input, output, session) {
     build_gamlss_model()
     build_outlier()
     
+    colnames(outlierfree_tr) <- c("ID", "SEX", "AGE_YEARS", "AGE_DAYS", "VALUE", "RESIDUALS", "ANALYTE")
+    
     DT::datatable(outlierfree_tr, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Decision Tree'))
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Dataset without the Residuals of the Decision Tree')) %>%
+    DT::formatRound(6, 2)
   })
 
   ##################################### Regressionen ##############################################
@@ -2583,11 +2439,11 @@ server <- function(input, output, session) {
   #   content = function(file) {
   #     write.csv2(rsquared_table, file, row.names = FALSE)})
 
-  output$downloadData_comparison <- downloadHandler(
-    filename = function(){
-      paste0(Sys.Date(),"_GAMLSS_Comparison.csv")},
-    content = function(file) {
-      write.csv2(compare_models, file, row.names = FALSE)})
+  # output$downloadData_comparison <- downloadHandler(
+  #   filename = function(){
+  #     paste0(Sys.Date(),"_GAMLSS_Comparison.csv")},
+  #   content = function(file) {
+  #     write.csv2(compare_models, file, row.names = FALSE)})
 
   output$downloadData_regression_table <- downloadHandler(
     filename = function(){
@@ -2597,87 +2453,87 @@ server <- function(input, output, session) {
 
   ##################################### Plots #####################################################
 
-  output$download_lms <- downloadHandler(
-    filename =  function(){
-      "LMS.eps"},
-    content = function(file){
-      setEPS()
-      postscript(file)
-      centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      dev.off()})
+  # output$download_lms <- downloadHandler(
+  #   filename =  function(){
+  #     "LMS.eps"},
+  #   content = function(file){
+  #     setEPS()
+  #     postscript(file)
+  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     dev.off()})
   
-  output$download_lms_jpeg <- downloadHandler(
-    filename =  function(){
-      "LMS.jpeg"},
-    content = function(file){
-      jpeg(file)
-      centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      dev.off()})
+  # output$download_lms_jpeg <- downloadHandler(
+  #   filename =  function(){
+  #     "LMS.jpeg"},
+  #   content = function(file){
+  #     jpeg(file)
+  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     dev.off()})
   
-  output$download_gamlss <- downloadHandler(
-    filename =  function(){
-      "GAMLSS.eps"},
-    content = function(file){
-      setEPS()
-      postscript(file)
-      
-      par(mfrow=c(3,2))
-      
-      centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75, 
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
-               ylab = ylab_, pch = 20, cex = 0.75, 
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent=c(2.5,50,97.5), xlab = "Age [Days]", 
-               ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      dev.off()})
+  # output$download_gamlss <- downloadHandler(
+  #   filename =  function(){
+  #     "GAMLSS.eps"},
+  #   content = function(file){
+  #     setEPS()
+  #     postscript(file)
+  #     
+  #     par(mfrow=c(3,2))
+  #     
+  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75, 
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
+  #              ylab = ylab_, pch = 20, cex = 0.75, 
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent=c(2.5,50,97.5), xlab = "Age [Days]", 
+  #              ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     dev.off()})
   
-  output$download_gamlss_jpeg <- downloadHandler(
-    filename =  function(){
-      "GAMLSS.jpeg"},
-    content = function(file){
-      jpeg(file)
-      
-      par(mfrow=c(3,2))
-      
-      centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75, 
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
-               ylab = ylab_, pch = 20, cex = 0.75, 
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent=c(2.5,50,97.5), xlab = "Age [Days]", 
-               ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-               col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
-               legend = FALSE, col = "lightgrey")
-      dev.off()})
+  # output$download_gamlss_jpeg <- downloadHandler(
+  #   filename =  function(){
+  #     "GAMLSS.jpeg"},
+  #   content = function(file){
+  #     jpeg(file)
+  #     
+  #     par(mfrow=c(3,2))
+  #     
+  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75, 
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
+  #              ylab = ylab_, pch = 20, cex = 0.75, 
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent=c(2.5,50,97.5), xlab = "Age [Days]", 
+  #              ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              legend = FALSE, col = "lightgrey")
+  #     dev.off()})
 
   output$download_tree <- downloadHandler(
     filename =  function() {
