@@ -67,7 +67,7 @@ window_method <- function(data_, window, method){
    
       ci_qq <- NA
       
-      modi_qq <- reflim(age_data_ready$value, log.mode = normal_log)
+      modi_qq <- reflim(age_data_ready$value, n.min = 100, log.mode = normal_log)
       if(!is.na(modi_qq[3]) || !is.na(modi_qq[4])){
         if(!(modi_qq[3] >= modi_qq[4]))
           try(ci_qq <- ci.quant95(n = length(age_data_ready$value), lower.limit = modi_qq[3], upper.limit = modi_qq[4], lognorm = normal_log))
@@ -169,7 +169,7 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
       
       ci_qq <- NA
       
-      modi_qq <- reflim(age_data_ready$value, log.mode = normal_log, plot.it = FALSE)
+      modi_qq <- reflim(age_data_ready$value, n.min = 100, log.mode = normal_log, plot.it = FALSE)
       if(!is.na(modi_qq[3]) || !is.na(modi_qq[4])){
         if(!(modi_qq[3] >= modi_qq[4]))
           try(ci_qq <- ci.quant95(n = length(age_data_ready$value), lower.limit = modi_qq[3], upper.limit = modi_qq[4], lognorm = normal_log))
@@ -268,7 +268,7 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
 
       ci_qq <- NA
       
-      modi_qq <- reflim(age_data_ready$value, log.mode = normal_log, plot.it = FALSE)
+      modi_qq <- reflim(age_data_ready$value, n.min = 100, log.mode = normal_log, plot.it = FALSE)
       if(!is.na(modi_qq[3]) || !is.na(modi_qq[4])){
         if(!(modi_qq[3] >= modi_qq[4]))
           try(ci_qq <- ci.quant95(n = length(age_data_ready$value), lower.limit = modi_qq[3], upper.limit = modi_qq[4], lognorm = normal_log))
@@ -382,7 +382,7 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
     
     ci_qq <- NA
     
-    modi_qq <- reflim(sliding_tukey_data[i,], log.mode = normal_log)
+    modi_qq <- reflim(sliding_tukey_data[i,], n.min = 100, log.mode = normal_log)
     if(!is.na(modi_qq[3]) || !is.na(modi_qq[4])){
       if(!(modi_qq[3] >= modi_qq[4]))
         try(ci_qq <- ci.quant95(n = length(sliding_tukey_data[i,]), lower.limit = modi_qq[3], upper.limit = modi_qq[4], lognorm = normal_log))
