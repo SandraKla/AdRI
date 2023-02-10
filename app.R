@@ -437,7 +437,7 @@ ui <- fluidPage(
                                                                                     "Machine Learning" = c("Neural Network" = "nn_ri", 
                                                                                                            "Decision Tree" = "tr_ri"))),
           #textOutput("prediction_gamlss"), hr(),
-          numericInput("deviation", "Deviation in % for the discrete Reference Intervals:", 10, min = 1, max = 100) #, hr(),
+          numericInput("deviation", "Deviation as max zlog value for the discrete Reference Intervals:", 5, min = 2, max = 10) #, hr(),
           #htmlOutput("helptext_prediction")
           ),
                
@@ -1864,7 +1864,7 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
     
-    deviation_gamlss <- split_gamlss(eval(parse(text = input$select_model)), input$deviation/100)
+    deviation_gamlss <- split_gamlss(eval(parse(text = input$select_model)), input$deviation)
     deviation_gamlss <- rbind(0, deviation_gamlss, max(eval(parse(text = input$select_model))))
     
     mean_gamlss <- data.frame()
@@ -1923,13 +1923,18 @@ server <- function(input, output, session) {
     }
     
     deviation_gamlss <- cbind(head(deviation_gamlss,-1), tail(deviation_gamlss,-1), head(deviation_gamlss,-1)/365, tail(deviation_gamlss,-1)/365,
-                              gamlss_2_5, mean_gamlss, gamlss_97_5)
+                              gamlss_2_5, gamlss_97_5)
     colnames(deviation_gamlss) <- c("Age-range from", "to [Days]","Age from", "to [Years]",
-                                    "2.5% Percentil","50% Percentil","97.5% Percentil")
+                                    "2.5% Percentil","97.5% Percentil")
     deviation_gamlss <<- deviation_gamlss
+    
+    if(input$select_model == "lms_ri" && lms_ready == FALSE){
+      validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
+    }
+    
     DT::datatable(deviation_gamlss, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the GAMLSS Models with', text_model)) %>%
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the GAMLSS Models')) %>%
     DT::formatRound(c(3:length(deviation_gamlss)), 2)
   })
   
@@ -1954,10 +1959,33 @@ server <- function(input, output, session) {
       else{validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
         stop()}}
     
-    plot(deviation_gamlss$`Age-range from`, deviation_gamlss$`97.5% Percentil`, type = "s", col = "cornflowerblue", xlab = "Age [Days]",
-         ylab = ylab_, lwd = 2, ylim = c(min(deviation_gamlss$`2.5% Percentil`, na.rm = TRUE), max(deviation_gamlss$`97.5% Percentil`, na.rm = TRUE)))
-    lines(deviation_gamlss$`Age-range from`, deviation_gamlss$`2.5% Percentil`, type = "s", col = "indianred", lwd = 2)
-    lines(deviation_gamlss$`Age-range from`, deviation_gamlss$`50% Percentil`, type = "s", col = "black")
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
+         ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i",  
+         ylim = c(min(deviation_gamlss$`2.5% Percentil`, na.rm = TRUE), max(deviation_gamlss$`97.5% Percentil`, na.rm = TRUE)))
+    
+    x_lower <- c(deviation_gamlss$`Age-range from`, tail(deviation_gamlss$`to [Days]`, 1))
+    y_lower <- c(deviation_gamlss$`2.5% Percentil`, tail(deviation_gamlss$`2.5% Percentil`, 1))
+    
+    segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
+    lowerlimit <- data.frame(x = x_lower, y = y_lower)
+    
+    x_upper <- c(deviation_gamlss$`Age-range from`, tail(deviation_gamlss$`to [Days]`, 1))
+    y_upper <- c(deviation_gamlss$`97.5% Percentil`, tail(deviation_gamlss$`97.5% Percentil`, 1))
+    
+    segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
+    upperlimit <- data.frame(x = x_upper, y = y_upper)
+    
+    for (i in 1: (nrow(lowerlimit)-1)){
+      
+      age <- c(lowerlimit$x[i+1], lowerlimit$x[i], lowerlimit$x[i], lowerlimit$x[i+1])
+      
+      lowerlimit_polygon <- c(lowerlimit$y[i], lowerlimit$y[i])
+      upperlimit_polygon <- c(upperlimit$y[i], upperlimit$y[i])
+      if(length(lowerlimit_polygon > 1)){
+        polygon(age, c(upperlimit_polygon[2], upperlimit_polygon[1], lowerlimit_polygon[1], lowerlimit_polygon[2]), 
+                col = rgb(red = 0 , green = 0, blue = 0, alpha = 0.25), border = NA)
+      }
+    }
   })
   
   ################################ Residuals #######################################

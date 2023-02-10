@@ -296,6 +296,9 @@ round_df <- function(x, digits) {
   return(x)
 }
 
+#' Round numeric values from a dataframe
+#' 
+#' @param x Expects a dataframe
 adjust.digits <- function(x){
   digits <- 2 - floor(log10(x))
   if(digits < 1){digits <- 1}
@@ -333,4 +336,25 @@ ci.quant95 <- function(n, lower.limit, upper.limit, lognorm = TRUE, apply.roundi
     result = round(result, digits)
   }
   return(result)
+}
+
+#' zlog-Standardization of a single quantitative laboratory result x
+#' 
+#' @param x Expects a dataframe
+#' @param lower.limt Lower Reference Limit
+#' @param upper.limit Upper Reference Limit
+zlog <- function(x, lower.limit, upper.limit){
+  if (x <= 0 | lower.limit <= 0 | upper.limit <= 0){
+    stop("(zlog) All parameters must be greater than 0")
+  }
+  if (upper.limit <= lower.limit){
+    stop("(zlog) upper.limit must be greater than lower.limit")
+  }
+  
+  logl <- log(lower.limit)
+  logu <- log(upper.limit)
+  mu.log <- (logl + logu) / 2
+  sigma.log <- (logu - logl) / 3.919928
+  
+  return((log(x) - mu.log) / sigma.log)
 }

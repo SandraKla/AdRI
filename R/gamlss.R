@@ -140,13 +140,13 @@ outliers_residuals <- function(data_analyte, gamlss_family, epochs, method, resi
 
 ####################################### Discrete Model ############################################
 
-#' Make discrete model from the GAMLSS model with a given deviation for the upper and low 
+#' Make discrete model from the GAMLSS model with the zlog value for the upper and low 
 #' reference intervals. When a change occurs in the 2.5% or 97.5% RI the age group is split
-#' and the mean and RI from this age groups is calculated
+#' and the mean and RI from this age groups is calculated. The zlog value should be between 1.96 and -1.96.
 #' 
 #' @param model predicted GAMLSS model
 #' @param deviation Deviation from the upper/lower Reference Intervals
-split_gamlss <- function(model, deviation = 0.1){
+split_gamlss <- function(model, max_zlog_value = 1.96){
   
   splitsgamlss <- data.frame()
   para_split <- 1
@@ -155,8 +155,10 @@ split_gamlss <- function(model, deviation = 0.1){
   # Go through the data to the end and check if the Reference Intervals are changed
   while (i < nrow(model)){
     
-    if (xor(model$`2.5`[para_split]/model$`2.5`[i+1] < 1-deviation, model$`2.5`[para_split]/model$`2.5`[i+1] > 1+deviation) ||
-        xor(model$`97.5`[para_split]/model$`97.5`[i+1] < 1-deviation, model$`97.5`[para_split]/model$`97.5`[i+1] > 1+deviation)){
+    if (abs(zlog(model$`2.5`[i+1], model$`2.5`[para_split], model$`97.5`[para_split])) > max_zlog_value || # previous RI - lower
+        abs(zlog(model$`2.5`[para_split], model$`2.5`[i+1], model$`97.5`[i+1])) > max_zlog_value || # next RI - lower
+        abs(zlog(model$`97.5`[i+1], model$`2.5`[para_split], model$`97.5`[para_split])) > max_zlog_value || # previous RI - higher
+        abs(zlog(model$`97.5`[para_split], model$`2.5`[i+1], model$`97.5`[i+1])) > max_zlog_value ){ # next RI - higher
       
       para_split <- i # change para_split for the next age group
       splitsgamlss <- rbind(splitsgamlss, para_split)}
