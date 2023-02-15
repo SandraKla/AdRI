@@ -13,47 +13,58 @@ source("R/gamlss.R")
 
 if("boot" %in% rownames(installed.packages())){
   library(boot)} else{
-    install.packages("boot")}
+    install.packages("boot")
+    library(boot)}
 
 if("dplyr" %in% rownames(installed.packages())){
   library(dplyr)} else{
-    install.packages("dplyr")}
+    install.packages("dplyr")
+    library(dplyr)}
 
 if("DT" %in% rownames(installed.packages())){
   library(DT)} else{
-    install.packages("DT")}
+    install.packages("DT")
+    library(DT)}
 
 if("gamlss" %in% rownames(installed.packages())){
   library(gamlss)} else{
-    install.packages("gamlss")}
+    install.packages("gamlss")
+    library(gamlss)}
 
 if("gamlss.add" %in% rownames(installed.packages())){
   library(gamlss.add)} else{
-    install.packages("gamlss.add")}
+    install.packages("gamlss.add")
+    library(gamlss.add)}
 
 #if("hexbin" %in% rownames(installed.packages())){
 #  library(hexbin)} else{
-#    install.packages("hexbin")}
+#    install.packages("hexbin")
+#    library(hexbin)}
 
 #if("MASS" %in% rownames(installed.packages())){
 #  library(MASS)} else{
-#    install.packages("MASS")}
+#    install.packages("MASS")
+#    library(MASS)}
 
 if("plotly" %in% rownames(installed.packages())){
   library(plotly)} else{
-    install.packages("plotly")}
+    install.packages("plotly")
+    library(plotly)}
 
 if("rpart" %in% rownames(installed.packages())){
   library(rpart)} else{
-    install.packages("rpart")}
+    install.packages("rpart")
+    library(rpart)}
 
 if("rpart.plot" %in% rownames(installed.packages())){
   library(rpart.plot)} else{
-    install.packages("rpart.plot")}
+    install.packages("rpart.plot")
+    library(rpart.plot)}
 
 if("zoo" %in% rownames(installed.packages())){
   library(zoo)} else{
-    install.packages("zoo")}
+    install.packages("zoo")
+    library(zoo)}
 
 ####################################### USER INTERFACE ############################################
 
@@ -61,7 +72,7 @@ ui <- fluidPage(
  
   theme = "style.css",  
   navbarPage("Age-dependent Reference Intervals (AdRI)", 
-  
+
   ################################### Overview ##################################################
     
   tabPanel("Analysis", icon = icon("database"),
@@ -365,9 +376,8 @@ ui <- fluidPage(
             
             tabPanel("GAMLSS (Splines)",  icon = icon("calculator"), value = "nav_gamlss", 
               
-              verbatimTextOutput("gamlss_text_splines"),
-              p("GAMLSS with P-Splines:"), plotOutput("gamlss_term_pb"), plotOutput("gamlss_fitted_pb_"),
-              p("GAMLSS with Cubic-Splines:"),plotOutput("gamlss_term_cs"), plotOutput("gamlss_fitted_cs_"),
+              p("GAMLSS with P-Splines:"), verbatimTextOutput("gamlss_text_psplines"), plotOutput("gamlss_term_pb"), plotOutput("gamlss_fitted_pb_"),
+              p("GAMLSS with Cubic-Splines:"), verbatimTextOutput("gamlss_text_splines"), plotOutput("gamlss_term_cs"), plotOutput("gamlss_fitted_cs_"),
               p("Wormplots for GAMLSS with the P-Splines and Cubic Splines:"), 
               plotOutput("wormplots_splines", height="500px")),
             
@@ -377,9 +387,8 @@ ui <- fluidPage(
             
             tabPanel("GAMLSS (Polynomials)", icon = icon("calculator"), value = "nav_gamlss", 
               
-              verbatimTextOutput("gamlss_text_poly"),   
-              p("GAMLSS with Polynomial Degree 3:"), plotOutput("gamlss_term_poly"), plotOutput("gamlss_fitted_poly_"),
-              p("GAMLSS with Polynomial Degree 4:"), plotOutput("gamlss_term_poly4"), plotOutput("gamlss_fitted_poly4_"),
+              p("GAMLSS with Polynomial Degree 3:"), verbatimTextOutput("gamlss_text_poly"), plotOutput("gamlss_term_poly"), plotOutput("gamlss_fitted_poly_"),
+              p("GAMLSS with Polynomial Degree 4:"), verbatimTextOutput("gamlss_text_poly4"), plotOutput("gamlss_term_poly4"), plotOutput("gamlss_fitted_poly4_"),
               p("Wormplots for GAMLSS with the Polynomial Degree 3 and 4:"), 
               plotOutput("wormplots_poly", height="500px")),
             
@@ -628,7 +637,7 @@ server <- function(input, output, session) {
         data_analyte <- as.data.frame(data_analyte)
         
         if(!(rows_table_ == nrow(data_analyte))){
-          cat(paste("Information!", rows_table_ - nrow(data_analyte), "values of the patients were present several times and were deleted. \n"))}
+          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values of the patients were present several times and were deleted. ***\n"))}
       }
       
       try(if(input$checkboxtukey == TRUE){
@@ -664,7 +673,7 @@ server <- function(input, output, session) {
         data_analyte <- data_analyte_tukey
         
         if(!(rows_table_ == nrow(data_analyte))){
-          cat(paste("Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the RefLim. \n"))}
+          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the RefLim. ***\n"))}
       })
     } 
     
@@ -689,7 +698,7 @@ server <- function(input, output, session) {
         data_analyte <- as.data.frame(data_analyte)
         
         if(!(rows_table_ == nrow(data_analyte))){
-          cat(paste("Information!", rows_table_ - nrow(data_analyte), "values of the patients were present several times and were deleted. \n"))}
+          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values of the patients were present several times and were deleted. ***\n"))}
       }
       
       try(if(input$checkboxtukey == TRUE){
@@ -726,7 +735,7 @@ server <- function(input, output, session) {
         data_analyte <- data_analyte_tukey
         
         if(!(rows_table_ == nrow(data_analyte))){
-          cat(paste("Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the RefLim. \n"))}
+          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the RefLim. ***\n"))}
       })
     }
     
@@ -1334,6 +1343,7 @@ server <- function(input, output, session) {
     
     lms_reactive()
     print(lms_) 
+    cat("\n")
     centiles(lms_, cent=c(2.5,50,97.5), plot=FALSE)
   })
   
@@ -1347,12 +1357,12 @@ server <- function(input, output, session) {
   
   output$buttons_gamlss <- renderUI({
     build_gamlss_model()
-    print("Your GAMLSS models are ready!")
+    print("*** Your GAMLSS models are ready! ***")
   })
   
   output$buttons_lms <- renderUI({
     lms_reactive()
-    print("Your LMS model is ready!")
+    print("*** Your LMS model is ready! ***")
   })
   
   # Centiles Plot with gamlss models (P-Splines, Cubic Splines) ######
@@ -1412,29 +1422,40 @@ server <- function(input, output, session) {
   })
   
   # GAMLSS - Analysis Text
-  output$gamlss_text_splines <- renderPrint({
+  output$gamlss_text_psplines <- renderPrint({
      
     build_gamlss_model()
-    
-    print("GAMLSS with P-Splines")
+    summary(pb_)
+    cat("\n")
     centiles(pb_, cent=c(2.5,50,97.5), plot=FALSE)
-    #summary(pb_)
-    print("GAMLSS with Cubic splines")
-    centiles(cs_, cent=c(2.5,50,97.5), plot=FALSE) 
-    #summary(cs_)
+    
+  })
+  
+  # GAMLSS - Analysis Text
+  output$gamlss_text_splines <- renderPrint({
+    
+    build_gamlss_model()
+    summary(cs_)
+    cat("\n")
+    centiles(cs_, cent=c(2.5,50,97.5), plot=FALSE)
   })
   
   # GAMLSS - Analysis Text
   output$gamlss_text_poly <- renderPrint({
     
     build_gamlss_model()
-    
-    print("GAMLSS with Polynomials (Degree 3)")
+    summary(poly_)
+    cat("\n")
     centiles(poly_,cent=c(2.5,50,97.5), plot=FALSE)
-    #summary(poly_)
-    print("GAMLSS with Polynomials (Degree 4)")
+  })
+  
+  # GAMLSS - Analysis Text
+  output$gamlss_text_poly4 <- renderPrint({
+    
+    build_gamlss_model()
+    summary(poly4_)
+    cat("\n")
     centiles(poly4_, cent=c(2.5,50,97.5), plot=FALSE)
-    #summary(poly4_)
   })
   
   # Plot the changed terms for P-Splines
@@ -1477,7 +1498,7 @@ server <- function(input, output, session) {
   output$wormplots_splines <- renderPlot({
     
     build_gamlss_model()
-    par(mfrow = c(2,2))
+    par(mfrow = c(1,2))
     
     try(wp(pb_, ylim.all  = 3, col = "cornflowerblue"))
     try(wp(cs_, ylim.all = 3, col = "cornflowerblue"))
@@ -1487,7 +1508,7 @@ server <- function(input, output, session) {
   output$wormplots_ploy <- renderPlot({
     
     build_gamlss_model()
-    par(mfrow = c(2,2))
+    par(mfrow = c(1,2))
     
     try(wp(poly_, ylim.all = 3, col = "cornflowerblue"))
     try(wp(poly4_, ylim.all = 3, col = "cornflowerblue"))
@@ -1561,7 +1582,7 @@ server <- function(input, output, session) {
   })
   
   # Decision Tree - Analysis
-  output$tree_text<- renderPrint({
+  output$tree_text <- renderPrint({
     
     build_gamlss_model()
     print(getSmo(tr_))

@@ -41,13 +41,13 @@ select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){
   
   # Deleted rows because of the subset 
   if(!(rows_table_ == nrow(data_analyte))){
-    cat(paste("Information!", rows_table_ - nrow(data_analyte), "values were deleted because of your subset for the age. \n"))}
+    cat(paste(" *** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of your subset for the age. ***\n"))}
 
   # Delete NAs
   rows_table_ <- nrow(data_analyte)
   data_analyte <- data_analyte[complete.cases(data_analyte), ]
   if(!(rows_table_ == nrow(data_analyte))){
-    cat(paste("Information!", rows_table_ - nrow(data_analyte), "values were NA and are deleted. \n"))}
+    cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were NA and are deleted. ***\n"))}
 
   # Separate data on the basis of the sex
   if(sex == "m"){data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}
@@ -93,13 +93,13 @@ select_data_days <- function(data_, age_begin = 0, age_end, sex = "t"){
   
   # Deleted rows because of the subset 
   if(!(rows_table_ == nrow(data_analyte))){
-    cat(paste("Information!", rows_table_ - nrow(data_analyte) ,"values were deleted because of your subset for the age. \n"))}
+    cat(paste("*** Information!", rows_table_ - nrow(data_analyte) ,"values were deleted because of your subset for the age. ***\n"))}
   
   # Delete NAs
   rows_table_ <- nrow(data_analyte)
   data_analyte <- data_analyte[complete.cases(data_analyte), ]
   if(!(rows_table_ == nrow(data_analyte))){
-    cat(paste("Information!", rows_table_ - nrow(data_analyte) ,"values were NA and are deleted. \n"))}
+    cat(paste("*** Information!", rows_table_ - nrow(data_analyte) ,"values were NA and are deleted. ***\n"))}
   
   # Separate data on the basis of the sex
   if(sex == "m"){data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}

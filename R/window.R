@@ -24,6 +24,17 @@ Boot_CI <- function(x, plot.it = FALSE){
   return(ci)
 }
 
+####################################### Decision Tree #############################################
+
+#' Build a Decision Tree from the package rpart
+#'
+#' @param data_analyte the data
+#' @param minsplit_tree Minimum number of observations that must exist in a node in order for a split to be attempted
+make_rpart <- function(data_analyte, minsplit_tree = 360){
+  rpart_ <<- rpart(value~age_days, data = data_analyte, method = "anova", 
+                   control = rpart.control(minsplit = minsplit_tree, cp = 0.01))
+}
+
 ####################################### Regular Window-method #####################################
 
 #' Regular Window-method with the RefLim
