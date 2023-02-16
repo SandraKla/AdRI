@@ -5,24 +5,24 @@
 ####################################### Bootstrapping #############################################
 
 #' Bootstrapping Confidence Intervals with package boot and 1000 Bootstrap replicates
-#'
+#' 
 #' @param x Data for the Confidence Intervals
 #' @param plot.it Plot the Bootstrapping
-Boot_CI <- function(x, plot.it = FALSE){
-  
-  boot.quantile <- function(x, indices, ...){
-    quantile(x[indices], ...)}
-    
-  boot_para <- boot(x, boot.quantile, R = 1000, probs = c(0.025, 0.975))
-  
-  if(plot.it){
-    plot(boot_para)}
-  
-  # Calculate the quantile of the different bootstrapping values with Confidence Intervals
-  ci <- apply(boot_para$t, MARGIN = 2, FUN = quantile, probs = c(0.5, 0.025, 0.975), na.rm = TRUE)
-  
-  return(ci)
-}
+# Boot_CI <- function(x, plot.it = FALSE){
+#   
+#   boot.quantile <- function(x, indices, ...){
+#     quantile(x[indices], ...)}
+#     
+#   boot_para <- boot(x, boot.quantile, R = 1000, probs = c(0.025, 0.975))
+#   
+#   if(plot.it){
+#     plot(boot_para)}
+#   
+#   # Calculate the quantile of the different bootstrapping values with Confidence Intervals
+#   ci <- apply(boot_para$t, MARGIN = 2, FUN = quantile, probs = c(0.5, 0.025, 0.975), na.rm = TRUE)
+#   
+#   return(ci)
+# }
 
 ####################################### Decision Tree #############################################
 
@@ -40,6 +40,16 @@ make_rpart <- function(data_analyte, minsplit_tree = 360){
 #' Regular Window-method with the RefLim
 #' 
 #' @param data_ Given dataset:
+#' 
+#'     patient sex age age_days value code name
+#' 25 35714677   W   2      905  40.9  3.2 ALBS
+#' 30 35746528   M   0       18  34.1  3.3 ALBS
+#' 66 35746170   W   5     2157  27.2  3.3 ALBS
+#' 68 35725954   M   1      572  41.8  3.1 ALBS
+#' 71 35744894   M   0       39  27.0  3.3 ALBS
+#' 73 35746153   W  16     5981  50.8  0.5 ALBS
+#' 
+#' 
 #' @param window range of the window
 #' @param method RefLim
 window_method <- function(data_, window, method){
@@ -135,7 +145,16 @@ window_method <- function(data_, window, method){
 #' Window_method were the age groups are calculated with the help machine learning, more accurate 
 #' Decision Tree from rpart().
 #'
-#' @param data_window_split Selected data
+#' @param data_window_split Given dataset:
+#' 
+#'     patient sex age age_days value code name
+#' 25 35714677   W   2      905  40.9  3.2 ALBS
+#' 30 35746528   M   0       18  34.1  3.3 ALBS
+#' 66 35746170   W   5     2157  27.2  3.3 ALBS
+#' 68 35725954   M   1      572  41.8  3.1 ALBS
+#' 71 35744894   M   0       39  27.0  3.3 ALBS
+#' 73 35746153   W  16     5981  50.8  0.5 ALBS
+#' 
 #' @param split Age group
 #' @param method RefLim
 #' @param plot_log Plot the function def.distribution() of each age groups
@@ -235,7 +254,16 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
 
 #' Same as window_method_split() just with given age groups
 #' 
-#' @param data_window_split Selected data
+#' @param data_window_split Given dataset:
+#' 
+#'     patient sex age age_days value code name
+#' 25 35714677   W   2      905  40.9  3.2 ALBS
+#' 30 35746528   M   0       18  34.1  3.3 ALBS
+#' 66 35746170   W   5     2157  27.2  3.3 ALBS
+#' 68 35725954   M   1      572  41.8  3.1 ALBS
+#' 71 35744894   M   0       39  27.0  3.3 ALBS
+#' 73 35746153   W  16     5981  50.8  0.5 ALBS
+#' 
 #' @param split Age group from the LIS
 #' @param method RefLim
 #' @param plot_log Plot the function def.distribution() of each age groups
@@ -336,7 +364,16 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
 
 #' Sliding Window-Method goes through the data with a specific window width and with specific steps
 #'
-#' @param sliding_window_data Selected data
+#' @param sliding_window_data Given dataset:
+#' 
+#'     patient sex age age_days value code name
+#' 25 35714677   W   2      905  40.9  3.2 ALBS
+#' 30 35746528   M   0       18  34.1  3.3 ALBS
+#' 66 35746170   W   5     2157  27.2  3.3 ALBS
+#' 68 35725954   M   1      572  41.8  3.1 ALBS
+#' 71 35744894   M   0       39  27.0  3.3 ALBS
+#' 73 35746153   W  16     5981  50.8  0.5 ALBS
+#' 
 #' @param width_ Range of the window
 #' @param by_ Step for the window
 #' @param outliers RefLim
@@ -345,15 +382,15 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
   # Order the data with the Index
   sliding_window_data <- sliding_window_data[order(sliding_window_data$age_days),]
 
-  ##################################### Age for the Slidng Window #################################
-  # Begin of the Slining Window
+  ##################################### Age for the Sliding Window ################################
+  # Begin of the Sliding Window
   sliding_age <- rollapply(sliding_window_data$age_days, width = width_, by = by_, 
                            FUN = min, na.rm = TRUE, partial = TRUE,align = "left")
   # End of the Sliding Window
   sliding_age_to <- rollapply(sliding_window_data$age_days, width = width_, by = by_, 
                              FUN = max, na.rm = TRUE, partial =TRUE,align = "left")
 
-  ##################################### Mean of the subset generated by rollapply() #############
+  ##################################### Mean of the subset generated by rollapply() ###############
   sliding_mean <- rollapply(sliding_window_data$value, width = width_, by = by_, 
                               FUN= mean, na.rm = TRUE, partial =TRUE,align = "left")
 
@@ -361,11 +398,11 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
   suppressWarnings(sliding_tukey_data <- rollapply(sliding_window_data$value, width = width_, by = by_, 
                                   FUN = invisible, partial = TRUE, align = "left"))
 
-  ##################################### 2.5% Percentil ############################################
+  ##################################### 2.5% Percentile ###########################################
   sliding_2_5 <- rollapply(sliding_window_data$value, width = width_, by = by_, 
                            FUN = quantile, probs = c(0.025), partial =TRUE, align = "left")
   
-  ##################################### 97.5% Percentil ###########################################
+  ##################################### 97.5% Percentile ##########################################
   sliding_97_5 <- rollapply(sliding_window_data$value, width = width_, by = by_, FUN = quantile, 
                             probs = c(0.975), partial =TRUE, align = "left")
   
@@ -451,7 +488,6 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
                              "Number of data points"  = sliding_n_data_tukey, check.names = FALSE)
   return(slide_tukey)
 }
-
 
 ####################################### Metrics ###################################################
 #' 

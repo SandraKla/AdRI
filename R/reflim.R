@@ -24,12 +24,6 @@ print.progress <- function(x, i, log.mode = FALSE){
 
 #' Calculate the central 95% of a normal distribution performs algorithm until length of vector does not change anymore
 #' Modification of John W. Tukey’s box plot algorithm
-#'
-#' @param x Expects a vector x of positive numbers without NAs
-#' @param perc Value for the Percentiles
-#' @param log.mode When the data is lognormal distributed
-#' @param print.cycles print the cycles 
-#' @param plot.it Plot the modified Tukey
 iBoxplot95 <- function(x, lognorm = FALSE, plot.it = TRUE){
   #sets starting parameters
   n0 <- 1
@@ -56,14 +50,6 @@ iBoxplot95 <- function(x, lognorm = FALSE, plot.it = TRUE){
   return(x)
 }
 
-
-#' iBoxplot
-#'
-#' @param x x
-#' @param log.mode log.mode
-#' @param perc perc
-#' @param n.min n.min
-#' @param print.cycles print.cycles
 iBoxplot <- function(x, log.mode = FALSE, perc = 2.5, n.min = 100, print.cycles = TRUE){
   # expects a numeric vector x > 0
   # returns a truncated vector together with the following statistics:
@@ -108,13 +94,6 @@ iBoxplot <- function(x, log.mode = FALSE, perc = 2.5, n.min = 100, print.cycles 
 
 #' Expects a numeric vector x without NAs (usually central 95% of normal distribution)
 #' Returns intercept and slope of a robust QQ-line plus calculated lower and upper limits of reference interval
-#'
-#' @param x represents a central percentage of a normal distribution defined by perc standard is central 
-#' 95% (perc means: from 2.5th to 97.5th percentile)
-#' @param perc Value for the Percentiles
-#' @param log.mode When the data is lognormal distributed
-#' @param print.cycles print the cycles 
-#' @param plot.it Plot the QQ-Plot
 reflim <- function(x, log.mode = NULL, n.quantiles = 100, n.min = 200, plot.it = TRUE,
                    main = "Q-Q plot", xlab = "Theoretical Quantiles", ylab = "Sample Quantiles"){
   
@@ -240,10 +219,6 @@ numeric.data <- function(x, no.zero = FALSE){
 
 
 #' Returns the Bowley skewness of a range between alpha and 1-alpha
-#' 
-#' @param x Expects a vector x
-#' @param alpha threshold
-#' @param digits Value to round the Bowley skewness
 bowley <- function(x, alpha = 0.25){
   q <- quantile(x, c(alpha, 0.5, 1 - alpha))
   return ((q[1] - 2 * q[2] + q[3]) / (q[3] - q[1]))
@@ -252,11 +227,6 @@ bowley <- function(x, alpha = 0.25){
 
 #' Compares the Bowley skewness for x and log(x)
 #' returns TRUE, if a lognormal distribution should be assumed
-#' 
-#' @param x Expects a numeric vector x > 0
-#' @param cutoff threshold
-#' @param alpha threshold
-#' @param plot.it Plot the result
 def.distribution <- function(x, cutoff = 0.05, alpha = 0.25, digits = 3, plot.it = TRUE, add.tx = "distribution", setvalues = NULL,
                              main = ""){
   
@@ -297,22 +267,12 @@ round_df <- function(x, digits) {
 }
 
 #' Round numeric values from a dataframe
-#' 
-#' @param x Expects a dataframe
 adjust.digits <- function(x){
   digits <- 2 - floor(log10(x))
   if(digits < 1){digits <- 1}
   return(digits)
 }
 
-
-#' ci.quant95
-#'
-#' @param n n
-#' @param lower.limit lower.limit
-#' @param upper.limit upper.limit
-#' @param lognorm lognorm
-#' @param apply.rounding apply.rounding
 ci.quant95 <- function(n, lower.limit, upper.limit, lognorm = TRUE, apply.rounding = TRUE){
   if(upper.limit <= lower.limit){stop("(ci.quant95) upper limit must be higher than lower limit")}
   if(lognorm){
