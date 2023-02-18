@@ -333,7 +333,7 @@ ui <- fluidPage(
             # selectInput("method", "GAMLSS Algorithm:", choices = list("Rigby and Stasinopoulos algorithm (RS)" = "RS",
             #                                                           "Cole and Green algorithm (CG)" = "CG")),
             # sliderInput("epochs", "Number of Epochs:", 5 , 250, 30),
-            actionButton("button_lms", "LMS-Model", icon("calculator"), onclick = "$(tab).removeClass('disabled')"), 
+            actionButton("button_lms", "Start LMS-Model", icon("calculator"), onclick = "$(tab).removeClass('disabled')"), 
             htmlOutput("buttons_lms"), hr(),
             selectInput("distribtion_gamlss", "GAMLSS-Distribution:", choices = list("Normal distribution" = "NO", 
                                                                                      "Log-Normal distribution" = "LOGNO",
@@ -344,7 +344,7 @@ ui <- fluidPage(
                                                                               #"Box-Cole Green T-Distribution" = "BCT", 
                                                                               "Box-Cole Green T-Distribution (orginal)" = "BCTo"))),
             checkboxInput("checkbox", "Distribution proposed by the LMS", value = FALSE),
-            actionButton("button_gamlss", "GAMLSS-Models", icon("calculator"), onclick = "$(tabs).removeClass('disabled')"),
+            actionButton("button_gamlss", "Start GAMLSS-Models", icon("calculator"), onclick = "$(tabs).removeClass('disabled')"),
             htmlOutput("buttons_gamlss"), #, 
             #hr(), htmlOutput("helptext_gamlss")
           ),
@@ -410,7 +410,10 @@ ui <- fluidPage(
                      
               verbatimTextOutput("tree_text"), p("Decision Tree - Analysis:"), 
               plotOutput("rpart_tree"),  plotOutput("tree_term"), plotOutput("tree_fitted", height="500px"), 
-              plotOutput("tr_wormplots"))
+              plotOutput("tr_wormplots")),
+            
+            tabPanel("GAMLSS-Comparison", icon = icon("balance-scale"), value = "nav_gamlss",
+              plotOutput("all_gamlss", height="700px"))
           ),
           tags$script( src = 'tabs_enabled.js')),
         )
@@ -431,7 +434,7 @@ ui <- fluidPage(
       
     ################################### GAMLSS - Prediction #######################################
     
-    tabPanel("Reference Intervals", icon = icon("table"),
+    tabPanel("Percentiles", icon = icon("table"),
       sidebarLayout(    
         ### Sidebar - GAMLSS ###
         sidebarPanel(width = 3,
@@ -446,27 +449,27 @@ ui <- fluidPage(
                                                                                     "Machine Learning" = c("Neural Network" = "nn_ri", 
                                                                                                            "Decision Tree" = "tr_ri"))),
           #textOutput("prediction_gamlss"), hr(),
-          numericInput("deviation", "Deviation as max zlog value for the discrete Reference Intervals:", 5, min = 2, max = 10) #, hr(),
+          numericInput("deviation", "Deviation as max zlog value for the discrete Percentiles:", 5, min = 2, max = 10) #, hr(),
           #htmlOutput("helptext_prediction")
           ),
                
         ### MainPanel - GAMLSS ###
         mainPanel(width = 9,
           tabsetPanel( 
-            tabPanel("Reference Intervals", icon = icon("chart-line"),
+            tabPanel("Percentiles", icon = icon("chart-line"),
               
               plotOutput("gamlss_prediction", height = "700px")),
            
             tabPanel("Table", icon = icon("table"), 
                      
               DT::dataTableOutput("gamlss_tables"), 
-              downloadButton("Download_ri", "Reference Intervals")),
+              downloadButton("Download_ri", "Percentiles")),
             
-            tabPanel("Discrete Reference Intervals", 
+            tabPanel("Discrete Percentiles", 
                      
               plotOutput("gamlss_plot", height = "500px"),
               DT::dataTableOutput("gamlss_split"),
-              downloadButton("Download_deviation_gamlss", "Table with discrete Reference Intervals"))
+              downloadButton("Download_deviation_gamlss", "Table with discrete Percentiles"))
           )
         )
       )
@@ -915,7 +918,7 @@ server <- function(input, output, session) {
   # output$scatterplot <- renderPlot({
   #   
   #   scatterplot_data <- data_analyte()
-  #   plot(scatterplot_data$value ~ scatterplot_data$age_days , pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
+  #   plot(scatterplot_data$value ~ scatterplot_data$age_days , pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
   #        ylab = ylab_)
   # })
 
@@ -1040,7 +1043,7 @@ server <- function(input, output, session) {
     
     window_reactive()
    
-    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
            ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
     x_lower <- window_data_tukey$age_days
@@ -1086,7 +1089,7 @@ server <- function(input, output, session) {
     
     window_lis()
     
-    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 1, col = "grey", 
          xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
     
     x_lower <- window_data_tukey_lis$age_days
@@ -1153,7 +1156,7 @@ server <- function(input, output, session) {
     build_rpart()
     windowtree()
 
-    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", 
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 1, col = "grey", 
          xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
          
     x_lower <- window_data_tukey_rpart$age_days
@@ -1221,7 +1224,7 @@ server <- function(input, output, session) {
   
     slidingwindow()
    
-    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey",
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 1, col = "grey",
          xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
     
     x_lower <- slide_tukey[,2]
@@ -1317,8 +1320,8 @@ server <- function(input, output, session) {
   output$lms <- renderPlot({
     
     lms_reactive()
-    centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75, 
-             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3),lwd.centiles = 1.5, 
+    centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1, 
+             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3),lwd.centiles = 2, 
              legend = FALSE, col = "lightgrey")
   })
 
@@ -1343,6 +1346,8 @@ server <- function(input, output, session) {
     
     lms_reactive()
     print(lms_) 
+    cat("Power:")
+    print(lms_$power) 
     cat("\n")
     centiles(lms_, cent=c(2.5,50,97.5), plot=FALSE)
   })
@@ -1350,10 +1355,15 @@ server <- function(input, output, session) {
   # Wormplots LMS
   output$lms_wormplots <- renderPlot({
     lms_reactive()
-    wp(lms_, ylim.all = 3, col = "cornflowerblue")
+    try(wp(lms_, ylim.all = 3, col = "cornflowerblue", n.inter= 9))
   })
-  
+
   ##################################### GAMLSS ####################################################
+  
+  output$all_gamlss <- renderPlot({
+    centiles.com(pb_, cs_, poly_, poly4_, nn_, tr_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, 
+                  legend = TRUE, main = "GAMLSS Models")
+  })
   
   output$buttons_gamlss <- renderUI({
     build_gamlss_model()
@@ -1372,11 +1382,11 @@ server <- function(input, output, session) {
     par(mfrow=c(1,2))
     
     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", 
-             ylab = ylab_, pch = 20, cex = 0.75, col.cent=c("indianred","black","cornflowerblue"), 
-             lty.centiles=c(3,1,3), lwd.centiles = 1.5 , legend = FALSE, col = "lightgrey")
+             ylab = ylab_, pch = 20, cex = 1, col.cent=c("indianred","black","cornflowerblue"), 
+             lty.centiles=c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", 
-             ylab = ylab_, pch = 20, cex = 0.75, col.cent=c("indianred","black","cornflowerblue"), 
-             lty.centiles=c(3,1,3), lwd.centiles = 1.5, legend = FALSE, col = "lightgrey")
+             ylab = ylab_, pch = 20, cex = 1, col.cent=c("indianred","black","cornflowerblue"), 
+             lty.centiles=c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
   
   # Centiles Plot with gamlss models (Polynomials Degree 3 and 4) ######
@@ -1386,11 +1396,11 @@ server <- function(input, output, session) {
     par(mfrow=c(1,2))
  
     centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
-             ylab = ylab_, pch = 20, cex = 0.75, col.cent=c("indianred","black","cornflowerblue"), 
-             lty.centiles=c(3,1,3), lwd.centiles = 1.5, legend = FALSE, col = "lightgrey")
+             ylab = ylab_, pch = 20, cex = 1, col.cent=c("indianred","black","cornflowerblue"), 
+             lty.centiles=c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
     centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent=c(2.5,50,97.5), xlab = "Age [Days]", 
-             ylab = ylab_, pch = 20, cex = 0.75, col.cent=c("indianred","black","cornflowerblue"), 
-             lty.centiles=c(3,1,3), lwd.centiles = 1.5, legend = FALSE, col = "lightgrey")
+             ylab = ylab_, pch = 20, cex = 1, col.cent=c("indianred","black","cornflowerblue"), 
+             lty.centiles=c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
   
   # Plot fitted models for P-Splines 
@@ -1500,8 +1510,8 @@ server <- function(input, output, session) {
     build_gamlss_model()
     par(mfrow = c(1,2))
     
-    try(wp(pb_, ylim.all  = 3, col = "cornflowerblue"))
-    try(wp(cs_, ylim.all = 3, col = "cornflowerblue"))
+    try(wp(pb_, ylim.all = 3, col = "cornflowerblue", n.inter= 9))
+    try(wp(cs_, ylim.all = 3, col = "cornflowerblue", n.inter= 9))
   })
   
   # Wormplots from Polynomials Degree 3 and 4
@@ -1510,8 +1520,8 @@ server <- function(input, output, session) {
     build_gamlss_model()
     par(mfrow = c(1,2))
     
-    try(wp(poly_, ylim.all = 3, col = "cornflowerblue"))
-    try(wp(poly4_, ylim.all = 3, col = "cornflowerblue"))
+    try(wp(poly_, ylim.all = 3, col = "cornflowerblue", n.inter= 9))
+    try(wp(poly4_, ylim.all = 3, col = "cornflowerblue", n.inter= 9))
   })
   
   # Neural Network (machine learning) ##############################################
@@ -1520,8 +1530,8 @@ server <- function(input, output, session) {
   output$gamlss_net <- renderPlot({
     
     build_gamlss_model()
-    centiles(nn_, main = "GAMLSS with Neural Network (3 Hidden-Units, decay=0.1)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, legend = FALSE, col = "lightgrey")
+    centiles(nn_, main = "GAMLSS with Neural Network (3 Hidden-Units, decay=0.1)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
 
   # Neural Network - Analysis
@@ -1551,7 +1561,7 @@ server <- function(input, output, session) {
   output$nn_wormplots <- renderPlot({
     
     build_gamlss_model()
-    try(wp(nn_, ylim.all = 3, col = "cornflowerblue"))
+    try(wp(nn_, ylim.all = 3, col = "cornflowerblue", n.inter= 9))
   })
   
   # Decision Tree #################################################################################
@@ -1561,8 +1571,8 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
     
-    centiles(tr_, main = "GAMLSS with Decision Tree only for mu (minsplit = 360, cp = 0.01)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, legend = FALSE, col = "lightgrey")
+    centiles(tr_, main = "GAMLSS with Decision Tree only for mu (minsplit = 360, cp = 0.01)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
   
   # Decision Tree - Analysis
@@ -1600,7 +1610,7 @@ server <- function(input, output, session) {
   output$tr_wormplots <- renderPlot({
     
     build_gamlss_model()
-    try(wp(tr_, ylim.all = 3, col = "cornflowerblue"))
+    try(wp(tr_, ylim.all = 3, col = "cornflowerblue", n.inter= 9))
   })
   
   # Comparism #####################################################################################
@@ -1959,7 +1969,7 @@ server <- function(input, output, session) {
     DT::formatRound(c(3:length(deviation_gamlss)), 2)
   })
   
-  # Plot for the discrete reference intervals from the GAMLSS-models
+  # Plot for the discrete percentiles from the GAMLSS-models
   output$gamlss_plot <- renderPlot({
     
     input$deviation
@@ -1980,7 +1990,7 @@ server <- function(input, output, session) {
       else{validate(need(lms_ready == TRUE, "Please use the LMS-Method first!"))
         stop()}}
     
-    plot(value~age_days, data=data_analyte(), pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
+    plot(value~age_days, data=data_analyte(), pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
          ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i",  
          ylim = c(min(deviation_gamlss$`2.5% Percentil`, na.rm = TRUE), max(deviation_gamlss$`97.5% Percentil`, na.rm = TRUE)))
     
@@ -2045,8 +2055,8 @@ server <- function(input, output, session) {
 
     model <- eval(parse(text = paste0("o", input$select_model_resi)))
     
-    centiles(model, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), legend = FALSE, lwd.centiles = 1.5)
+    centiles(model, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+             col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), legend = FALSE, lwd.centiles = 2)
   })
   
   # Plot the changed terms from refitted model with P-Splines  
@@ -2159,7 +2169,7 @@ server <- function(input, output, session) {
     ################################### Linear regression #########################################
     
     linear_regression <<- lm(value~age_days, data = data_regression)
-    plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
+    plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
          ylab = ylab_, main = paste("Linear Regression of the data from", data_analyte()[1,7]), xaxs = "i")
     abline(linear_regression)
     
@@ -2173,7 +2183,7 @@ server <- function(input, output, session) {
     ###################################  Polynomials (Degree 10) ##################################
     
     poly_2_regression <<- lm(value ~ poly(age_days,10), data = data_regression)
-    plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
+    plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
          ylab = ylab_, main = paste(" Polynomials (10) of the data from", data_analyte()[1,7]), xaxs = "i")
     lines(sort(data_analyte()[,4]), fitted(poly_2_regression)[order(data_analyte()[,4])])
     
@@ -2187,7 +2197,7 @@ server <- function(input, output, session) {
     ###################################  Polynomials (Degree 3) ###################################
     
     poly_3_regression <<- lm(value ~ poly(age_days,3), data = data_regression)
-    plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
+    plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
          ylab = ylab_, main = paste(" Polynomials (3) of the data from", data_analyte()[1,7]), xaxs = "i")
     lines(sort(data_analyte()[,4]), fitted(poly_3_regression)[order(data_analyte()[,4])])
     
@@ -2201,7 +2211,7 @@ server <- function(input, output, session) {
     ###################################  Polynomials (Degree 4) ###################################
     
     poly_4_regression <<- lm(value ~ poly(age_days,4), data = data_regression)
-    plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 0.75, col = "grey", xlab = "Age [Days]",
+    plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
          ylab = ylab_, main = paste(" Polynomials (4) of the data from", data_analyte()[1,7]), xaxs = "i")
     lines(sort(data_analyte()[,4]), fitted(poly_4_regression)[order(data_analyte()[,4])])
     
@@ -2508,8 +2518,8 @@ server <- function(input, output, session) {
   #   content = function(file){
   #     setEPS()
   #     postscript(file)
-  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     dev.off()})
   
@@ -2518,8 +2528,8 @@ server <- function(input, output, session) {
   #     "LMS.jpeg"},
   #   content = function(file){
   #     jpeg(file)
-  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     dev.off()})
   
@@ -2532,25 +2542,25 @@ server <- function(input, output, session) {
   #     
   #     par(mfrow=c(3,2))
   #     
-  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75, 
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1, 
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
-  #              ylab = ylab_, pch = 20, cex = 0.75, 
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              ylab = ylab_, pch = 20, cex = 1, 
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent=c(2.5,50,97.5), xlab = "Age [Days]", 
-  #              ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     dev.off()})
   
@@ -2562,25 +2572,25 @@ server <- function(input, output, session) {
   #     
   #     par(mfrow=c(3,2))
   #     
-  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75, 
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1, 
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
-  #              ylab = ylab_, pch = 20, cex = 0.75, 
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              ylab = ylab_, pch = 20, cex = 1, 
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent=c(2.5,50,97.5), xlab = "Age [Days]", 
-  #              ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #              ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 0.75,
-  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 1.5, 
+  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     dev.off()})
 

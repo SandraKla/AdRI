@@ -11,6 +11,8 @@
 
 This Shiny App was developed to create **A**ge-**d**ependent **R**eference **I**ntervals (**AdRI**) using different methods: [**LMS**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Generalized-additive-models-for-location,-scale-and-shape-(GAMLSS)#lms), [**GAMLSS**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Generalized-additive-models-for-location,-scale-and-shape-(GAMLSS)), [**Window-Methods**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Window-Methods) and [**Regression**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Regression).
 
+*** **Warning!** This Shiny App has not been enough validated for the basis of a medical diagnosis! There is no warranty for the app and/or the reference intervals! ***
+
 <img src="www/shiny_overview.png" align="center"/>
 
 ## Installation 
@@ -26,9 +28,9 @@ if("shiny" %in% rownames(installed.packages())){
 runGitHub("Age-dependent-Reference-Intervals", "SandraKla")
 ```
 
-**Method 2** (not recommended):
+**Method 2:**
 Download the Zip-File from this Shiny App. Unzip the file and set your working direction to the path of the folder. 
-The package [shiny](https://cran.r-project.org/web/packages/shiny/index.html) (≥ 1.7.1) must be installed before using the Shiny App:
+The package [shiny](https://cran.r-project.org/web/packages/shiny/index.html) must be installed before using the Shiny App:
 
 ```bash
 # Test if shiny is installed:
@@ -46,10 +48,8 @@ All required packages are downloaded when starting this app or imported if they 
 
 ## Contact
 
-**Warning!** This Shiny application has not been enough validated for the basis of a medical diagnosis! There is no warranty for the app and/or the reference intervals!
-
 You are welcome to:
 - Submit suggestions and bugs at: https://github.com/SandraKla/Age-dependent-Reference-Intervals/issues
 - Make a pull request on: https://github.com/SandraKla/Age-dependent-Reference-Intervals/pulls
 
-For more information use the [Wiki](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki)! 
+For more information use the [Wiki](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki)!
