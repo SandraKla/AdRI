@@ -1,15 +1,15 @@
 # Age-dependent-Reference-Intervals (AdRI)
 
-![](https://img.shields.io/github/license/SandraKla/Age-dependent-Reference-Intervals.svg)
-![](https://img.shields.io/github/last-commit/SandraKla/Age-dependent-Reference-Intervals.svg)
-![](https://img.shields.io/github/languages/count/SandraKla/Age-dependent-Reference-Intervals.svg)
-![](https://img.shields.io/github/languages/top/SandraKla/Age-dependent-Reference-Intervals.svg)
+![](https://img.shields.io/github/license/SandraKla/AdRI.svg)
+![](https://img.shields.io/github/last-commit/SandraKla/AdRI.svg)
+![](https://img.shields.io/github/languages/count/SandraKla/AdRI.svg)
+![](https://img.shields.io/github/languages/top/SandraKla/AdRI.svg)
 
 <img src="www/Logo.svg" width="225px" height="150px" align="right"/>
 
 **Shiny App for calculating Age-dependent Reference Intervals!**
 
-This Shiny App was developed to create **A**ge-**d**ependent **R**eference **I**ntervals (**AdRI**) using different methods: [**LMS**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Generalized-additive-models-for-location,-scale-and-shape-(GAMLSS)#lms), [**GAMLSS**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Generalized-additive-models-for-location,-scale-and-shape-(GAMLSS)), [**Window-Methods**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Window-Methods) and [**Regression**](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Regression).
+This Shiny App was developed to create **A**ge-**d**ependent **R**eference **I**ntervals (**AdRI**) using different methods: [**LMS**](https://github.com/SandraKla/AdRI/wiki/LMS), [**GAMLSS**](https://github.com/SandraKla/AdRI/wiki/Generalized-additive-models-for-location,-scale-and-shape-(GAMLSS)), [**Window-Methods**](https://github.com/SandraKla/AdRI/wiki/Window-Methods) and [**Regression**](https://github.com/SandraKla/AdRI/wiki/Regression).
 
 *** **Warning!** This Shiny App has not been enough validated for the basis of a medical diagnosis! There is no warranty for the app and/or the reference intervals! ***
 
@@ -25,7 +25,7 @@ if("shiny" %in% rownames(installed.packages())){
   library(shiny)} else{
   install.packages("shiny")
   library(shiny)}
-runGitHub("Age-dependent-Reference-Intervals", "SandraKla")
+runGitHub("AdRI", "SandraKla")
 ```
 
 **Method 2:**
@@ -44,12 +44,12 @@ And then start the app with the following code:
 runApp("app.R")
 ```
 
-All required packages are downloaded when starting this app or imported if they already exist. For more information about the required packages use the [Wiki](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki/Versions).
+All required packages are downloaded when starting this app or imported if they already exist. For more information about the required packages use the [Wiki](https://github.com/SandraKla/AdRI/wiki/Versions).
 
 ## Contact
 
 You are welcome to:
-- Submit suggestions and bugs at: https://github.com/SandraKla/Age-dependent-Reference-Intervals/issues
-- Make a pull request on: https://github.com/SandraKla/Age-dependent-Reference-Intervals/pulls
+- Submit suggestions and bugs at: https://github.com/SandraKla/AdRI/issues
+- Make a pull request on: https://github.com/SandraKla/AdRI/pulls
 
-For more information use the [Wiki](https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki)!
+For more information use the [Wiki](https://github.com/SandraKla/AdRI/wiki)!
