@@ -41,7 +41,7 @@ select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){
   
   # Deleted rows because of the subset 
   if(!(rows_table_ == nrow(data_analyte))){
-    cat(paste(" *** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of your subset for the age. ***\n"))}
+    cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of your subset for the age. ***\n"))}
 
   # Delete NAs
   rows_table_ <- nrow(data_analyte)

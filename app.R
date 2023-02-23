@@ -335,8 +335,8 @@ ui <- fluidPage(
             # sliderInput("epochs", "Number of Epochs:", 5 , 250, 30),
             actionButton("button_lms", "Start LMS-Model", icon("calculator"), onclick = "$(tab).removeClass('disabled')"), 
             htmlOutput("buttons_lms"), hr(),
-            selectInput("distribtion_gamlss", "GAMLSS-Distribution:", choices = list("Normal distribution" = "NO", 
-                                                                                     "Log-Normal distribution" = "LOGNO",
+            selectInput("distribtion_gamlss", "GAMLSS-Distribution:", choices = list( "Log-Normal distribution" = "LOGNO",
+                                                                                      "Normal distribution" = "NO",
                                                                 "Box-Cox" = c(#"Box-Cole Green Distrubtion" = "BCCG", 
                                                                               "Box-Cole Green Distrubtion (orginal)" = "BCCGo",
                                                                               #"Box-Cole Green Exp. Distrubtion" = "BCPE",
@@ -606,6 +606,8 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
     progress$set(message = "Load data...", detail = "", value = 2)
     
+    cat(paste("*** Welcome to the Shiny App AdRI! ***\n"))
+    
     req(input$dataset, input$age_end)
     
     lms_ready <<- FALSE        # To check if the lms method was used
@@ -839,9 +841,9 @@ server <- function(input, output, session) {
     if(input$checkbox == TRUE){
       validate(need(lms_ready == TRUE, 
       "Please make first the LMS-Method to get the proposed distribution!"))
-      gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], lms_$family[1], 50, "RS")} 
+      gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], lms_$family[1], 100, "RS")} 
 
-    else{gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], input$distribtion_gamlss, 50, "RS")}
+    else{gamlss_model_read <- make_gamlss(data_analyte(), input$age_end[2], input$distribtion_gamlss, 100, "RS")}
     
     # Save global value to check later if the models are already calculated
     modelsprediction <<- TRUE
@@ -856,8 +858,7 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
     progress$set(message = "Calculate Percentiles with LMS...", detail = "", value = 2)
     
-    new_lms_data <<- data.frame(value_lms = data_analyte()[[5]], age_lms = data_analyte()[[4]])
-    lms_ <<- lms(value_lms, age_lms, k=2, data = new_lms_data, cent=c(2.5,50,97.5), trans.x = TRUE)
+    lms_model <- make_lms(data_analyte())
     
     lms_ready <<- TRUE # Value to check if lms is accomplished
     on.exit(progress$close())
@@ -1435,7 +1436,7 @@ server <- function(input, output, session) {
   output$gamlss_text_psplines <- renderPrint({
      
     build_gamlss_model()
-    summary(pb_)
+    suppressWarnings({summary(pb_)})
     cat("\n")
     centiles(pb_, cent=c(2.5,50,97.5), plot=FALSE)
     
@@ -1445,7 +1446,7 @@ server <- function(input, output, session) {
   output$gamlss_text_splines <- renderPrint({
     
     build_gamlss_model()
-    summary(cs_)
+    suppressWarnings({summary(cs_)})
     cat("\n")
     centiles(cs_, cent=c(2.5,50,97.5), plot=FALSE)
   })
@@ -1454,7 +1455,7 @@ server <- function(input, output, session) {
   output$gamlss_text_poly <- renderPrint({
     
     build_gamlss_model()
-    summary(poly_)
+    suppressWarnings({summary(poly_)})
     cat("\n")
     centiles(poly_,cent=c(2.5,50,97.5), plot=FALSE)
   })
@@ -1463,7 +1464,7 @@ server <- function(input, output, session) {
   output$gamlss_text_poly4 <- renderPrint({
     
     build_gamlss_model()
-    summary(poly4_)
+    suppressWarnings({summary(poly4_)})
     cat("\n")
     centiles(poly4_, cent=c(2.5,50,97.5), plot=FALSE)
   })
@@ -1554,6 +1555,7 @@ server <- function(input, output, session) {
   output$net_text<- renderPrint({
     
     build_gamlss_model()
+    suppressWarnings({summary(nn_)})
     centiles(nn_,cent=c(2.5,50,97.5), plot=FALSE)
   })
   
@@ -1571,7 +1573,7 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
     
-    centiles(tr_, main = "GAMLSS with Decision Tree only for mu (minsplit = 360, cp = 0.01)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+    centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
   
@@ -1596,6 +1598,7 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
     print(getSmo(tr_))
+    suppressWarnings({summary(tr_)})
     centiles(tr_,cent=c(2.5,50,97.5), plot=FALSE)
   })
 
@@ -1684,6 +1687,8 @@ server <- function(input, output, session) {
       # Pseudo R-squared (R^2)
       R_2 <- data.frame(model = c("pb_","cs_","poly_","poly4_","nn_","tr_"), 
                         R2 = c(Rsq(pb_), Rsq(cs_),Rsq(poly_), Rsq(poly4_), Rsq(nn_), Rsq(tr_)))
+      # Error in solve.default(oout$hessian) : 
+      #   Lapack routine dgesv: system is exactly singular: U[4,4] = 0
       
       # Merge the Metrics
       compare_models <- merge(AIC_,GAIC_,by=c("model"))
@@ -1863,7 +1868,7 @@ server <- function(input, output, session) {
   #   if(input$select_model == "cs_ri"){text_model <- "Cubic Splines"}
   #   if(input$select_model == "poly_ri"){text_model <- " Polynomials (Degree 3)"}
   #   if(input$select_model == "poly4_ri"){text_model <- "Polynomials (Degree 4)"}
-  #   if(input$select_model == "tr_ri"){text_model <- "Decsion Tree"}
+  #   if(input$select_model == "tr_ri"){text_model <- "Decision Tree"}
   #   if(input$select_model == "nn_ri"){text_model <- "Neural Network"}
   #  
   #   if(modelsprediction == TRUE){
