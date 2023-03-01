@@ -15,6 +15,7 @@ helper_make_gamlss <- function(x) {return(eval(parse(text=x)))}
 #' @param method CG or RS algorithm
 make_gamlss <- function(data_analyte, age_end, family_gamlss, epochs, method){
   
+  set.seed(1)
   data_analyte <<- data_analyte
   
   model_gamlss_pb <- {paste("gamlss(value ~pb(age_days), sigma.formula = ~pb(age_days), nu.formula = ~pb(age_days), tau.formula = ~pb(age_days), 
@@ -37,14 +38,13 @@ make_gamlss <- function(data_analyte, age_end, family_gamlss, epochs, method){
   cat(paste("*** GAMLSS - Polynomials Degree 4: ***\n"))
   poly4_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_poly4))})
   
-  # Minsplit by 360 to became at least 120 values at the last leaf from the Decision Tree (only for mu, because it has the most age-dependent impact)
   model_gamlss_tr <- {paste("gamlss(value ~tr(~age_days), sigma.formula = ~age_days, nu.formula = ~age_days, tau.formula = ~age_days, 
                             family =",family_gamlss,", data = data_analyte, method = ",method,"(",epochs,"), control = gamlss.control(n.cyc = 100))")}
   cat(paste("*** GAMLSS - Decision Tree: ***\n"))
   tr_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_tr))})
   
-  # With 3 Hidden Units for each parameter
-  model_gamlss_nn <- {paste("gamlss(value ~nn(~age_days,size=3, decay=0.1), sigma.formula = ~nn(~age_days,size=3, decay=0.1), nu.formula = ~nn(~age_days,size=3, decay=0.1), tau.formula = ~nn(~age_days,size=3, decay=0.1), 
+
+  model_gamlss_nn <- {paste("gamlss(value ~nn(~age_days,size=4, decay=0.1), sigma.formula = ~nn(~age_days,size=3, decay=0.1), nu.formula = ~nn(~age_days,size=1, decay=0.1), tau.formula = ~nn(~age_days,size=1, decay=0.1), 
                             family =",family_gamlss,", data = data_analyte, method = ",method,"(",epochs,"), control = gamlss.control(n.cyc = 100))")}
   cat(paste("*** GAMLSS - Neural Network: ***\n"))
   nn_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_nn))})
@@ -67,7 +67,7 @@ make_lms <- function(data_analyte){
 #' @param residuals_cut Threshold for the Residuals
 outliers_residuals <- function(data_analyte, gamlss_family, epochs, method, residuals_cut = 1.5){
   
-  helper_make_gamlss <- function(x) {return(eval(parse(text=x)))} 
+  set.seed(1)
   
   # Save the residuals to each value and day
   residuals_pb <- data.frame(value = data_analyte$value, age_days = data_analyte$age_days, resid = pb_$residuals, 
@@ -123,7 +123,7 @@ outliers_residuals <- function(data_analyte, gamlss_family, epochs, method, resi
   cat(paste("*** GAMLSS - Decision Tree: ***\n"))
   otr_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_tr))})
   
-  model_gamlss_nn <- {paste("gamlss(value ~nn(~age_days,size=3, decay=0.1), sigma.formula = ~nn(~age_days,size=3, decay=0.1), nu.formula = ~nn(~age_days,size=3, decay=0.1), tau.formula = ~nn(~age_days,size=3, decay=0.1), 
+  model_gamlss_nn <- {paste("gamlss(value ~nn(~age_days,size=4, decay=0.1), sigma.formula = ~nn(~age_days,size=3, decay=0.1), nu.formula = ~nn(~age_days,size=1, decay=0.1), tau.formula = ~nn(~age_days,size=1, decay=0.1), 
                             family =",gamlss_family,", data = outlierfree_nn, method = ",method,"(",epochs,"))")}
   cat(paste("*** GAMLSS - Neural Network: ***\n"))
   onn_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_nn))})

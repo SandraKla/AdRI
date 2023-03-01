@@ -1531,7 +1531,7 @@ server <- function(input, output, session) {
   output$gamlss_net <- renderPlot({
     
     build_gamlss_model()
-    centiles(nn_, main = "GAMLSS with Neural Network (3 Hidden-Units, decay=0.1)", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+    centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
 
