@@ -306,7 +306,7 @@ ui <- fluidPage(
         Bayesian Information Criterion (BIC), Mean absolute Error (MAE), Mean squared error (MSE), 
         Root mean squared error (RMSE). Best model to each metric is marked"),
         DT::dataTableOutput("regression_table"),
-        downloadButton("downloadData_regression_table", "Table with Metrics")),
+        downloadButton("DownloadData_regression_table", "Table with Metrics")),
          
       # tabPanel("Analysis",
       #          
@@ -469,7 +469,8 @@ ui <- fluidPage(
                      
               plotOutput("gamlss_plot", height = "500px"),
               DT::dataTableOutput("gamlss_split"),
-              downloadButton("Download_deviation_gamlss", "Table with discrete Percentiles"))
+              downloadButton("Download_deviation_gamlss", "Table with discrete Percentiles"),
+              downloadButton("Download_zlog_table", "Table with discrete Percentiles for Zlog_AdRI"))
           )
         )
       )
@@ -917,19 +918,18 @@ server <- function(input, output, session) {
   
   # Scatterplot from the data_analyte()
   # output$scatterplot <- renderPlot({
-  #   
-  #   scatterplot_data <- data_analyte()
-  #   plot(scatterplot_data$value ~ scatterplot_data$age_days , pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
-  #        ylab = ylab_)
+  # 
+  #   ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
+  #   plot(data_analyte()$value ~ data_analyte()$age_days , pch = 20, cex = 1, col = "grey", xlab = "Age [Days]", ylab = ylab_)
   # })
 
   # Scatterplot from the data_analyte() with plotly
   output$scatterplot_plotly <- renderPlotly({
 
-    ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]") 
-    
+    ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
+
     #if(input$fast == FALSE){
-      fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, 
+      fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value,
                    text = ~ paste('</br>Patient: ', patient,
                                   '</br>Station: ', code,
                                   '</br>Age [Years]: ', age,
@@ -942,7 +942,7 @@ server <- function(input, output, session) {
                    colors = c("indianred", "cornflowerblue"),
                    mode = "markers",
                    marker = list(size = 10)) %>%
-          layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
+          layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)),
                  yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))#}
     # else{
     #   fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, color = ~sex, colors = c("cornflowerblue", "indianred"),
@@ -954,7 +954,7 @@ server <- function(input, output, session) {
     #                  type = "scattergl",
     #                  mode = "markers",
     #                  marker = list(size = 5)) %>%
-    #     layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
+    #     layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)),
     #            yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))
     #   }
   })
@@ -2450,6 +2450,27 @@ server <- function(input, output, session) {
       paste0(Sys.Date(),"_Prediction_LMS.csv")},
     content = function(file) {
       write.csv2(lms_ri, file, row.names = FALSE)})
+  
+  ################################ Interface to Zlog_AdrI ##########################
+  
+  output$Download_zlog_table <- downloadHandler(
+    filename = function(){
+      paste0(Sys.Date(),"_Zlog_AdRI.csv")},
+    content = function(file) {
+
+      if(input$sex == "t")
+        sex_zlog <- "MF"
+      if(input$sex == "m")
+        sex_zlog <- "M"
+      if(input$sex == "f")
+        sex_zlog <- "F"
+      
+      zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
+                              AgeFrom = deviation_gamlss$`Age-range from`, AgeUntil = deviation_gamlss$`to [Days]`,
+                              LowerLimit = deviation_gamlss$`2.5% Percentil`, UpperLimit = deviation_gamlss$`97.5% Percentil`, 
+                              check.names = FALSE)
+
+      write.csv(zlog_adri, file, row.names = FALSE)})
 
   ################################ Residuals #######################################
   
@@ -2509,7 +2530,7 @@ server <- function(input, output, session) {
   #   content = function(file) {
   #     write.csv2(compare_models, file, row.names = FALSE)})
 
-  output$downloadData_regression_table <- downloadHandler(
+  output$DownloadData_regression_table <- downloadHandler(
     filename = function(){
       paste0(Sys.Date(),"_Regression_Comparison.csv")},
     content = function(file) {
