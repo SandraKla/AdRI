@@ -99,32 +99,32 @@ outliers_residuals <- function(data_analyte, gamlss_family, epochs, method, resi
   
   # Fit new models with the cutted data
   model_gamlss_pb <- {paste("gamlss(value ~pb(age_days), sigma.formula = ~pb(age_days), nu.formula = ~pb(age_days), tau.formula = ~pb(age_days), 
-                            family =",gamlss_family,", data = outlierfree_pb, method = ",method,"(",epochs,"))")}
+                            family =",gamlss_family,", data = outlierfree_pb, method = ",method,"(",epochs,"), control = gamlss.control(n.cyc = 100))")}
   cat(paste("*** GAMLSS - P-Splines: ***\n"))
   opb_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_pb))})
   
   model_gamlss_cs <- {paste("gamlss(value ~cs(age_days), sigma.formula = ~cs(age_days), nu.formula = ~cs(age_days), tau.formula = ~cs(age_days), 
-                            family =",gamlss_family,", data = outlierfree_cs, method = ",method,"(",epochs,"))")}
+                            family =",gamlss_family,", data = outlierfree_cs, method = ",method,"(",epochs,"), control = gamlss.control(n.cyc = 100))")}
   cat(paste("*** GAMLSS - Cubic Splines: ***\n"))
   ocs_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_cs))})
   
   model_gamlss_poly <- {paste("gamlss(value ~poly(age_days,3), sigma.formula = ~poly(age_days,3), nu.formula = ~poly(age_days,3), tau.formula = ~poly(age_days,3), 
-                              family =",gamlss_family,", data = outlierfree_poly, method = ",method,"(",epochs,"))")}
+                              family =",gamlss_family,", data = outlierfree_poly, method = ",method,"(",epochs,"), control = gamlss.control(n.cyc = 100))")}
   cat(paste("*** GAMLSS - Polynomials Degree 3: ***\n"))
   opoly_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_poly))})
   
   model_gamlss_poly4 <- {paste("gamlss(value ~poly(age_days,4), sigma.formula = ~poly(age_days,4), nu.formula = ~poly(age_days,4), tau.formula = ~poly(age_days,4),
-                               family =",gamlss_family,", data = outlierfree_poly4, method = ",method,"(",epochs,"))")}
+                               family =",gamlss_family,", data = outlierfree_poly4, method = ",method,"(",epochs,"), control = gamlss.control(n.cyc = 100))")}
   cat(paste("*** GAMLSS - Polynomials Degree 4: ***\n"))
   opoly4_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_poly4))})
   
   model_gamlss_tr <- {paste("gamlss(value ~tr(~age_days), sigma.formula = ~age_days, nu.formula = ~age_days, tau.formula = ~age_days, 
-                            family =",gamlss_family,", data = outlierfree_tr, method = ",method,"(",epochs,"))")}
+                            family =",gamlss_family,", data = outlierfree_tr, method = ",method,"(",epochs,"), control = gamlss.control(n.cyc = 100))")}
   cat(paste("*** GAMLSS - Decision Tree: ***\n"))
   otr_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_tr))})
   
   model_gamlss_nn <- {paste("gamlss(value ~nn(~age_days,size=4, decay=0.1), sigma.formula = ~nn(~age_days,size=3, decay=0.1), nu.formula = ~nn(~age_days,size=1, decay=0.1), tau.formula = ~nn(~age_days,size=1, decay=0.1), 
-                            family =",gamlss_family,", data = outlierfree_nn, method = ",method,"(",epochs,"))")}
+                            family =",gamlss_family,", data = outlierfree_nn, method = ",method,"(",epochs,"), control = gamlss.control(n.cyc = 100))")}
   cat(paste("*** GAMLSS - Neural Network: ***\n"))
   onn_ <<- suppressWarnings({helper_make_gamlss(noquote(model_gamlss_nn))})
 }

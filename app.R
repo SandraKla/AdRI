@@ -547,6 +547,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
   options(shiny.sanitize.errors = TRUE)
+  options(warn = -1)
   
   ##################################### Reactive Expressions ######################################
 
@@ -933,7 +934,8 @@ server <- function(input, output, session) {
   output$scatterplot_plotly <- renderPlotly({
 
     ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
-
+    options(htmlwidgets.TOJSON_ARGS = list(na = 'string'))
+    
     #if(input$fast == FALSE){
       fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value,
                    text = ~ paste('</br>Patient: ', patient,
@@ -970,27 +972,31 @@ server <- function(input, output, session) {
 
     ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
     
-    hist_data_w <- subset(data_analyte(), sex == "F", select = age)
-    hist_data_m <- subset(data_analyte(), sex == "M", select = age)
+    if(!(nrow(data_analyte())) == 0){
+      hist_data_w <- subset(data_analyte(), sex == "F", select = age)
+      hist_data_m <- subset(data_analyte(), sex == "M", select = age)
   
-    hist_w <- hist(hist_data_w$age, breaks=seq(min(data_analyte()[,3])-1,max(data_analyte()[,3]),by=1))$counts
-    hist_m <- hist(hist_data_m$age, breaks=seq(min(data_analyte()[,3])-1,max(data_analyte()[,3]),by=1))$counts
+      hist_w <- hist(hist_data_w$age, breaks=seq(min(data_analyte()[,3])-1,max(data_analyte()[,3]),by=1))$counts
+      hist_m <- hist(hist_data_m$age, breaks=seq(min(data_analyte()[,3])-1,max(data_analyte()[,3]),by=1))$counts
   
-    barplot(rbind(hist_m,hist_w), col = c("cornflowerblue","indianred"),
-          names.arg=seq(min(data_analyte()[,3]), max(data_analyte()[,3]), by=1), xlab = "AGE_YEARS", las = 1, beside = TRUE)
-    abline(h=0)
-    legend("topright", legend = c(paste0("Men: ", nrow(hist_data_m)), paste0("Female: ", nrow(hist_data_w))), col = c("cornflowerblue","indianred"), pch = c(17, 20))
-  
-    par(new = TRUE)
-    boxplot(data_analyte()[,3], horizontal = TRUE, axes = FALSE, col = rgb(0, 0, 0, alpha = 0.15))
+      barplot(rbind(hist_m,hist_w), col = c("cornflowerblue","indianred"),
+            names.arg=seq(min(data_analyte()[,3]), max(data_analyte()[,3]), by=1), xlab = "AGE_YEARS", las = 1, beside = TRUE)
+      abline(h=0)
+      legend("topright", legend = c(paste0("Men: ", nrow(hist_data_m)), paste0("Female: ", nrow(hist_data_w))), col = c("cornflowerblue","indianred"), pch = c(17, 20))
+    
+      par(new = TRUE)
+      boxplot(data_analyte()[,3], horizontal = TRUE, axes = FALSE, col = rgb(0, 0, 0, alpha = 0.15))
+    }
   })
   
   output$barplot_value <- renderPlot({
     
     ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
     
-    boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
-            ylab = ylab_, col = c("indianred", "cornflowerblue"), las = 2)
+    if(!(nrow(data_analyte())) == 0){
+      boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
+              ylab = ylab_, col = c("indianred", "cornflowerblue"), las = 2)
+    }
   })
 
   # Barplot with the distribution of the stations
@@ -1014,13 +1020,17 @@ server <- function(input, output, session) {
   # QQ-Plot for the complete dataset  
   output$qqplot <- renderPlot({
     
-    qqnorm(data_analyte()[,5], pch = 20, col = "grey")
-    qqline(data_analyte()[,5])
+    if(!(nrow(data_analyte())) == 0){
+      qqnorm(data_analyte()[,5], pch = 20, col = "grey")
+      qqline(data_analyte()[,5])
+    }
   })
   
   # Bowley and Lognormfunction
   output$lognorm <- renderPlot({
-    try(def.distribution(data_analyte()[,5]))
+    if(!(nrow(data_analyte())) == 0){
+      try(def.distribution(data_analyte()[,5]))
+    }
   })
   
   #Hexbin for the Data with the package hexbin
