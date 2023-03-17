@@ -136,7 +136,9 @@ ui <- fluidPage(
         tabPanel("Barplots", icon = icon("chart-bar"),
                  
           plotOutput("barplot_sex", height="400px"), 
-          plotOutput("barplot_station_and_age", height="400px")),
+          plotOutput("barplot_value", height="400px")
+          #plotOutput("barplot_station_and_age", height="400px")
+          ),
           
         #tabPanel("2D Density Plot", plotlyOutput("hexbinplotly", height="600px")),
             
@@ -966,6 +968,8 @@ server <- function(input, output, session) {
   # Barplot with the distribution of the sex
   output$barplot_sex <- renderPlot({
 
+    ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
+    
     hist_data_w <- subset(data_analyte(), sex == "F", select = age)
     hist_data_m <- subset(data_analyte(), sex == "M", select = age)
   
@@ -973,28 +977,39 @@ server <- function(input, output, session) {
     hist_m <- hist(hist_data_m$age, breaks=seq(min(data_analyte()[,3])-1,max(data_analyte()[,3]),by=1))$counts
   
     barplot(rbind(hist_m,hist_w), col = c("cornflowerblue","indianred"),
-          names.arg=seq(min(data_analyte()[,3]), max(data_analyte()[,3]), by=1), xlab = "AGE_YEARS", las = 1)
+          names.arg=seq(min(data_analyte()[,3]), max(data_analyte()[,3]), by=1), xlab = "AGE_YEARS", las = 1, beside = TRUE)
     abline(h=0)
     legend("topright", legend = c(paste0("Men: ", nrow(hist_data_m)), paste0("Female: ", nrow(hist_data_w))), col = c("cornflowerblue","indianred"), pch = c(17, 20))
+  
+    par(new = TRUE)
+    boxplot(data_analyte()[,3], horizontal = TRUE, axes = FALSE, col = rgb(0, 0, 0, alpha = 0.15))
+  })
+  
+  output$barplot_value <- renderPlot({
+    
+    ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
+    
+    boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
+            ylab = ylab_, col = c("indianred", "cornflowerblue"), las = 2)
   })
 
   # Barplot with the distribution of the stations
-  output$barplot_station_and_age <- renderPlot({
-    
-    par(mfrow=c(1,2))
-    
-    # Barplot Stations
-    barplot(table(data_analyte()[,6]), las=1, col = "grey", xlab = "STATION")
-    abline(h=0)
-    
-    # Boxplot Age
-    if(input$days_or_years == 'age'){
-      boxplot(data_analyte()[,3], col = "grey", xlab = "AGE_YEARS")
-    } else{
-      boxplot(data_analyte()[,4], col = "grey", xlab = "AGE_DAYS")
-    }
-    abline(h=0)
-  })
+  # output$barplot_station_and_age <- renderPlot({
+  #   
+  #   par(mfrow=c(1,2))
+  #   
+  #   # Barplot Stations
+  #   barplot(table(data_analyte()[,6]), las=1, col = "grey", xlab = "STATION")
+  #   abline(h=0)
+  #   
+  #   # Boxplot Age
+  #   if(input$days_or_years == 'age'){
+  #     boxplot(data_analyte()[,3], col = "grey", xlab = "AGE_YEARS")
+  #   } else{
+  #     boxplot(data_analyte()[,4], col = "grey", xlab = "AGE_DAYS")
+  #   }
+  #   abline(h=0)
+  # })
   
   # QQ-Plot for the complete dataset  
   output$qqplot <- renderPlot({
