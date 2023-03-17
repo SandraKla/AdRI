@@ -174,7 +174,8 @@ ui <- fluidPage(
             tabPanel("Table", icon = icon("table"), 
                      
               DT::dataTableOutput("windowtable_t"),
-              downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with RefLim"))
+              downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with RefLim"),
+              downloadButton("Download_zlog_table_window_data_all_tukey", "Table with Reference intervals for Zlog_AdRI"))
           )
         )
       )
@@ -206,7 +207,8 @@ ui <- fluidPage(
             tabPanel("Table", icon = icon("table"), 
                      
               DT::dataTableOutput("lis_table_t"),
-              downloadButton("Download_lis_table_t","Table with Reference Intervals without Outlierdetection")))
+              downloadButton("Download_lis_table_t","Table with Reference Intervals with RefLim"),
+              downloadButton("Download_zlog_lis_table_t", "Table with Reference intervals for Zlog_AdRI")))
         )
       )   
     ),
@@ -238,12 +240,13 @@ ui <- fluidPage(
                            
             tabPanel("Table", icon = icon("table"), 
               DT::dataTableOutput("tree_windowtable_t"),
-              downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with RefLim")))
+              downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with RefLim"),
+              downloadButton("Download_zlog_window_data_split_tukey", "Table with Reference intervals for Zlog_AdRI")))
         )
       )
     ),
     
-    tabPanel("Sliding Window", icon = icon("chart-bar"),
+    tabPanel("Sliding Window (Beta Version)", icon = icon("chart-bar"),
       sidebarLayout(
         ### Sidebar - Sliding Window
           sidebarPanel(width = 3,
@@ -263,7 +266,8 @@ ui <- fluidPage(
             tabPanel("Table", icon = icon("table"), 
 
               DT::dataTableOutput("sliding_tukey"),
-              downloadButton("Download_sliding_tukey", "Table with Reference Intervals with RefLim"))
+              downloadButton("Download_sliding_tukey", "Table with Reference Intervals with RefLim"),
+              downloadButton("Download_zlog_sliding_window", "Table with Reference intervals for Zlog_AdRI"))
           )
         )
       )
@@ -286,21 +290,21 @@ ui <- fluidPage(
     
     navbarMenu("Regression", icon = icon("chart-line"),
                
-      tabPanel("Overview",icon = icon("home"),
+      tabPanel("Overview (Beta Version)",icon = icon("home"),
         
         p("Regression can be used for normally distributed data to get the 95% prediction interval. The blue
         line show the 95% Confindence interval from the regression in black and the red the prediction interval (2.5% and 97.5%).
         This method is not yet validated, caution when using it for meaningful reference intervals."), 
         plotOutput("regression", height="800px")),
               
-      tabPanel("Tables", icon = icon("table"),
+      tabPanel("Tables (Beta Version)", icon = icon("table"),
                
         DT::dataTableOutput("regression_linear"), 
         DT::dataTableOutput("regression_poly10"), 
         DT::dataTableOutput("regression_poly2"), 
         DT::dataTableOutput("regression_poly3")),
         
-      tabPanel("Comparison", icon = icon("balance-scale"),
+      tabPanel("Comparison (Beta Version)", icon = icon("balance-scale"),
                
         p("Compare the Regressions with R-Squared (R2), Akaike Information Criterion (AIC), 
         Bayesian Information Criterion (BIC), Mean absolute Error (MAE), Mean squared error (MSE), 
@@ -470,7 +474,7 @@ ui <- fluidPage(
               plotOutput("gamlss_plot", height = "500px"),
               DT::dataTableOutput("gamlss_split"),
               downloadButton("Download_deviation_gamlss", "Table with discrete Percentiles"),
-              downloadButton("Download_zlog_table", "Table with discrete Percentiles for Zlog_AdRI"))
+              downloadButton("Download_zlog_table_gamlss", "Table with discrete Percentiles for Zlog_AdRI"))
           )
         )
       )
@@ -922,7 +926,7 @@ server <- function(input, output, session) {
   #   ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
   #   plot(data_analyte()$value ~ data_analyte()$age_days , pch = 20, cex = 1, col = "grey", xlab = "Age [Days]", ylab = ylab_)
   # })
-
+  
   # Scatterplot from the data_analyte() with plotly
   output$scatterplot_plotly <- renderPlotly({
 
@@ -2453,9 +2457,91 @@ server <- function(input, output, session) {
   
   ################################ Interface to Zlog_AdrI ##########################
   
-  output$Download_zlog_table <- downloadHandler(
+  # Regular Window with RefLim
+  output$Download_zlog_table_window_data_all_tukey <- downloadHandler(
     filename = function(){
-      paste0(Sys.Date(),"_Zlog_AdRI.csv")},
+      paste0(Sys.Date(),"_Zlog_AdRI_Regular_Window_With_RefLim.csv")},
+    content = function(file) {
+      
+      if(input$sex == "t")
+        sex_zlog <- "MF"
+      if(input$sex == "m")
+        sex_zlog <- "M"
+      if(input$sex == "f")
+        sex_zlog <- "F"
+      
+      window_data_all_tukey
+      
+      zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
+                              AgeFrom = window_data_all_tukey$`Age-range from`, AgeUntil = window_data_all_tukey$`to [Days]`,
+                              LowerLimit = window_data_all_tukey$`2.5 % RI`, UpperLimit = window_data_all_tukey$`97.5% RI`, 
+                              check.names = FALSE)
+      
+      write.csv(zlog_adri, file, row.names = FALSE)})
+  
+  # Window-Method coupled Decision Tree with RefLim
+  output$Download_zlog_window_data_split_tukey <- downloadHandler(
+    filename = function(){
+      paste0(Sys.Date(),"_Zlog_AdRI_Windowtree_With_RefLim.csv")},
+    content = function(file) {
+      
+      if(input$sex == "t")
+        sex_zlog <- "MF"
+      if(input$sex == "m")
+        sex_zlog <- "M"
+      if(input$sex == "f")
+        sex_zlog <- "F"
+      
+      zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
+                              AgeFrom = window_data_split_tukey$`Age-range from`, AgeUntil = window_data_split_tukey$`to [Days]`,
+                              LowerLimit = window_data_split_tukey$`2.5 % RI`, UpperLimit = window_data_split_tukey$`97.5% RI`, 
+                              check.names = FALSE)
+      
+      write.csv(zlog_adri, file, row.names = FALSE)})
+  
+  # Sliding-Windowmethod with RefLim
+  output$Download_zlog_sliding_window <- downloadHandler(
+    filename = function(){
+      paste0(Sys.Date(),"_Zlog_AdRI_SlidingWindow_With_RefLim.csv")},
+    content = function(file) {
+      
+      if(input$sex == "t")
+        sex_zlog <- "MF"
+      if(input$sex == "m")
+        sex_zlog <- "M"
+      if(input$sex == "f")
+        sex_zlog <- "F"
+      
+      zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
+                              AgeFrom = slide_tukey$`Age-range from`, AgeUntil = slide_tukey$`to [Days]`,
+                              LowerLimit = slide_tukey$`2.5 % RI`, UpperLimit = slide_tukey$`97.5% RI`, 
+                              check.names = FALSE)
+      
+      write.csv(zlog_adri, file, row.names = FALSE)})
+  
+  # LIS Window-Method with RefLim
+  output$Download_zlog_lis_table_t <- downloadHandler(
+    filename = function(){
+      paste0(Sys.Date(),"_Zlog_AdRI_LIS_With_RefLim.csv")},
+    content = function(file) {
+      
+      if(input$sex == "t")
+        sex_zlog <- "MF"
+      if(input$sex == "m")
+        sex_zlog <- "M"
+      if(input$sex == "f")
+        sex_zlog <- "F"
+      
+      zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
+                              AgeFrom = window_data_lis_tukey$`Age-range from`, AgeUntil = window_data_lis_tukey$`to [Days]`,
+                              LowerLimit = window_data_lis_tukey$`2.5 % RI`, UpperLimit = window_data_lis_tukey$`97.5% RI`, 
+                              check.names = FALSE)
+      
+      write.csv(zlog_adri, file, row.names = FALSE)})
+  
+  output$Download_zlog_table_gamlss <- downloadHandler(
+    filename = function(){
+      paste0(Sys.Date(),"_Zlog_AdRI_GAMLSS.csv")},
     content = function(file) {
 
       if(input$sex == "t")

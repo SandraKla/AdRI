@@ -4,17 +4,6 @@
 
 ####################################### Statistics ################################################
 
-truncate.x <- function(x, qf){
-  #qf = quantile factor to derive qnorm(0.025) from qnorm(0.25)
-  Q <- quantile(x, c(0.25, 0.5, 0.75))
-  var1 <- Q[2] - Q[1]
-  var2 <- Q[3] - Q[2]
-  var <- min(var1, var2)
-  lim <- c(Q[2] - qf * var, Q[2] + qf * var)
-  return(subset(x, x >= lim[1] & x <= lim[2]))
-}
-
-
 print.progress <- function(x, i, log.mode = FALSE){
   if (log.mode){x <- exp(x)}
   x <- round(x, 2)
@@ -31,6 +20,17 @@ iBoxplot95 <- function(x, lognorm = FALSE, plot.it = TRUE){
   qf <- 2.906 #qnorm(0.025) / qnorm(0.25)
   i <- 1
   if(lognorm){x <- log(x)}
+  
+  truncate.x <- function(x, qf){
+    #qf = quantile factor to derive qnorm(0.025) from qnorm(0.25)
+    Q <- quantile(x, c(0.25, 0.5, 0.75))
+    var1 <- Q[2] - Q[1]
+    var2 <- Q[3] - Q[2]
+    var <- min(var1, var2)
+    lim <- c(Q[2] - qf * var, Q[2] + qf * var)
+    return(subset(x, x >= lim[1] & x <= lim[2]))
+  }#truncate.x
+  
   #truncates x repeatedly until no more outliers are detected
   while (n0 > n1){
     n0 <- length(x)
@@ -72,6 +72,18 @@ iBoxplot <- function(x, log.mode = FALSE, perc = 2.5, n.min = 100, print.cycles 
   n0 <- 1
   n1 <- 0
   i <- 0
+  
+  truncate.x <- function(x, i){
+    qf <- ifelse(i==1, 
+                 qnorm(perc/100)/qnorm(0.25), 
+                 qnorm(perc/100)/qnorm(0.25*(1-perc/50) + perc/100))
+    Q <- quantile(x, c(0.25, 0.5, 0.75))	
+    var1 <- Q[2] - Q[1] #the lower half of the box
+    var2 <- Q[3] - Q[2] #the upper half of the box
+    var <- min(var1, var2) #the smaller half of the box
+    lim <- c(Q[2] - qf * var, Q[2] + qf * var) #two truncation points
+    return(subset(x, x >= lim[1] & x <= lim[2]))
+  } #truncate.x
   
   if(print.cycles){print.progress(xx, i, log.mode = log.mode)}
   

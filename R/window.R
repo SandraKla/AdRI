@@ -475,7 +475,7 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
   sliding_with_tukey_97_5_from <- c(confidence_with_tukey_97_5[1,1], confidence_with_tukey_97_5[,1], confidence_with_tukey_97_5[1, length(confidence_with_tukey_97_5)])
   sliding_with_tukey_97_5_to <- c(confidence_with_tukey_97_5[1,2], confidence_with_tukey_97_5[,2], confidence_with_tukey_97_5[2, length(confidence_with_tukey_97_5)])
   
-  slide_tukey <<- data.frame("Age-Range from" = sliding_age,
+  slide_tukey <<- data.frame("Age-range from" = sliding_age,
                              "to [Days]" = sliding_age_to,
                              "Age-Range from" = round_df(sliding_age/365, 3),
                              "to [Years]" = round_df(sliding_age_to/365, 3),
