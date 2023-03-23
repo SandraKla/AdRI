@@ -547,7 +547,6 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
   options(shiny.sanitize.errors = TRUE)
-  options(warn = -1)
   
   ##################################### Reactive Expressions ######################################
 
@@ -934,7 +933,6 @@ server <- function(input, output, session) {
   output$scatterplot_plotly <- renderPlotly({
 
     ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
-    options(htmlwidgets.TOJSON_ARGS = list(na = 'string'))
     
     #if(input$fast == FALSE){
       fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value,
