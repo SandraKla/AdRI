@@ -331,7 +331,7 @@ ui <- fluidPage(
   
     navbarMenu("GAMLSS", icon = icon("chart-line"),
     
-      tabPanel("GAMLSS- and LMS-Models", icon = icon("chart-line"),
+      tabPanel("GAMLSS and LMS", icon = icon("chart-line"),
         sidebarLayout( 
           ### Sidebar - GAMLSS ###
           sidebarPanel(width = 3,
@@ -339,9 +339,9 @@ ui <- fluidPage(
             # selectInput("method", "GAMLSS Algorithm:", choices = list("Rigby and Stasinopoulos algorithm (RS)" = "RS",
             #                                                           "Cole and Green algorithm (CG)" = "CG")),
             # sliderInput("epochs", "Number of Epochs:", 5 , 250, 30),
-            actionButton("button_lms", "Start LMS-Model", icon("calculator"), onclick = "$(tab).removeClass('disabled')"), 
+            actionButton("button_lms", "Start LMS", icon("calculator"), onclick = "$(tab).removeClass('disabled')"), 
             htmlOutput("buttons_lms"), hr(),
-            selectInput("distribtion_gamlss", "GAMLSS-Distribution:", choices = list( "Log-Normal distribution" = "LOGNO",
+            selectInput("distribtion_gamlss", "Distribution for GAMLSS:", choices = list( "Log-Normal distribution" = "LOGNO",
                                                                                       "Normal distribution" = "NO",
                                                                 "Box-Cox" = c(#"Box-Cole Green Distrubtion" = "BCCG", 
                                                                               "Box-Cole Green Distrubtion (orginal)" = "BCCGo",
@@ -350,7 +350,7 @@ ui <- fluidPage(
                                                                               #"Box-Cole Green T-Distribution" = "BCT", 
                                                                               "Box-Cole Green T-Distribution (orginal)" = "BCTo"))),
             checkboxInput("checkbox", "Distribution proposed by the LMS", value = FALSE),
-            actionButton("button_gamlss", "Start GAMLSS-Models", icon("calculator"), onclick = "$(tabs).removeClass('disabled')"),
+            actionButton("button_gamlss", "Start GAMLSS", icon("calculator"), onclick = "$(tabs).removeClass('disabled')"),
             htmlOutput("buttons_gamlss"), #, 
             #hr(), htmlOutput("helptext_gamlss")
           ),
@@ -429,7 +429,7 @@ ui <- fluidPage(
       
       tabPanel("Comparison", icon = icon("balance-scale"),
                
-        p("Models from the package gamlss can be compared visually or with the Akaike Information Criterion (AIC), 
+        p("Models can be compared visually or with the Akaike Information Criterion (AIC), 
         Generalized Information Criterion (GAIC), Bayesian Information Criterion (BIC), 
         or Pseudo R-Squared (R^2). The model with the smallest value for AIC, BIC and GAIC is the best model for the data.
         The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored."), 
@@ -489,7 +489,7 @@ ui <- fluidPage(
         ### Sidebar - GAMLSS ###
         sidebarPanel(width = 3,
           
-          helpText("Improvement from the GAMLSS models by deleting high residuals:"),
+          helpText("Improvement from the GAMLSS by deleting high residuals:"),
           selectInput("select_model_resi", "Select Model:", choices = list("Splines" = c("P-Splines" = "pb_",
                                                                                       "Cubic Splines" = "cs_"),
                                                                                       "Polynomial" = c("Polynomial (Degree 3)" = "poly_", 
@@ -877,7 +877,7 @@ server <- function(input, output, session) {
   build_outlier <- eventReactive(input$button_residuals, {
     
     progress <- shiny::Progress$new()
-    progress$set(message = "Refit the GAMLSS Models...", detail = "", value = 2)
+    progress$set(message = "Refit the GAMLSS...", detail = "", value = 2)
     
     outliers_residuals(data_analyte(), input$distribtion_gamlss, 50, "RS", input$error)
 
@@ -978,7 +978,7 @@ server <- function(input, output, session) {
       hist_m <- hist(hist_data_m$age, breaks=seq(min(data_analyte()[,3])-1,max(data_analyte()[,3]),by=1))$counts
   
       barplot(rbind(hist_m,hist_w), col = c("cornflowerblue","indianred"),
-            names.arg=seq(min(data_analyte()[,3]), max(data_analyte()[,3]), by=1), xlab = "AGE_YEARS", las = 1, beside = TRUE)
+            names.arg=seq(min(data_analyte()[,3]), max(data_analyte()[,3]), by=1), xlab = "AGE_YEARS", las = 1, beside = TRUE, ylab = "Number of data")
       abline(h=0)
       legend("topright", legend = c(paste0("Men: ", nrow(hist_data_m)), paste0("Female: ", nrow(hist_data_w))), col = c("cornflowerblue","indianred"), pch = c(17, 20))
     
@@ -1390,12 +1390,12 @@ server <- function(input, output, session) {
   
   output$all_gamlss <- renderPlot({
     centiles.com(pb_, cs_, poly_, poly4_, nn_, tr_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, 
-                  legend = TRUE, main = "GAMLSS Models")
+                  legend = TRUE, main = "GAMLSS")
   })
   
   output$buttons_gamlss <- renderUI({
     build_gamlss_model()
-    print("*** Your GAMLSS models are ready! ***")
+    print("*** Your GAMLSS are ready! ***")
   })
   
   output$buttons_lms <- renderUI({
@@ -1403,7 +1403,7 @@ server <- function(input, output, session) {
     print("*** Your LMS model is ready! ***")
   })
   
-  # Centiles Plot with gamlss models (P-Splines, Cubic Splines) ######
+  # Centiles Plot with gamlss (P-Splines, Cubic Splines) ######
   output$gamlss_models_splines <- renderPlot({
     
     build_gamlss_model()
@@ -1417,7 +1417,7 @@ server <- function(input, output, session) {
              lty.centiles=c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
   
-  # Centiles Plot with gamlss models (Polynomials Degree 3 and 4) ######
+  # Centiles Plot with gamlss (Polynomials Degree 3 and 4) ######
   output$gamlss_models_poly <- renderPlot({
     
     build_gamlss_model()
@@ -1645,7 +1645,7 @@ server <- function(input, output, session) {
   
   # Comparism #####################################################################################
   
-  # Comparison Table for all GAMLSS models and LMS
+  # Comparison Table for all GAMLSS and LMS
   output$table_compare <- DT::renderDataTable({
   
     if(lms_ready == TRUE){ 
@@ -1887,7 +1887,7 @@ server <- function(input, output, session) {
       DT::formatRound(c(2:4), 2)}
   })
   
-  # # Tool to predict reference intervals for the different gamlss models
+  # # Tool to predict reference intervals for the different gamlss
   # output$prediction_gamlss <- renderText({
   #   
   #   if(input$select_model == "lms_ri"){text_model <- "LMS"}
@@ -1910,12 +1910,12 @@ server <- function(input, output, session) {
   #                                input$dataset, "is for the GAMLSS Model", text_model,":", round(value[1,2], digits = 2),
   #                                "(2.5% Percentil) to", round(value[1,4], digits = 2),
   #                                "(97.5% Percentil) with the Median (50% Percentil):", round(value[1,3], digits = 2))}}
-  #   else{prediction_text <- "First you need to make GAMLSS models, than you can predict with these!"}
+  #   else{prediction_text <- "First you need to make GAMLSS, than you can predict with these!"}
   # 
   #   prediction_text
   # })
 
-  # Tables with the discrete values from the predicted GAMLSS models ##############################
+  # Tables with the discrete values from the predicted GAMLSS #####################################
   output$gamlss_split <- DT::renderDataTable({
     
     if(input$select_model == "pb_ri"){text_model <- "P-Splines"}
@@ -1997,7 +1997,7 @@ server <- function(input, output, session) {
     
     DT::datatable(deviation_gamlss, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the GAMLSS Models')) %>%
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Prediction of the GAMLSS')) %>%
     DT::formatRound(c(3:length(deviation_gamlss)), 2)
   })
   
@@ -2053,7 +2053,7 @@ server <- function(input, output, session) {
   
   ################################ Residuals #######################################
   
-  # Plot the residuals from the GAMLSS models
+  # Plot the residuals from the GAMLSS
   output$outlier <- renderPlot({
     
     build_gamlss_model()
