@@ -13,7 +13,7 @@ This Shiny App was developed to create **A**ge-**d**ependent **R**eference **I**
 
 *** **Warning!** This Shiny App has not been enough validated for the basis of a medical diagnosis! There is no warranty for the app and/or the reference intervals! ***
 
-<img src="www/shiny_overview.png" align="center"/>
+<img src="docs/shiny_overview.png" align="center"/>
 
 ## Installation 
 
