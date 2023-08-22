@@ -1,0 +1,10 @@
+theme: jekyll-theme-cayman
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - about.md
+  - guide.md
+  - methods.md
+  - index.md
+  - install.md

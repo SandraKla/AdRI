@@ -61,6 +61,11 @@ if("rpart.plot" %in% rownames(installed.packages())){
     install.packages("rpart.plot")
     library(rpart.plot)}
 
+if("shinydashboard" %in% rownames(installed.packages())){
+  library(shinydashboard)} else{
+    install.packages("shinydashboard")
+    library(shinydashboard)}
+
 if("zoo" %in% rownames(installed.packages())){
   library(zoo)} else{
     install.packages("zoo")
@@ -68,478 +73,779 @@ if("zoo" %in% rownames(installed.packages())){
 
 ####################################### USER INTERFACE ############################################
 
-ui <- fluidPage(
- 
-  theme = "style.css",  
-  navbarPage("Age-dependent Reference Intervals (AdRI)", 
-
-  ################################### Overview ##################################################
+ui <- dashboardPage(
+  dashboardHeader(title = "AdRI", titleWidth = 175),
+  dashboardSidebar(width = 175,
+                   sidebarMenu(
+                     menuItem("Analysis", tabName = "analysis", icon = icon("database")),
+                     menuItem("Window-Methods", tabName = "window", icon = icon("align-center"), startExpanded = FALSE,
+                              menuSubItem("Regular", tabName = "windowregular", icon = icon("chart-bar")),
+                              menuSubItem("LIS", tabName = "windowlis", icon = icon("chart-bar")),
+                              menuSubItem("Decision Tree", tabName = "windowtree", icon = icon("tree")),
+                              menuSubItem("Sliding", tabName = "windowsliding", icon = icon("chart-bar"))),
+                     menuItem("Regression", tabName = "regression", icon = icon("chart-line"), startExpanded = FALSE,
+                              menuSubItem("Regression", tabName = "regressionoverview", icon = icon("chart-line")),
+                              menuSubItem("Comparison", tabName = "regressioncomparison", icon = icon("balance-scale"))),
+                     menuItem("GAMLSS", tabName = "gamlss", icon = icon("chart-line"), startExpanded = FALSE,
+                              menuSubItem("GAMLSS and LMS", tabName = "gamlsslms", icon = icon("chart-line")),
+                              menuSubItem("Comparison", tabName = "comparison", icon = icon("balance-scale")),
+                              menuSubItem("Percentiles", tabName = "percentiles", icon = icon("table")),
+                              menuSubItem("Residuals", tabName = "residuals", icon = icon("eraser")))
+                   )),
+  dashboardBody(
     
-  tabPanel("Analysis", icon = icon("database"),
-    sidebarLayout( 
-    ### Sidebar - Analysis ###
-      sidebarPanel(width = 3,
-                   
-        helpText("Data Upload:"),
-                              
-        selectInput("dataset", "Select preinstalled dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
-        
-        uiOutput("dataset_file"),
-        
-        actionButton('reset', 'Reset Input', icon = icon("trash")), hr(),
-        
-        helpText("Data Preprocessing:"),
-          
-        radioButtons("days_or_years", "Unit for the Age:", c("year" = "age", "day "= "age_days")),
-          
-        conditionalPanel(condition = "input.days_or_years == 'age'", 
-                         sliderInput("age_end", "Select age-range:", min = 0 , max = 100, value = c(0,18))),
-          
-        conditionalPanel(condition = "input.days_or_years == 'age_days'", 
-                         numericInput("age_input_min", "Select age-range from:", 0, min = 0, max = 100*365)), 
-      
-        conditionalPanel(condition = "input.days_or_years == 'age_days'", 
-                         numericInput("age_input", "to:", 100, min = 1, max = 100*365)),
-          
-        selectInput("sex", "Select the Sex:", choices = list("Male + Female" = "t", "Male" = "m", "Female" = "f")), 
-          
-        textInput("text_unit", "Unit of the Analyte:", value = "Unit"), 
-        
-        checkboxInput("unique", "First Unique values", value = TRUE), hr(),
-          
-        helpText("Outlierdetection (Beta version):"), 
-      
-        checkboxInput("checkboxtukey", "iBoxplot95 coupled with a Decision Tree", value = FALSE),
-      
-        helpText("Hyperparameter for the Decision Tree (minbucket): Minimum number of observations in an age group (leaf node)."),
-      
-        selectInput("tree_minsplit", "", 
-                    choices = list("Each group with > 120 patients (for RI according to CLSI)" = 360,
-                                   "> 40 patients" = 120, 
-                                   "> 20 patients" = 60))),
-      
-    ### MainPanel - Analysis ###              
-    mainPanel(width = 9,
-      tabsetPanel(
-        tabPanel("Overview", icon = icon("home"),
-                 
-          p(strong("Shiny App for calculating Age-dependent Reference Intervals! (Beta version)"), br(), br(),
-          "This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods: 
-          LMS, GAMLSS, Window-Methods and Regression.", br(), "For further information visit our", 
-          a("Wiki", href="https://github.com/SandraKla/Age-dependent-Reference-Intervals/wiki"),"!"), 
-          plotlyOutput("scatterplot_plotly", height="700px")),
-            
-        tabPanel("Dataset", icon = icon("table"),
-                 
-          DT::dataTableOutput("datatable")),
-            
-        tabPanel("Barplots", icon = icon("chart-bar"),
-                 
-          plotOutput("barplot_sex", height="400px"), 
-          plotOutput("barplot_value", height="400px")
-          #plotOutput("barplot_station_and_age", height="400px")
-          ),
-          
-        #tabPanel("2D Density Plot", plotlyOutput("hexbinplotly", height="600px")),
-            
-        tabPanel("Statistics", icon = icon("calculator"),
-          
-          plotOutput("qqplot", height="400px"),
-          plotOutput("lognorm", height="400px"))
-        )
-    ))),
-  
-  ################################### Window-Methods ############################################
-
-  navbarMenu("Window-Methods", icon = icon("align-center"),
-      
-    ##### Regular Window-Method #####        
-    tabPanel("Regular", icon = icon("chart-bar"),
-      sidebarLayout(
-        ### Sidebar - Regular Window ###
-        sidebarPanel(width = 3,
-                     
-          sliderInput("window_age", "Regular Window-range for the age-subgroups in years:", 1, 10, 10),
-          conditionalPanel(condition = "input.window_age <= 1", 
-                           numericInput("window_agedays", "Regular Window-range for the age-subgroups in days:", 365, min = 1, max = 100*365))),
+    tags$style("html, body {overflow: visible !important;"),
+    
+    tabItems(
+      tabItem(tabName = "analysis",
               
-        ### MainPanel - Regular Window ###
-        mainPanel(width = 9,
-          tabsetPanel(
-            tabPanel("Plot",  icon = icon("chart-bar"),
-                           
-              p("This is a regular Window-method, the window is make regular in the same size through the data (given by the user on the left), 
-                so it is only recommended for small changes through the age."),
-              
-              plotOutput("window", height="600px")),
-
-            tabPanel("Table", icon = icon("table"), 
-                     
-              DT::dataTableOutput("windowtable_t"),
-              downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with RefLim"),
-              downloadButton("Download_zlog_table_window_data_all_tukey", "Table with Reference intervals for Zlog_AdRI"))
-          )
-        )
-      )
-    ),
-    
-    ##### LIS Window-Method #####      
-    tabPanel("Laboratory Information System (LIS)", icon = icon("chart-bar"),
-      sidebarLayout(
-        ### Sidebar - LIS Window-Method ###
-        sidebarPanel(width = 3,
-
-          selectInput("lis_data", "Select preinstalled dataset:", choice = list.files(pattern = "txt", recursive = TRUE)),
-          uiOutput("lis_data_file"),
-          actionButton('reset_lis', 'Reset Input', icon = icon("trash"))), 
-            
-        ### MainPanel - LIS Window-Method ###   
-        mainPanel(width = 9,
-          tabsetPanel(
-            tabPanel("Plot", icon = icon("chart-bar"),
-                         
-              p("Load a TXT file on the left with the age groups from your Laboratory Information System (LIS)
-              and the Reference Intervals will be calculated."),
-              plotOutput("lis_window", height = "600px")),
-            
-            tabPanel("Laboratory Information System (LIS)", icon = icon("database"),
-                     
-                plotOutput("lis_window_analysis")),
-            
-            tabPanel("Table", icon = icon("table"), 
-                     
-              DT::dataTableOutput("lis_table_t"),
-              downloadButton("Download_lis_table_t","Table with Reference Intervals with RefLim"),
-              downloadButton("Download_zlog_lis_table_t", "Table with Reference intervals for Zlog_AdRI")))
-        )
-      )   
-    ),
-    
-    ##### Decision Tree Method #####                       
-    tabPanel("Decision Tree", icon = icon("tree"),
-      sidebarLayout(
-        ### Sidebar - Decision Tree Method ###
-        sidebarPanel(width = 3,""),
-      
-        ### MainPanel - Decision Tree Method ###
-        mainPanel(width = 9,
-          tabsetPanel(
-            tabPanel("Plot", icon = icon("chart-bar"),
-                     
-              p("Decision Trees are used for machine learning. It can be used for classification (supervised learning), but also
-                for clustering (unsupervised learning). Here it used to cluster the data into subgroups with similar values.
-                The Decision is from the package rpart and is visualized with rpart.plot. The subgroups according to the Decision Tree
-                are used to calculate the reference intervals."),
-              plotOutput("tree_window", height = "600px")),
-              
-            tabPanel("Decision Tree", icon = icon("tree"),
-                     
-              p("Used Decision Tree and Analysis for each subgroup for Normal- or Lognormaldistribution with the 
-                Bowley-Skewness (see Frank Klawonn et al. (2020)):"),
-              plotOutput("tree_rpart", height = "500px"),
-              plotOutput("tree_window_analysis"),
-              downloadButton("download_tree", "Decision Tree")),
-                           
-            tabPanel("Table", icon = icon("table"), 
-              DT::dataTableOutput("tree_windowtable_t"),
-              downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with RefLim"),
-              downloadButton("Download_zlog_window_data_split_tukey", "Table with Reference intervals for Zlog_AdRI")))
-        )
-      )
-    ),
-    
-    tabPanel("Sliding Window (Beta Version)", icon = icon("chart-bar"),
-      sidebarLayout(
-        ### Sidebar - Sliding Window
-          sidebarPanel(width = 3,
-                            
-            numericInput("sliding_width", "Sliding Window-Method Width:", 500, min = 10, max = 10000),
-            numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500)),
-             
-        ### MainPanel - Sliding Window
-        mainPanel(width = 9,
-          tabsetPanel(
-            tabPanel("Plot", icon = icon("chart-bar"),
+              fluidRow(
+                ### Sidebar - Analysis ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
                   
-              p("Sliding Window-method goes through the data with a window calculates the mean and reference intervals and goes then
-              with a window-steps further through the data to the end."), 
-              plotOutput("slidingwindow", height = "600px")),
-                       
-            tabPanel("Table", icon = icon("table"), 
-
-              DT::dataTableOutput("sliding_tukey"),
-              downloadButton("Download_sliding_tukey", "Table with Reference Intervals with RefLim"),
-              downloadButton("Download_zlog_sliding_window", "Table with Reference intervals for Zlog_AdRI"))
-          )
-        )
-      )
-    )),
-
-    ##### Comparison #####   
-    # tabPanel("Comparison", icon = icon("balance-scale"),
-    #          
-    #   p("Compare the Window-Methods with R-Squared (R2), Mean Absolute Error (MAE), 
-    #   Mean squared error (MSE), Root mean squared error (RMSE). Best models to each each metric are marked."),
-    #        
-    #   DT::dataTableOutput("rsquared_table"),
-    #   downloadButton("Download_rsquared_table", "Table with Metrics"))),
-  
-    ############################## Quant sheets ####################################
-    
-    # tabPanel("Quant Sheets", icon = icon("table"), plotOutput("quantsheets", height = "600px")),
-    
-    ############################## Regression ######################################
-    
-    navbarMenu("Regression", icon = icon("chart-line"),
-               
-      tabPanel("Overview (Beta Version)",icon = icon("home"),
-        
-        p("Regression can be used for normally distributed data to get the 95% prediction interval. The blue
-        line show the 95% Confindence interval from the regression in black and the red the prediction interval (2.5% and 97.5%).
-        This method is not yet validated, caution when using it for meaningful reference intervals."), 
-        plotOutput("regression", height="800px")),
-              
-      tabPanel("Tables (Beta Version)", icon = icon("table"),
-               
-        DT::dataTableOutput("regression_linear"), 
-        DT::dataTableOutput("regression_poly10"), 
-        DT::dataTableOutput("regression_poly2"), 
-        DT::dataTableOutput("regression_poly3")),
-        
-      tabPanel("Comparison (Beta Version)", icon = icon("balance-scale"),
-               
-        p("Compare the Regressions with R-Squared (R2), Akaike Information Criterion (AIC), 
-        Bayesian Information Criterion (BIC), Mean absolute Error (MAE), Mean squared error (MSE), 
-        Root mean squared error (RMSE). Best model to each metric is marked"),
-        DT::dataTableOutput("regression_table"),
-        downloadButton("DownloadData_regression_table", "Table with Metrics")),
-         
-      # tabPanel("Analysis",
-      #          
-      #   p("Linear Regression:"), 
-      #   plotOutput("regression_stats_linear", height = "500px"),
-      #   p("Polynomials (Degree 10):"),
-      #   plotOutput("regression_stats_poly10", height = "500px"),
-      #   p("Polynomials (Degree 3):"), 
-      #   plotOutput("regression_stats_poly3", height = "500px"),
-      #   p("Polynomials (Degree 4):"), 
-      #   plotOutput("regression_stats_poly4", height = "500px")
-      # )
-    ),
-    
-    ############################################# GAMLSS ##########################################
-  
-    navbarMenu("GAMLSS", icon = icon("chart-line"),
-    
-      tabPanel("GAMLSS and LMS", icon = icon("chart-line"),
-        sidebarLayout( 
-          ### Sidebar - GAMLSS ###
-          sidebarPanel(width = 3,
-            
-            # selectInput("method", "GAMLSS Algorithm:", choices = list("Rigby and Stasinopoulos algorithm (RS)" = "RS",
-            #                                                           "Cole and Green algorithm (CG)" = "CG")),
-            # sliderInput("epochs", "Number of Epochs:", 5 , 250, 30),
-            actionButton("button_lms", "Start LMS", icon("calculator"), onclick = "$(tab).removeClass('disabled')"), 
-            htmlOutput("buttons_lms"), hr(),
-            selectInput("distribtion_gamlss", "Distribution for GAMLSS:", choices = list( "Log-Normal Distribution" = "LOGNO",
-                                                                                          "Normal Distribution" = "NO",
-                                                                                          "Box-Cox" = c(#"Box-Cole Green Distribution" = "BCCG", 
-                                                                                            "Box-Cole Green Distribution (orginal)" = "BCCGo",
-                                                                                            #"Box-Cole Green Exp. Distribution" = "BCPE",
-                                                                                            "Box-Cole Green Exp. Distribution (orginal)" = "BCPEo", 
-                                                                                            #"Box-Cole Green T-Distribution" = "BCT", 
-                                                                                            "Box-Cole Green T-Distribution (orginal)" = "BCTo"))),
-            checkboxInput("checkbox", "Distribution proposed by the LMS", value = FALSE),
-            actionButton("button_gamlss", "Start GAMLSS", icon("calculator"), onclick = "$(tabs).removeClass('disabled')"),
-            htmlOutput("buttons_gamlss"), #, 
-            #hr(), htmlOutput("helptext_gamlss")
-          ),
-        
-        ### MainPanel - GAMLSS ###        
-        mainPanel(width = 9, 
+                  helpText("Data Upload:"),
                   
-          tabsetPanel( 
-            # tabPanel("Overview", icon = icon("home"), includeHTML("www/gamlss.html"), 
-            #          
-            #   # downloadButton("download_lms", "LMS-Plot in .EPS"),
-            #   # downloadButton("download_lms_jpeg", "LMS-Plot in .JPEG"),
-            #   # downloadButton("download_gamlss", "GAMLSS-Plot in .EPS"),
-            #   # downloadButton("download_gamlss_jpeg", "GAMLSS-Plot in .JPEG")
-            #   ),
-            
-            tabPanel("LMS", icon = icon("chart-line"), value = "nav_lms",
-                     
-              plotOutput("lms", height="700px")),
-            
-            tabPanel("LMS", icon = icon("calculator"), value = "nav_lms",
-                     
-              verbatimTextOutput("lms_text"), 
-              plotOutput("lms_plot"), plotOutput("lms_fitted", height = "500px"), plotOutput("lms_wormplots")),
-            
-            tabPanel("GAMLSS (Splines)", icon = icon("chart-line"), value = "nav_gamlss",
-              
-              plotOutput("gamlss_models_splines", height="700px")), 
-            
-            tabPanel("GAMLSS (Splines)",  icon = icon("calculator"), value = "nav_gamlss", 
-              
-              p("GAMLSS with P-Splines:"), verbatimTextOutput("gamlss_text_psplines"), plotOutput("gamlss_term_pb"), plotOutput("gamlss_fitted_pb_"),
-              p("GAMLSS with Cubic-Splines:"), verbatimTextOutput("gamlss_text_splines"), plotOutput("gamlss_term_cs"), plotOutput("gamlss_fitted_cs_"),
-              p("Wormplots for GAMLSS with the P-Splines and Cubic Splines:"), 
-              plotOutput("wormplots_splines", height="500px")),
-            
-            tabPanel("GAMLSS (Polynomials)", icon = icon("chart-line"), value = "nav_gamlss",
-                     
-              plotOutput("gamlss_models_poly", height="700px")), 
-            
-            tabPanel("GAMLSS (Polynomials)", icon = icon("calculator"), value = "nav_gamlss", 
-              
-              p("GAMLSS with Polynomial Degree 3:"), verbatimTextOutput("gamlss_text_poly"), plotOutput("gamlss_term_poly"), plotOutput("gamlss_fitted_poly_"),
-              p("GAMLSS with Polynomial Degree 4:"), verbatimTextOutput("gamlss_text_poly4"), plotOutput("gamlss_term_poly4"), plotOutput("gamlss_fitted_poly4_"),
-              p("Wormplots for GAMLSS with the Polynomial Degree 3 and 4:"), 
-              plotOutput("wormplots_poly", height="500px")),
-            
-            tabPanel("GAMLSS (Neural Network)", icon = icon("brain"), value = "nav_gamlss",
-                   
-              plotOutput("gamlss_net", height="700px")),
-            
-            tabPanel("GAMLSS (Neural Network)", icon = icon("calculator"), value = "nav_gamlss",
-                     
-              verbatimTextOutput("net_text"), p("Neural Network - Analysis:"), 
-              # Plot neural network with term.plot(nn_)
-              plotOutput("network_term"), plotOutput("network_fitted", height="500px"), plotOutput("nn_wormplots")),
-          
-            tabPanel("GAMLSS (Decision Tree)",  icon = icon("tree"), value = "nav_gamlss",
-                   
-              plotOutput("gamlss_tree", height="700px")),
-            
-            tabPanel("GAMLSS (Decision Tree)",  icon = icon("calculator"), value = "nav_gamlss",
-                     
-              verbatimTextOutput("tree_text"), p("Decision Tree - Analysis:"), 
-              plotOutput("rpart_tree"),  plotOutput("tree_term"), plotOutput("tree_fitted", height="500px"), 
-              plotOutput("tr_wormplots")),
-            
-            tabPanel("GAMLSS-Comparison", icon = icon("balance-scale"), value = "nav_gamlss",
-              plotOutput("all_gamlss", height="700px"))
-          ),
-          tags$script( src = 'tabs_enabled.js')),
-        )
-      ),
-      
-    ##################################### GAMLSS - Comparison #####################################
-      
-      tabPanel("Comparison", icon = icon("balance-scale"),
-               
-        p("Models can be compared visually or with the Akaike Information Criterion (AIC), 
-        Generalized Information Criterion (GAIC), Bayesian Information Criterion (BIC), 
-        or Pseudo R-Squared (R^2). The model with the smallest value for AIC, BIC and GAIC is the best model for the data.
-        The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored."), 
-               
-        DT::dataTableOutput("table_compare"),
-        #downloadButton("downloadData_comparison", "Comparison"),
-        plotOutput("metrics", height = "400px")),  
-      
-    ################################### GAMLSS - Prediction #######################################
-    
-    tabPanel("Percentiles", icon = icon("table"),
-      sidebarLayout(    
-        ### Sidebar - GAMLSS ###
-        sidebarPanel(width = 3,
-                     
-          #numericInput("prediction_age", "Prediction of the Reference Intervals for age [Days]:", 0, min = 0, max = 12*365),
-          
-          selectInput("select_model", "Select Model:", choices = list("Splines" = c("P-Splines" = "pb_ri",
-                                                                                                  "Cubic Splines" = "cs_ri"),
-                                                                                    "LMS" = c(LMS = "lms_ri"),
-                                                                                    "Polynomial" = c("Polynomial (Degree 3)" = "poly_ri", 
-                                                                                                   "Polynomial (Degree 4)" = "poly4_ri"),
-                                                                                    "Machine Learning" = c("Neural Network" = "nn_ri", 
-                                                                                                           "Decision Tree" = "tr_ri"))),
-          #textOutput("prediction_gamlss"), hr(),
-          numericInput("deviation", "Deviation as max zlog value for the discrete Percentiles:", 5, min = 2, max = 10) #, hr(),
-          #htmlOutput("helptext_prediction")
-          ),
-               
-        ### MainPanel - GAMLSS ###
-        mainPanel(width = 9,
-          tabsetPanel( 
-            tabPanel("Percentiles", icon = icon("chart-line"),
-              
-              plotOutput("gamlss_prediction", height = "700px")),
-           
-            tabPanel("Table", icon = icon("table"), 
-                     
-              DT::dataTableOutput("gamlss_tables"), 
-              downloadButton("Download_ri", "Percentiles")),
-            
-            tabPanel("Discrete Percentiles", 
-                     
-              plotOutput("gamlss_plot", height = "500px"),
-              DT::dataTableOutput("gamlss_split"),
-              downloadButton("Download_deviation_gamlss", "Table with discrete Percentiles"),
-              downloadButton("Download_zlog_table_gamlss", "Table with discrete Percentiles for Zlog_AdRI"))
-          )
-        )
-      )
-    ),
-    
-    ############################### GAMLSS - Residuals ##############################
-    
-    tabPanel("Residuals (Beta Version)", icon = icon("eraser"),
-      sidebarLayout(  
-        ### Sidebar - GAMLSS ###
-        sidebarPanel(width = 3,
-          
-          helpText("Improvement from the GAMLSS by deleting high residuals:"),
-          selectInput("select_model_resi", "Select Model:", choices = list("Splines" = c("P-Splines" = "pb_",
-                                                                                      "Cubic Splines" = "cs_"),
-                                                                                      "Polynomial" = c("Polynomial (Degree 3)" = "poly_", 
-                                                                                                       "Polynomial (Degree 4)" = "poly4_"),
-                                                                                      "Machine Learning" = c("Neural Network" = "nn_", 
-                                                                                                      "Decision Tree" = "tr_"))),                
-          numericInput("error", "Maximum value for residuals:", 1.5, min = 0.75, max = 10),
-          actionButton("button_residuals", "Refit the Models", icon("calculator"), onclick = "$(tab_resi).removeClass('disabled')") #, hr(), 
-          #htmlOutput("helptext_residuals")
-          ),
-          
-        ### MainPanel - GAMLSS ###      
-        mainPanel(width = 9,
-          tabsetPanel(               
-            tabPanel("Optimization - GAMLSS", icon = icon("chart-line"),
-                     
-              p("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
-              outliers from the model and refit the model. High residuals values are in red, low in blue", 
-              strong("This must not be equal to the real outliers of the data!"),"."),
-              plotOutput("outlier", height="700px")),
+                  selectInput("dataset", "Select preinstalled dataset:", choice = list.files(pattern = c(".csv"), recursive = TRUE)),
+                  uiOutput("dataset_file"),
+                  actionButton('reset', 'Reset Input', icon = icon("trash")), hr(),
+                  
+                  helpText("Data Preprocessing:"),
+                  
+                  radioButtons(
+                    "days_or_years",
+                    "Unit for the age:",
+                    c("year" = "age", "day" = "age_days")),
+                  
+                  conditionalPanel(
+                    condition = "input.days_or_years == 'age'",
+                    sliderInput(
+                      "age_end",
+                      "Select age-range:",
+                      min = 0 ,
+                      max = 100,
+                      value = c(0, 18))),
+                  
+                  conditionalPanel(
+                    condition = "input.days_or_years == 'age_days'",
+                    numericInput(
+                      "age_input_min",
+                      "Select age-range from:",
+                      0,
+                      min = 0,
+                      max = 100 * 365)),
+                  
+                  conditionalPanel(
+                    condition = "input.days_or_years == 'age_days'",
+                    numericInput("age_input", "to:", 100, min = 1, max = 100 * 365)),
+                  
+                  selectInput("sex", "Select the sex:",
+                              choices = list(
+                                "Male + Female" = "t",
+                                "Male" = "m",
+                                "Female" = "f")),
+                  
+                  textInput("text_unit", "Unit of the analyte:", value = "Unit"),
+                  checkboxInput("unique", "First unique values", value = TRUE),
+                  
+                  helpText("Outlierdetection:"), 
+                  
+                  checkboxInput("checkboxtukey", "iboxplot() coupled with a Decision Tree", value = FALSE),
+                  
+                  helpText("Hyperparameter for the Decision Tree (minbucket -", br(), 
+                           "minimum number of observations in an age group (leaf node))"),
+                  
+                  selectInput("tree_minsplit", "", 
+                              choices = list("Each group with > 120 patients (for RI according to CLSI)" = 360,
+                                             "> 40 patients" = 120, 
+                                             "> 20 patients" = 60))
+                ),
+                
+                ### MainPanel - Analysis ###
+                column(
+                  width = 9,
+                  tabsetPanel(
+                    tabPanel("Overview", icon = icon("home"),
                              
-            tabPanel("GAMLSS", icon = icon("chart-line"), value = "nav_resi",
-                     
-              plotOutput("gamlss_outlier", height="700px")),
-            
-            tabPanel("GAMLSS", icon = icon("calculator"), value = "nav_resi",
-                     
-              plotOutput("outlier_term_gamlss")),
+                            p(strong("Shiny App for calculating Age-dependent Reference Intervals!"), br(), br(),
+                            "This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods: 
+                            LMS, GAMLSS, Window-Methods and Regression.", br(), "For further information visit our", 
+                            a("Homepage", href="https://sandrakla.github.io/AdRI/"),"!"), 
+                             
+                             plotlyOutput("scatterplot_plotly", height ="700px")),
+                    
+                    tabPanel("Dataset", icon = icon("table"),
+                             
+                             p(strong("Shiny App for calculating Age-dependent Reference Intervals!"), br(), br(),
+                             "This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods: 
+                             LMS, GAMLSS, Window-Methods and Regression.", br(), "For further information visit our", 
+                             a("Homepage", href="https://sandrakla.github.io/AdRI/"),"!"),     
+                             
+                             DT::dataTableOutput("datatable")),
+                    
+                    tabPanel("Barplots", icon = icon("chart-bar"),
+                             
+                             p(strong("Shiny App for calculating Age-dependent Reference Intervals!"), br(), br(),
+                             "This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods: 
+                             LMS, GAMLSS, Window-Methods and Regression.", br(), "For further information visit our", 
+                             a("Homepage", href="https://sandrakla.github.io/AdRI/"),"!"),
+                             
+                             plotOutput("barplot_sex", height = "375px"),
+                             #plotOutput("barplot_station_and_age", height="375px"),
+                             plotOutput("barplot_value", height = "375px")),
+                    
+                    tabPanel("Statistics", icon = icon("calculator"),
+                             
+                             p(strong("Shiny App for calculating Age-dependent Reference Intervals!"), br(), br(),
+                             "This Shiny App was developed to create Age-dependent Reference Intervals (AdRI) using different methods: 
+                             LMS, GAMLSS, Window-Methods and Regression.", br(), "For further information visit our", 
+                             a("Homepage", href="https://sandrakla.github.io/AdRI/"),"!"),     
+                             
+                             plotOutput("qqplot", height = "375px"),
+                             plotOutput("lognorm", height = "375px"))
+                  )
+                )
+              )),
+
+      ### Regular Window-Method ###
+      tabItem(tabName = "windowregular",
+              
+              fluidRow(
+                ### Sidebar - Regular Window-Method ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  p("This is a regular Window-method, the window is make regular in the same size through the data, 
+                  so it is only recommended for small changes through the age."),
+                  
+                  sliderInput("window_age", "Regular Window-range for the age-subgroups in years:", 1, 10, 10),
+                  conditionalPanel(condition = "input.window_age <= 1", 
+                                   numericInput("window_agedays", "Regular Window-range for the age-subgroups in days:", 
+                                                365, min = 1, max = 100*365))
+                ),
+                
+                ### MainPanel - Regular Window-Method ###
+                column(width = 9,
+                       fluidRow(
+                         box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "primary",
+
+                             plotOutput("window", height="475px")
+                         ),
+                         
+                         box(title = tagList(shiny::icon("table"), "Table"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "info",
+                             class = "custom-scrollbox",
+                             
+                             DT::dataTableOutput("windowtable_t"),
+                             downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with reflim()"),
+                             downloadButton("Download_zlog_table_window_data_all_tukey", "Table with Reference intervals for Zlog_AdRI")
+                         ))
+                ))),
       
-            tabPanel("Table", icon = icon("table"), value = "nav_resi",
-                                    
-              p("Tables with the Prediction Tables, can be downloaded and be used like another dataset for this Shiny App!"),
-              DT::dataTableOutput("gamlss_residuals_pb"), 
-              downloadButton("Download_pb_residuals", "GAMLSS with P-Splines"),
-              DT::dataTableOutput("gamlss_residuals_cs"),
-              downloadButton("Download_cs_residuals", "GAMLSS with Cubic Splines"),
-              DT::dataTableOutput("gamlss_residuals_poly"),
-              downloadButton("Download_poly_residuals", "GAMLSS with Polynomial Regression with Degree 3"),
-              DT::dataTableOutput("gamlss_residuals_poly4"),
-              downloadButton("Download_poly4_residuals", "GAMLSS with Polynomial Regression with Degree 4"),
-              DT::dataTableOutput("gamlss_residuals_nn"),
-              downloadButton("Download_nn_residuals", "GAMLSS with Neural Network"),
-              DT::dataTableOutput("gamlss_residuals_tr"),
-              downloadButton("Download_tr_residuals", "GAMLSS with Decision Tree"),
-            tags$script(src = 'tabs_enabled_resi.js')))
-        )
-      )
-    )
-  )
-  )
+      ##### LIS Window-Method ##### 
+      tabItem(tabName = "windowlis",
+              
+              fluidRow(
+                ### Sidebar - LIS Window-Method ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  p("Load a TXT file with the age groups from your Laboratory Information System (LIS)
+                  and the Reference Intervals will be calculated."),
+                  
+                  selectInput("lis_data", "Select preinstalled dataset:", choice = list.files(pattern = "txt", recursive = TRUE)),
+                  uiOutput("lis_data_file"),
+                  actionButton('reset_lis', 'Reset Input', icon = icon("trash"))
+                  ),
+                
+                ### MainPanel - LIS Window-Method ###
+                column(width = 9,
+                       fluidRow(
+                         box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "primary",
+                             
+                             plotOutput("lis_window", height = "475px")
+                         ),
+                         
+                         box(title = tagList(shiny::icon("database"), "Laboratory Information System (LIS)"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "info",
+                             
+                             plotOutput("lis_window_analysis", height = "475px")
+                         ),
+                         
+                         box(title = tagList(shiny::icon("table"), "Table"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "info",
+                             class = "custom-scrollbox",
+                             
+                             DT::dataTableOutput("lis_table_t"),
+                             downloadButton("Download_lis_table_t","Table with Reference Intervals with reflim()"),
+                             downloadButton("Download_zlog_lis_table_t", "Table with Reference intervals for Zlog_AdRI")
+                         ))
+                ))),
+      
+      ##### Decision Tree Window-Method ##### 
+      tabItem(tabName = "windowtree",
+              
+              fluidRow(
+                ### Sidebar - Decision Tree Window-Method ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  p("Decision Trees are used for machine learning. It can be used for classification (supervised learning), but also
+                  for clustering (unsupervised learning). Here it used to cluster the data into subgroups with similar values.
+                  The Decision Tree is from the package rpart and is visualized with rpart.plot. The subgroups according to the Decision Tree
+                  are used to calculate the reference intervals.")
+                ),
+                
+                ### MainPanel - Decision Tree Window-Method ###
+                column(width = 9,
+                       fluidRow(
+                         box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "primary",
+                             
+                             plotOutput("tree_window", height = "475px")
+                         ),
+                         
+                         box(title = tagList(shiny::icon("tree"), "Decision Tree"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "info",
+                             
+                             plotOutput("tree_rpart", height = "475px"),
+                             plotOutput("tree_window_analysis"),
+                             downloadButton("download_tree", "Decision Tree")
+                         ),
+                         
+                         box(title = tagList(shiny::icon("table"), "Table"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "info",
+                             class = "custom-scrollbox",
+                             
+                             DT::dataTableOutput("tree_windowtable_t"),
+                             downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with reflim()"),
+                             downloadButton("Download_zlog_window_data_split_tukey", "Table with Reference intervals for Zlog_AdRI")
+                         ))
+                ))),
+      
+      ##### Sliding Window-Method ##### 
+      tabItem(tabName = "windowsliding",
+              fluidRow(
+                
+                ### Sidebar - Sliding Window-Method ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  p("Sliding Window-method goes through the data with a window calculates the mean and reference intervals and goes then
+                  with a window-steps further through the data to the end."),
+                  
+                  numericInput("sliding_width", "Sliding Window-Method Width:", 500, min = 10, max = 10000),
+                  numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500)
+                ),
+                
+                ### MainPanel - Sliding Window-Method ###
+                column(width = 9,
+                       fluidRow(
+                         box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "primary",
+                             
+                             plotOutput("slidingwindow", height = "475px")
+                         ),
+                         
+                         box(title = tagList(shiny::icon("table"), "Table"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "info",
+                             class = "custom-scrollbox",
+                             
+                             DT::dataTableOutput("sliding_tukey"),
+                             downloadButton("Download_sliding_tukey", "Table with Reference Intervals with reflim()"),
+                             downloadButton("Download_zlog_sliding_window", "Table with Reference intervals for Zlog_AdRI")
+                         ))
+                ))),
+      
+      ### Regression ###
+      tabItem(tabName = "regressionoverview",
+              fluidRow(
+                
+                ### Sidebar - Regression ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  p("Regression can be used for normally distributed data to get the 95% prediction interval. The blue
+                  line show the 95% Confindence interval from the regression in black and the red the prediction interval (2.5% and 97.5%).")
+                ),
+                
+                ### MainPanel - Regression ###
+                column(width = 9,
+                       fluidRow(
+                         box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "primary",
+                             
+                             plotOutput("regression", height="600px")
+                         ),
+                         
+                         box(title = tagList(shiny::icon("table"), "Table"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "info",
+                             class = "custom-scrollbox",
+                             
+                             DT::dataTableOutput("regression_linear"), 
+                             DT::dataTableOutput("regression_poly10"), 
+                             DT::dataTableOutput("regression_poly2"), 
+                             DT::dataTableOutput("regression_poly3")
+                         ))
+                ))),
+
+      ### Regression - Comparison ###
+      tabItem(tabName = "regressioncomparison",
+              fluidRow(
+                
+                ### Sidebar - Regression - Comparison ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  p("Regression can be used for normally distributed data to get the 95% prediction interval. The blue
+                  line show the 95% Confindence interval from the regression in black and the red the prediction interval (2.5% and 97.5%).")
+                ),
+                
+                ### MainPanel - Regression - Comparison ###
+                column(width = 9,
+                       fluidRow(
+                         DT::dataTableOutput("regression_table"))
+                ))),
+      
+      tabItem(tabName = "gamlsslms",
+              fluidRow(
+                
+                ### Sidebar - GAMLSS ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  actionButton("button_lms", "Start LMS", icon("calculator"), onclick = "$(tab).removeClass('disabled')"),
+                  htmlOutput("buttons_lms"),
+                  hr(),
+                  selectInput(
+                    "distribtion_gamlss",
+                    "Distribution for GAMLSS:",
+                    choices = list(
+                      "Log-Normal Distribution" = "LOGNO",
+                      "Normal Distribution" = "NO",
+                      "Box-Cox" = c(
+                        #"Box-Cole Green Distribution" = "BCCG",
+                        "Box-Cole Green Distribution (orginal)" = "BCCGo",
+                        #"Box-Cole Green Exp. Distribution" = "BCPE",
+                        "Box-Cole Green Exp. Distribution (orginal)" = "BCPEo",
+                        #"Box-Cole Green T-Distribution" = "BCT",
+                        "Box-Cole Green T-Distribution (orginal)" = "BCTo"
+                      )
+                    )
+                  ),
+                  checkboxInput("checkbox", "Distribution proposed by the LMS", value = FALSE),
+                  actionButton("button_gamlss", "Start GAMLSS", icon("calculator"), onclick = "$(tabs).removeClass('disabled')"),
+                  htmlOutput("buttons_gamlss")
+                ),
+                
+                ### MainPanel - GAMLSS ###
+                column(width = 9,
+                       tabsetPanel(
+                         tabPanel(
+                           "LMS", 
+                           icon = icon("chart-line"), 
+                           value = "nav_lms",
+                           
+                           fluidRow(
+                             box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "primary",
+                                 
+                                 plotOutput("lms", height = "475px")
+                             ),
+                             
+                             box(title = tagList(shiny::icon("calculator"), "Statistics"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "info",
+                                 class = "custom-scrollbox",
+                                 
+                                 verbatimTextOutput("lms_text"),
+                                 plotOutput("lms_plot"),
+                                 plotOutput("lms_fitted"),
+                                 plotOutput("lms_wormplots"))
+                           )),
+                         
+                         tabPanel(
+                           "GAMLSS (Splines)",
+                           icon = icon("chart-line"),
+                           value = "nav_gamlss",
+                           
+                           fluidRow(
+                             box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "primary",
+                                 
+                                 plotOutput("gamlss_models_splines", height = "475px")
+                             ),
+                             
+                             box(title = tagList(shiny::icon("calculator"), "Statistics"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "info",
+                                 class = "custom-scrollbox",
+                                 
+                                 p("GAMLSS with P-Splines:"),
+                                 verbatimTextOutput("gamlss_text_psplines"),
+                                 plotOutput("gamlss_term_pb"),
+                                 plotOutput("gamlss_fitted_pb_"),
+                                 p("GAMLSS with Cubic-Splines:"),
+                                 verbatimTextOutput("gamlss_text_splines"),
+                                 plotOutput("gamlss_term_cs"),
+                                 plotOutput("gamlss_fitted_cs_"),
+                                 p("Wormplots for GAMLSS with the P-Splines and Cubic Splines:"),
+                                 plotOutput("wormplots_splines"))
+                           )),
+                         
+                         tabPanel(
+                           "GAMLSS (Polynomials)",
+                           icon = icon("chart-line"),
+                           value = "nav_gamlss",
+                           
+                           fluidRow(
+                             box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "primary",
+                                 
+                                 plotOutput("gamlss_models_poly", height ="475px")
+                             ),
+                             
+                             box(title = tagList(shiny::icon("calculator"), "Statistics"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "info",
+                                 class = "custom-scrollbox",
+                                 
+                                 p("GAMLSS with Polynomial Degree 3:"),
+                                 verbatimTextOutput("gamlss_text_poly"),
+                                 plotOutput("gamlss_term_poly"),
+                                 plotOutput("gamlss_fitted_poly_"),
+                                 p("GAMLSS with Polynomial Degree 4:"),
+                                 verbatimTextOutput("gamlss_text_poly4"),
+                                 plotOutput("gamlss_term_poly4"),
+                                 plotOutput("gamlss_fitted_poly4_"),
+                                 p("Wormplots for GAMLSS with the Polynomial Degree 3 and 4:"),
+                                 plotOutput("wormplots_poly"))
+                           )),
+                         
+                         tabPanel(
+                           "GAMLSS (Neural Network)",
+                           icon = icon("brain"),
+                           value = "nav_gamlss",
+                           
+                           fluidRow(
+                             box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "primary",
+                                 
+                                 plotOutput("gamlss_net", height = "475px")),
+                             
+                             box(title = tagList(shiny::icon("calculator"), "Statistics"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "info",
+                                 class = "custom-scrollbox",
+                                 
+                                 verbatimTextOutput("net_text"),
+                                 # Plot neural network with term.plot(nn_)
+                                 plotOutput("network_term"),
+                                 plotOutput("network_fitted"),
+                                 plotOutput("nn_wormplots"))
+                           )),
+                         
+                         tabPanel(
+                           "GAMLSS (Decision Tree)",
+                           icon = icon("tree"),
+                           value = "nav_gamlss",
+                           
+                           fluidRow(
+                             box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "primary",
+                                 
+                                 plotOutput("gamlss_tree", height = "475px")
+                             ),
+                             
+                             box(title = tagList(shiny::icon("calculator"), "Statistics"),
+                                 width = 12,
+                                 solidHeader = TRUE,
+                                 collapsible = TRUE,
+                                 status = "info",
+                                 class = "custom-scrollbox",
+                                 
+                                 verbatimTextOutput("tree_text"),
+                                 plotOutput("rpart_tree"),
+                                 plotOutput("tree_term"),
+                                 plotOutput("tree_fitted"),
+                                 plotOutput("tr_wormplots"))
+                           )
+                         )
+                       )
+                ), tags$script(src = 'tabs_enabled.js'))), 
+      
+      ### GAMLSS - Comparison ###
+      tabItem(tabName = "comparison",
+              fluidRow(
+                
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  p("Models can be compared visually or with the Akaike Information Criterion (AIC),
+                  Generalized Information Criterion (GAIC), Bayesian Information Criterion (BIC),
+                  or Pseudo R-Squared (R^2). The model with the smallest value for AIC, BIC and GAIC is the best model for the data.
+                  The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored.")
+                ),
+                
+                
+                box(
+                  title = tagList(shiny::icon("balance-scale"), "Comparison"),
+                  width = 9,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  DT::dataTableOutput("table_compare"),
+                  plotOutput("metrics", height = "475px")
+                ))),
+      
+      ### GAMLSS - Prediction ###
+      tabItem(tabName = "percentiles",
+              
+              fluidRow(column(
+                width = 3,
+                
+                fluidRow(
+                  box(
+                    title = tagList(shiny::icon("gear"), "Settings"),
+                    width = 12,
+                    solidHeader = TRUE,
+                    status = "primary",
+                    
+                    selectInput(
+                      "select_model",
+                      "Select model:",
+                      choices = list(
+                        "Splines" = c("P-Splines" = "pb_ri",
+                                      "Cubic Splines" = "cs_ri"),
+                        "LMS" = c(LMS = "lms_ri"),
+                        "Polynomial" = c(
+                          "Polynomial (Degree 3)" = "poly_ri",
+                          "Polynomial (Degree 4)" = "poly4_ri"
+                        ),
+                        "Machine Learning" = c("Neural Network" = "nn_ri",
+                                               "Decision Tree" = "tr_ri")
+                      )
+                    ),
+                    numericInput("deviation", "Deviation as max zlog value for the discrete Percentiles:", 5, min = 2, max = 10)
+                
+                  ))),
+                
+                column(width = 9,
+                       tabsetPanel(
+                         tabPanel(
+                           "Percentiles", 
+                           icon = icon("chart-line"), 
+                           
+                           fluidRow(
+                       
+                       box(title = tagList(shiny::icon("chart-line"), "Percentiles"),
+                           width = 12,
+                           solidHeader = TRUE,
+                           collapsible = TRUE,
+                           status = "primary",
+                           
+                           plotOutput("gamlss_prediction", height = "475px")),
+                       
+                       box(title = tagList(shiny::icon("table"), "Table"),
+                           width = 12,
+                           solidHeader = TRUE,
+                           collapsible = TRUE,
+                           status = "info",
+                           class = "custom-scrollbox",
+                           
+                           DT::dataTableOutput("gamlss_tables"))
+                       )),
+                       
+                       
+                       tabPanel(
+                         "Discrete Percentiles", 
+                         icon = icon("chart-line"), 
+                         
+                         fluidRow(
+
+                       
+                       box(title = tagList(shiny::icon("table"), "Discrete Table"),
+                           width = 12,
+                           solidHeader = TRUE,
+                           collapsible = TRUE,
+                           status = "info",
+                           class = "custom-scrollbox",
+                           
+                           DT::dataTableOutput("gamlss_split"),
+                           downloadButton("Download_deviation_gamlss", "Table with discrete Percentiles"),
+                           downloadButton("Download_zlog_table_gamlss", "Table with discrete Percentiles for Zlog_AdRI")
+                       ),
+                       
+                       box(title = tagList(shiny::icon("chart-line"), "Discrete Percentiles"),
+                           width = 12,
+                           solidHeader = TRUE,
+                           collapsible = TRUE,
+                           status = "primary",
+                           
+                           plotOutput("gamlss_plot", height = "475px"))
+                       
+                       ) )))
+              )),
+      
+      ### GAMLSS - Residuals ###
+      tabItem(tabName = "residuals",
+              
+              fluidRow(column(
+                width = 3,
+                
+                fluidRow(
+                  box(
+                    title = tagList(shiny::icon("gear"), "Settings"),
+                    width = 12,
+                    solidHeader = TRUE,
+                    status = "primary",
+                    
+                    p("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
+                      outliers from the model and refit the model. High residuals values are in red, low in blue", 
+                      strong("This must not be equal to the real outliers of the data!", br())),
+                    
+                    helpText("Improvement from the GAMLSS by deleting high residuals:"),
+                    selectInput("select_model_resi", "Select Model:", choices = list("Splines" = c("P-Splines" = "pb_",
+                                                                                                   "Cubic Splines" = "cs_"),
+                                                                                     "Polynomial" = c("Polynomial (Degree 3)" = "poly_", 
+                                                                                                      "Polynomial (Degree 4)" = "poly4_"),
+                                                                                     "Machine Learning" = c("Neural Network" = "nn_", 
+                                                                                                            "Decision Tree" = "tr_"))),                
+                    numericInput("error", "Maximum value for residuals:", 1.5, min = 0.75, max = 10),
+                    actionButton("button_residuals", "Refit the Models", icon("calculator"), onclick = "$(tab_resi).removeClass('disabled')")
+                    
+                  ))),
+                
+                column(width = 9,
+                       
+                       box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                           width = 12,
+                           solidHeader = TRUE,
+                           collapsible = TRUE,
+                           status = "primary",
+                           
+                           plotOutput("outlier", height="600px")),
+                       
+                       box(title = tagList(shiny::icon("chart-line"), "Fitted Plot"),
+                           width = 12,
+                           solidHeader = TRUE,
+                           collapsible = TRUE,
+                           status = "primary",
+                           
+                           plotOutput("gamlss_outlier", height="600px"),
+                           plotOutput("outlier_term_gamlss", height="475px")),
+                       
+                       box(title = tagList(shiny::icon("table"), "Table"),
+                           width = 12,
+                           solidHeader = TRUE,
+                           collapsible = TRUE,
+                           status = "info",
+                           class = "custom-scrollbox",
+                           
+                           p("Tables with the Prediction Tables, can be downloaded and be used like another dataset for this Shiny App!"),
+                           DT::dataTableOutput("gamlss_residuals_pb"), 
+                           downloadButton("Download_pb_residuals", "GAMLSS with P-Splines"),
+                           DT::dataTableOutput("gamlss_residuals_cs"),
+                           downloadButton("Download_cs_residuals", "GAMLSS with Cubic Splines"),
+                           DT::dataTableOutput("gamlss_residuals_poly"),
+                           downloadButton("Download_poly_residuals", "GAMLSS with Polynomial Regression with Degree 3"),
+                           DT::dataTableOutput("gamlss_residuals_poly4"),
+                           downloadButton("Download_poly4_residuals", "GAMLSS with Polynomial Regression with Degree 4"),
+                           DT::dataTableOutput("gamlss_residuals_nn"),
+                           downloadButton("Download_nn_residuals", "GAMLSS with Neural Network"),
+                           DT::dataTableOutput("gamlss_residuals_tr"),
+                           downloadButton("Download_tr_residuals", "GAMLSS with Decision Tree"),
+                           tags$script(src = 'tabs_enabled_resi.js'))
+              )))
+    ))
 )
 
 ####################################### SERVER ####################################################
@@ -685,7 +991,7 @@ server <- function(input, output, session) {
         data_analyte <- data_analyte_tukey
         
         if(!(rows_table_ == nrow(data_analyte))){
-          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the RefLim. ***\n"))}
+          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the reflim(). ***\n"))}
       })
     } 
     
@@ -747,7 +1053,7 @@ server <- function(input, output, session) {
         data_analyte <- data_analyte_tukey
         
         if(!(rows_table_ == nrow(data_analyte))){
-          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the RefLim. ***\n"))}
+          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the reflim(). ***\n"))}
       })
     }
     
@@ -1099,14 +1405,14 @@ server <- function(input, output, session) {
     }
   })
   
-  # Tables to the regular windowmethod - With RefLim
+  # Tables to the regular windowmethod - With reflim()
   output$windowtable_t <- DT::renderDataTable({
     
     window_reactive()
     
     DT::datatable(window_data_all_tukey, rownames= FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Regular Window-Method With RefLim')) %>%
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Regular Window-Method With reflim()')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
       DT::formatRound(c(3:length(window_data_all_tukey)), 2)
   })
@@ -1165,14 +1471,14 @@ server <- function(input, output, session) {
     window_method_lis(data_analyte(), split, "reflim", TRUE)
   })
   
-  # Tables to the Window-method with Decision Tree - With RefLim
+  # Tables to the Window-method with Decision Tree - With reflim()
   output$lis_table_t <- DT::renderDataTable({
     
     window_lis()
     
     DT::datatable(window_data_lis_tukey, rownames= FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: Laboratory Information System (LIS)-Method with RefLim')) %>%
+                  caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: Laboratory Information System (LIS)-Method with reflim()')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
       DT::formatRound(c(3:length(window_data_lis_tukey)), 2)
   })
@@ -1234,7 +1540,7 @@ server <- function(input, output, session) {
     window_method_split(data_analyte(), split, "reflim", TRUE)
   })
   
-  # Tables to the Window-method with Decision Tree - With RefLim
+  # Tables to the Window-method with Decision Tree - With reflim()
   output$tree_windowtable_t <- DT::renderDataTable({
   
     build_rpart()  
@@ -1242,7 +1548,7 @@ server <- function(input, output, session) {
     
     DT::datatable(window_data_split_tukey, rownames= FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: Window Method with Decision Tree with RefLim')) %>%
+                  caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: Window Method with Decision Tree with reflim()')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
       DT::formatRound(c(3:length(window_data_split_tukey)), 2)
   })
@@ -1280,14 +1586,14 @@ server <- function(input, output, session) {
     }
   })
   
-  # Tables to the Sliding Window-method - With RefLim
+  # Tables to the Sliding Window-method - With reflim()
   output$sliding_tukey <- DT::renderDataTable({
     
     slidingwindow()
     
     DT::datatable(slide_tukey, rownames= FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Sliding Window-Method with RefLim')) %>%
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Sliding Window-Method with reflim()')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
       DT::formatRound(c(3:length(slide_tukey)), 2)
   })
@@ -1305,7 +1611,7 @@ server <- function(input, output, session) {
   #   rmse_window <- rmse_window()
   #   r_test <- r_window()
   # 
-  #   rsquared_table <<- data.frame("Method" = c("Regular Window (RefLim)", "Decision Tree Window (RefLim)"),
+  #   rsquared_table <<- data.frame("Method" = c("Regular Window (reflim())", "Decision Tree Window (reflim())"),
   #                                 MAE = c(mae_window),
   #                                 MSE = c(mse_window),
   #                                 RMSE = c(rmse_window),
@@ -2284,7 +2590,7 @@ server <- function(input, output, session) {
     rmse_poly_3_regression <- rmse(data_regression$value, prediction_poly_3[,1])
     rmse_poly_4_regression <- rmse(data_regression$value, prediction_poly_4[,1])
     
-    regression_table <<- data.frame("Regression" = c("Lineare Regression"," Polynomials (10)", 
+    regression_table <<- data.frame("Regression" = c("Linear Regression"," Polynomials (10)", 
                                                     " Polynomials (3)", " Polynomials (4)"),
                                     R2 = c(summary(linear_regression)$r.squared, summary(poly_2_regression)$r.squared,
                                               summary(poly_3_regression)$r.squared, summary(poly_4_regression)$r.squared), 
@@ -2398,31 +2704,31 @@ server <- function(input, output, session) {
   
   ##################################### Download ##################################################
 
-  # Regular Window with RefLim
+  # Regular Window with reflim()
   output$Download_window_data_all_tukey <- downloadHandler(
     filename = function() {
-      paste0(Sys.Date(),"_Regular_Window_With_RefLim.csv")},
+      paste0(Sys.Date(),"_Regular_Window_With_reflim.csv")},
     content = function(file) {
       write.csv2(window_data_all_tukey, file, row.names = FALSE)})
 
-  # Window-Method coupled Decision Tree with RefLim
+  # Window-Method coupled Decision Tree with reflim()
   output$Download_window_data_split_tukey <- downloadHandler(
     filename = function() {
-      paste0(Sys.Date(),"_Windowtree_With_RefLim.csv")},
+      paste0(Sys.Date(),"_Windowtree_With_reflim.csv")},
     content = function(file) {
       write.csv2(window_data_split_tukey, file, row.names = FALSE)})
   
-  # Sliding-Windowmethod with RefLim
+  # Sliding-Windowmethod with reflim()
   output$Download_sliding_tukey <- downloadHandler(
     filename = function() {
-      paste0(Sys.Date(),"_SlidingWindow_With_RefLim.csv")},
+      paste0(Sys.Date(),"_SlidingWindow_With_reflim.csv")},
     content = function(file) {
       write.csv2(slide_tukey, file, row.names = FALSE)})
   
-  # LIS Window-Method with RefLim
+  # LIS Window-Method with reflim()
   output$Download_lis_table_t <- downloadHandler(
     filename = function() {
-      paste0(Sys.Date(),"_LIS_With_RefLim.csv")},
+      paste0(Sys.Date(),"_LIS_With_reflim.csv")},
     content = function(file) {
       write.csv2(window_data_lis_tukey, file, row.names = FALSE)})
   
@@ -2480,10 +2786,10 @@ server <- function(input, output, session) {
   
   ################################ Interface to Zlog_AdrI ##########################
   
-  # Regular Window with RefLim
+  # Regular Window with reflim()
   output$Download_zlog_table_window_data_all_tukey <- downloadHandler(
     filename = function(){
-      paste0(Sys.Date(),"_Zlog_AdRI_Regular_Window_With_RefLim.csv")},
+      paste0(Sys.Date(),"_Zlog_AdRI_Regular_Window_With_reflim.csv")},
     content = function(file) {
       
       if(input$sex == "t")
@@ -2502,10 +2808,10 @@ server <- function(input, output, session) {
       
       write.csv(zlog_adri, file, row.names = FALSE)})
   
-  # Window-Method coupled Decision Tree with RefLim
+  # Window-Method coupled Decision Tree with reflim()
   output$Download_zlog_window_data_split_tukey <- downloadHandler(
     filename = function(){
-      paste0(Sys.Date(),"_Zlog_AdRI_Windowtree_With_RefLim.csv")},
+      paste0(Sys.Date(),"_Zlog_AdRI_Windowtree_With_reflim.csv")},
     content = function(file) {
       
       if(input$sex == "t")
@@ -2522,10 +2828,10 @@ server <- function(input, output, session) {
       
       write.csv(zlog_adri, file, row.names = FALSE)})
   
-  # Sliding-Windowmethod with RefLim
+  # Sliding-Windowmethod with reflim()
   output$Download_zlog_sliding_window <- downloadHandler(
     filename = function(){
-      paste0(Sys.Date(),"_Zlog_AdRI_SlidingWindow_With_RefLim.csv")},
+      paste0(Sys.Date(),"_Zlog_AdRI_SlidingWindow_With_reflim.csv")},
     content = function(file) {
       
       if(input$sex == "t")
@@ -2542,10 +2848,10 @@ server <- function(input, output, session) {
       
       write.csv(zlog_adri, file, row.names = FALSE)})
   
-  # LIS Window-Method with RefLim
+  # LIS Window-Method with reflim()
   output$Download_zlog_lis_table_t <- downloadHandler(
     filename = function(){
-      paste0(Sys.Date(),"_Zlog_AdRI_LIS_With_RefLim.csv")},
+      paste0(Sys.Date(),"_Zlog_AdRI_LIS_With_reflim.csv")},
     content = function(file) {
       
       if(input$sex == "t")
