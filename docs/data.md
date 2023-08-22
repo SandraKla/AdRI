@@ -1,8 +1,8 @@
 [Home](./index.md) --- [Installation](./install.md) --- [Data](./data.md) --- [Methods](./methods.md) --- [Guide](./guide.md) --- [About](./about.md)
 
 ---
-1. [CALIPER Dataset](#caliper)
-2. [AdRI_Generator Dataset](#adri_generator)
+1) [CALIPER Dataset](#caliper)
+2) [AdRI_Generator Dataset](#adri_generator)
 ---
 
 ## CALIPER Dataset <a name = "caliper"></a>

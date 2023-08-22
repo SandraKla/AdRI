@@ -1,9 +1,9 @@
 [Home](./index.md) --- [Installation](./install.md) --- [Data](./data.md) --- [Methods](./methods.md) --- [Guide](./guide.md) --- [About](./about.md)
 
 ---
-1. [Contact](#contact)
-2. [References](#references)
-3. [Version](#version)
+1) [Contact](#contact)
+2) [References](#references)
+3) [Version](#version)
 ---
 
 ## Contact <a name = "contact"></a>

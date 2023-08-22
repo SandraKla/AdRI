@@ -1,10 +1,10 @@
 [Home](./index.md) --- [Installation](./install.md) --- [Data](./data.md) --- [Methods](./methods.md) --- [Guide](./guide.md) --- [About](./about.md)
 
 ---
-1. [GAMLSS](#gamlss)
-2. [LMS](#lms)
-3. [Window-Methods](#window)
-4. [Regression](#regression)
+1) [GAMLSS](#gamlss)
+2) [LMS](#lms)
+3) [Window-Methods](#window)
+4) [Regression](#regression)
 ---
 
 ## GAMLSS <a name = "gamlss"></a>
