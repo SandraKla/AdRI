@@ -5,7 +5,6 @@
 ####################################### Scripts ###################################################
 
 source("R/analysis.R")
-source("R/reflim.R")
 source("R/window.R")
 source("R/gamlss.R")
 
@@ -50,6 +49,11 @@ if("plotly" %in% rownames(installed.packages())){
   library(plotly)} else{
     install.packages("plotly")
     library(plotly)}
+
+if("reflimR" %in% rownames(installed.packages())){
+  library(reflimR)} else{
+    install.packages("reflimR")
+    library(reflimR)}
 
 if("rpart" %in% rownames(installed.packages())){
   library(rpart)} else{
@@ -250,8 +254,8 @@ ui <- dashboardPage(
                              class = "custom-scrollbox",
                              
                              DT::dataTableOutput("windowtable_t"),
-                             downloadButton("Download_window_data_all_tukey", "Table with Reference intervals with reflim()"),
-                             downloadButton("Download_zlog_table_window_data_all_tukey", "Table with Reference intervals for Zlog_AdRI")
+                             downloadButton("Download_window_data_all_reflimR", "Table with Reference intervals with reflim()"),
+                             downloadButton("Download_zlog_table_window_data_all_reflimR", "Table with Reference intervals for Zlog_AdRI")
                          ))
                 ))),
       
@@ -356,8 +360,8 @@ ui <- dashboardPage(
                              class = "custom-scrollbox",
                              
                              DT::dataTableOutput("tree_windowtable_t"),
-                             downloadButton("Download_window_data_split_tukey", "Table with Reference Intervals with reflim()"),
-                             downloadButton("Download_zlog_window_data_split_tukey", "Table with Reference intervals for Zlog_AdRI")
+                             downloadButton("Download_window_data_split_reflimR", "Table with Reference Intervals with reflim()"),
+                             downloadButton("Download_zlog_window_data_split_reflimR", "Table with Reference intervals for Zlog_AdRI")
                          ))
                 ))),
       
@@ -398,8 +402,8 @@ ui <- dashboardPage(
                              status = "info",
                              class = "custom-scrollbox",
                              
-                             DT::dataTableOutput("sliding_tukey"),
-                             downloadButton("Download_sliding_tukey", "Table with Reference Intervals with reflim()"),
+                             DT::dataTableOutput("sliding_reflimR"),
+                             downloadButton("Download_sliding_reflimR", "Table with Reference Intervals with reflim()"),
                              downloadButton("Download_zlog_sliding_window", "Table with Reference intervals for Zlog_AdRI")
                          ))
                 ))),
@@ -962,7 +966,7 @@ server <- function(input, output, session) {
         
         rows_table_ <- nrow(data_analyte) 
         
-        data_analyte_tukey <- data.frame()
+        data_analyte_reflimR <- data.frame()
         # Make Decision Tree to group the data in groups
         rpart_ready <- make_rpart(data_analyte, as.numeric(input$tree_minsplit))
         # Read the splits from the Decision Tree
@@ -970,7 +974,7 @@ server <- function(input, output, session) {
         
         split <- round(c(0,sort(splits$index), max(data_analyte$age_days))) 
         
-        # Select each range of the splits and delete outliers with the iBoxplot95()
+        # Select each range of the splits and delete outliers with the iboxplot()
         for (i in 2:length(split)){
           
           data_analyte_split <- subset(data_analyte, age_days <= split[i], select = c(patient, sex, age, age_days, value, code, name)) 
@@ -980,15 +984,15 @@ server <- function(input, output, session) {
             data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days >= split[i-1])}
           
           normal_log <- FALSE
-          try(normal_log <- def.distribution(data_analyte_subset$value, plot.it = FALSE)$lognorm)
+          try(normal_log <- lognorm(data_analyte_subset$value, plot.it = FALSE)$lognorm)
           
-          if(normal_log == TRUE){modi <- iBoxplot95(data_analyte_subset$value, plot.it = FALSE, lognorm = TRUE)}
-          else{modi <- iBoxplot95(data_analyte_subset$value, plot.it = FALSE)}
+          if(normal_log == TRUE){modi <- iboxplot(data_analyte_subset$value, plot.it = FALSE, lognorm = TRUE)}
+          else{modi <- iboxplot(data_analyte_subset$value, plot.it = FALSE)}
           
           data_analyte_save <- data_analyte_subset[data_analyte_subset$value %in% modi,]
-          data_analyte_tukey <- rbind(data_analyte_tukey, data_analyte_save)}
+          data_analyte_reflimR <- rbind(data_analyte_reflimR, data_analyte_save)}
         
-        data_analyte <- data_analyte_tukey
+        data_analyte <- data_analyte_reflimR
         
         if(!(rows_table_ == nrow(data_analyte))){
           cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the reflim(). ***\n"))}
@@ -1023,7 +1027,7 @@ server <- function(input, output, session) {
         
         rows_table_ <- nrow(data_analyte) 
         
-        data_analyte_tukey <- data.frame()
+        data_analyte_reflimR <- data.frame()
         # Make Decision Tree to group the data in groups
         rpart_ready <- make_rpart(data_analyte, as.numeric(input$tree_minsplit))
         
@@ -1032,7 +1036,7 @@ server <- function(input, output, session) {
         
         split <- round(c(0,sort(splits$index), max(data_analyte$age_days)))
 
-        # Select each range of the splits and delete outliers with the iBoxplot95()
+        # Select each range of the splits and delete outliers with the iboxplot()
         for (i in 2:length(split)){
           
           data_analyte_split <- subset(data_analyte, age_days <= split[i], select = c(patient, sex, age, age_days, value, code, name)) 
@@ -1042,15 +1046,15 @@ server <- function(input, output, session) {
             data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days >= split[i-1])}
           
           normal_log <- FALSE
-          try(normal_log <- def.distribution(data_analyte_subset$value, plot.it = FALSE)$lognorm)
+          try(normal_log <- lognorm(data_analyte_subset$value, plot.it = FALSE)$lognorm)
           
-          if(normal_log == TRUE){modi <- iBoxplot95(data_analyte_subset$value, plot.it = FALSE, lognorm = TRUE)}
-          else{modi <- iBoxplot95(data_analyte_subset$value, plot.it = FALSE)}
+          if(normal_log == TRUE){modi <- iboxplot(data_analyte_subset$value, plot.it = FALSE, lognorm = TRUE)$trunc}
+          else{modi <- iboxplot(data_analyte_subset$value, plot.it = FALSE)$trunc}
           
           data_analyte_save <- data_analyte_subset[data_analyte_subset$value %in% modi,] 
-          data_analyte_tukey <- rbind(data_analyte_tukey, data_analyte_save)}
+          data_analyte_reflimR <- rbind(data_analyte_reflimR, data_analyte_save)}
         
-        data_analyte <- data_analyte_tukey
+        data_analyte <- data_analyte_reflimR
         
         if(!(rows_table_ == nrow(data_analyte))){
           cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the reflim(). ***\n"))}
@@ -1298,8 +1302,18 @@ server <- function(input, output, session) {
     ylab_ <<- paste0(data_analyte()[1,7]," [", input$text_unit,"]")
     
     if(!(nrow(data_analyte())) == 0){
-      boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
-              ylab = ylab_, col = c("indianred", "cornflowerblue"), las = 2)
+      
+      if (input$sex == "m") {
+        boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
+                ylab = ylab_, col = "cornflowerblue", las = 2)
+      }
+      else if (input$sex == "f") {
+        boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
+                ylab = ylab_, col = "indianred", las = 2)
+      } else{
+        boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
+                ylab = ylab_, col = c("indianred", "cornflowerblue"), las = 2)
+      }
     }
   })
 
@@ -1333,7 +1347,7 @@ server <- function(input, output, session) {
   # Bowley and Lognormfunction
   output$lognorm <- renderPlot({
     if(!(nrow(data_analyte())) == 0){
-      try(def.distribution(data_analyte()[,5]))
+      try(lognorm(data_analyte()[,5]))
     }
   })
   
@@ -1380,14 +1394,14 @@ server <- function(input, output, session) {
     plot(value~age_days, data=data_analyte(), pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
            ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-    x_lower <- window_data_tukey$age_days
-    y_lower <- window_data_tukey$quantile1
+    x_lower <- window_data_reflimR$age_days
+    y_lower <- window_data_reflimR$quantile1
       
     segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
     lowerlimit <- data.frame(x = x_lower, y = y_lower)
 
-    x_upper <- window_data_tukey$age_days
-    y_upper <- window_data_tukey$quantile2
+    x_upper <- window_data_reflimR$age_days
+    y_upper <- window_data_reflimR$quantile2
       
     segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
     upperlimit <- data.frame(x = x_upper, y = y_upper)
@@ -1405,16 +1419,16 @@ server <- function(input, output, session) {
     }
   })
   
-  # Tables to the regular windowmethod - With reflim()
+  # Tables to the regular windowmethod - with reflimR
   output$windowtable_t <- DT::renderDataTable({
     
     window_reactive()
     
-    DT::datatable(window_data_all_tukey, rownames= FALSE, extensions = 'Buttons',
+    DT::datatable(window_data_all_reflimR, rownames= FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Regular Window-Method With reflim()')) %>%
+                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Regular Window-Method with reflimR')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
-      DT::formatRound(c(3:length(window_data_all_tukey)), 2)
+      DT::formatRound(c(3:length(window_data_all_reflimR)), 2)
   })
   
   
@@ -1426,14 +1440,14 @@ server <- function(input, output, session) {
     plot(value~age_days, data=data_analyte(), pch = 20, cex = 1, col = "grey", 
          xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
     
-    x_lower <- window_data_tukey_lis$age_days
-    y_lower <- window_data_tukey_lis$quantile1
+    x_lower <- window_data_reflimR_lis$age_days
+    y_lower <- window_data_reflimR_lis$quantile1
     
     segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
     lowerlimit <- data.frame(x = x_lower, y = y_lower)
     
-    x_upper <- window_data_tukey_lis$age_days
-    y_upper <- window_data_tukey_lis$quantile2
+    x_upper <- window_data_reflimR_lis$age_days
+    y_upper <- window_data_reflimR_lis$quantile2
     
     segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
     upperlimit <- data.frame(x = x_upper, y = y_upper)
@@ -1471,16 +1485,16 @@ server <- function(input, output, session) {
     window_method_lis(data_analyte(), split, "reflim", TRUE)
   })
   
-  # Tables to the Window-method with Decision Tree - With reflim()
+  # Tables to the Window-method with Decision Tree - with reflimR
   output$lis_table_t <- DT::renderDataTable({
     
     window_lis()
     
-    DT::datatable(window_data_lis_tukey, rownames= FALSE, extensions = 'Buttons',
+    DT::datatable(window_data_lis_reflimR, rownames= FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: Laboratory Information System (LIS)-Method with reflim()')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
-      DT::formatRound(c(3:length(window_data_lis_tukey)), 2)
+      DT::formatRound(c(3:length(window_data_lis_reflimR)), 2)
   })
   
   # Window-Method coupled to a Decision Tree
@@ -1493,14 +1507,14 @@ server <- function(input, output, session) {
     plot(value~age_days, data=data_analyte(), pch = 20, cex = 1, col = "grey", 
          xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
          
-    x_lower <- window_data_tukey_rpart$age_days
-    y_lower <- window_data_tukey_rpart$quantile1
+    x_lower <- window_data_reflimR_rpart$age_days
+    y_lower <- window_data_reflimR_rpart$quantile1
          
     segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
     lowerlimit <- data.frame(x = x_lower, y = y_lower)
          
-    x_upper <- window_data_tukey_rpart$age_days
-    y_upper <- window_data_tukey_rpart$quantile2
+    x_upper <- window_data_reflimR_rpart$age_days
+    y_upper <- window_data_reflimR_rpart$quantile2
          
     segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
     upperlimit <- data.frame(x = x_upper, y = y_upper)
@@ -1540,17 +1554,17 @@ server <- function(input, output, session) {
     window_method_split(data_analyte(), split, "reflim", TRUE)
   })
   
-  # Tables to the Window-method with Decision Tree - With reflim()
+  # Tables to the Window-method with Decision Tree - with reflimR
   output$tree_windowtable_t <- DT::renderDataTable({
   
     build_rpart()  
     windowtree()
     
-    DT::datatable(window_data_split_tukey, rownames= FALSE, extensions = 'Buttons',
+    DT::datatable(window_data_split_reflimR, rownames= FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style ='caption-side: bottom; text-align: center;','Table: Window Method with Decision Tree with reflim()')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
-      DT::formatRound(c(3:length(window_data_split_tukey)), 2)
+      DT::formatRound(c(3:length(window_data_split_reflimR)), 2)
   })
   
   # Sliding Window-Method 
@@ -1561,14 +1575,14 @@ server <- function(input, output, session) {
     plot(value~age_days, data=data_analyte(), pch = 20, cex = 1, col = "grey",
          xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
     
-    x_lower <- slide_tukey[,2]
-    y_lower <- slide_tukey[,5]
+    x_lower <- slide_reflimR[,2]
+    y_lower <- slide_reflimR[,5]
     
     segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
     lowerlimit <- data.frame(x = x_lower, y = y_lower)
     
-    x_upper <- slide_tukey[,2]
-    y_upper <- slide_tukey[,6]
+    x_upper <- slide_reflimR[,2]
+    y_upper <- slide_reflimR[,6]
     
     segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
     upperlimit <- data.frame(x = x_upper, y = y_upper)
@@ -1586,16 +1600,16 @@ server <- function(input, output, session) {
     }
   })
   
-  # Tables to the Sliding Window-method - With reflim()
-  output$sliding_tukey <- DT::renderDataTable({
+  # Tables to the Sliding Window-method - with reflimR
+  output$sliding_reflimR <- DT::renderDataTable({
     
     slidingwindow()
     
-    DT::datatable(slide_tukey, rownames= FALSE, extensions = 'Buttons',
+    DT::datatable(slide_reflimR, rownames= FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Sliding Window-Method with reflim()')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
-      DT::formatRound(c(3:length(slide_tukey)), 2)
+      DT::formatRound(c(3:length(slide_reflimR)), 2)
   })
   
   # # Comparison Regular Window and Sliding Window
@@ -2705,32 +2719,32 @@ server <- function(input, output, session) {
   ##################################### Download ##################################################
 
   # Regular Window with reflim()
-  output$Download_window_data_all_tukey <- downloadHandler(
+  output$Download_window_data_all_reflimR <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_Regular_Window_With_reflim.csv")},
     content = function(file) {
-      write.csv2(window_data_all_tukey, file, row.names = FALSE)})
+      write.csv2(window_data_all_reflimR, file, row.names = FALSE)})
 
   # Window-Method coupled Decision Tree with reflim()
-  output$Download_window_data_split_tukey <- downloadHandler(
+  output$Download_window_data_split_reflimR <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_Windowtree_With_reflim.csv")},
     content = function(file) {
-      write.csv2(window_data_split_tukey, file, row.names = FALSE)})
+      write.csv2(window_data_split_reflimR, file, row.names = FALSE)})
   
   # Sliding-Windowmethod with reflim()
-  output$Download_sliding_tukey <- downloadHandler(
+  output$Download_sliding_reflimR <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_SlidingWindow_With_reflim.csv")},
     content = function(file) {
-      write.csv2(slide_tukey, file, row.names = FALSE)})
+      write.csv2(slide_reflimR, file, row.names = FALSE)})
   
   # LIS Window-Method with reflim()
   output$Download_lis_table_t <- downloadHandler(
     filename = function() {
       paste0(Sys.Date(),"_LIS_With_reflim.csv")},
     content = function(file) {
-      write.csv2(window_data_lis_tukey, file, row.names = FALSE)})
+      write.csv2(window_data_lis_reflimR, file, row.names = FALSE)})
   
   # Discrete GAMLSS-Models
   output$Download_deviation_gamlss <- downloadHandler(
@@ -2787,7 +2801,7 @@ server <- function(input, output, session) {
   ################################ Interface to Zlog_AdrI ##########################
   
   # Regular Window with reflim()
-  output$Download_zlog_table_window_data_all_tukey <- downloadHandler(
+  output$Download_zlog_table_window_data_all_reflimR <- downloadHandler(
     filename = function(){
       paste0(Sys.Date(),"_Zlog_AdRI_Regular_Window_With_reflim.csv")},
     content = function(file) {
@@ -2799,17 +2813,17 @@ server <- function(input, output, session) {
       if(input$sex == "f")
         sex_zlog <- "F"
       
-      window_data_all_tukey
+      window_data_all_reflimR
       
       zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
-                              AgeFrom = window_data_all_tukey$`Age-range from`, AgeUntil = window_data_all_tukey$`to [Days]`,
-                              LowerLimit = window_data_all_tukey$`2.5 % RI`, UpperLimit = window_data_all_tukey$`97.5% RI`, 
+                              AgeFrom = window_data_all_reflimR$`Age-range from`, AgeUntil = window_data_all_reflimR$`to [Days]`,
+                              LowerLimit = window_data_all_reflimR$`2.5 % RI`, UpperLimit = window_data_all_reflimR$`97.5% RI`, 
                               check.names = FALSE)
       
       write.csv(zlog_adri, file, row.names = FALSE)})
   
   # Window-Method coupled Decision Tree with reflim()
-  output$Download_zlog_window_data_split_tukey <- downloadHandler(
+  output$Download_zlog_window_data_split_reflimR <- downloadHandler(
     filename = function(){
       paste0(Sys.Date(),"_Zlog_AdRI_Windowtree_With_reflim.csv")},
     content = function(file) {
@@ -2822,8 +2836,8 @@ server <- function(input, output, session) {
         sex_zlog <- "F"
       
       zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
-                              AgeFrom = window_data_split_tukey$`Age-range from`, AgeUntil = window_data_split_tukey$`to [Days]`,
-                              LowerLimit = window_data_split_tukey$`2.5 % RI`, UpperLimit = window_data_split_tukey$`97.5% RI`, 
+                              AgeFrom = window_data_split_reflimR$`Age-range from`, AgeUntil = window_data_split_reflimR$`to [Days]`,
+                              LowerLimit = window_data_split_reflimR$`2.5 % RI`, UpperLimit = window_data_split_reflimR$`97.5% RI`, 
                               check.names = FALSE)
       
       write.csv(zlog_adri, file, row.names = FALSE)})
@@ -2842,8 +2856,8 @@ server <- function(input, output, session) {
         sex_zlog <- "F"
       
       zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
-                              AgeFrom = slide_tukey$`Age-range from`, AgeUntil = slide_tukey$`to [Days]`,
-                              LowerLimit = slide_tukey$`2.5 % RI`, UpperLimit = slide_tukey$`97.5% RI`, 
+                              AgeFrom = slide_reflimR$`Age-range from`, AgeUntil = slide_reflimR$`to [Days]`,
+                              LowerLimit = slide_reflimR$`2.5 % RI`, UpperLimit = slide_reflimR$`97.5% RI`, 
                               check.names = FALSE)
       
       write.csv(zlog_adri, file, row.names = FALSE)})
@@ -2862,8 +2876,8 @@ server <- function(input, output, session) {
         sex_zlog <- "F"
       
       zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
-                              AgeFrom = window_data_lis_tukey$`Age-range from`, AgeUntil = window_data_lis_tukey$`to [Days]`,
-                              LowerLimit = window_data_lis_tukey$`2.5 % RI`, UpperLimit = window_data_lis_tukey$`97.5% RI`, 
+                              AgeFrom = window_data_lis_reflimR$`Age-range from`, AgeUntil = window_data_lis_reflimR$`to [Days]`,
+                              LowerLimit = window_data_lis_reflimR$`2.5 % RI`, UpperLimit = window_data_lis_reflimR$`97.5% RI`, 
                               check.names = FALSE)
       
       write.csv(zlog_adri, file, row.names = FALSE)})

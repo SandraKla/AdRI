@@ -37,7 +37,7 @@ make_rpart <- function(data_analyte, minsplit_tree = 360){
 
 ####################################### Regular Window-method #####################################
 
-#' Regular Window-method with the RefLim
+#' Regular Window-method with the reflim
 #' 
 #' @param data_ Given dataset:
 #' 
@@ -51,93 +51,64 @@ make_rpart <- function(data_analyte, minsplit_tree = 360){
 #' 
 #' 
 #' @param window range of the window
-#' @param method RefLim
+#' @param method reflim
 window_method <- function(data_, window, method){
 
   ##################################### Mean ######################################################
-  mean_with_tukey <-  data.frame() 
+  mean_with_reflimR <-  data.frame() 
   ##################################### Quantiles #################################################
-  quantiles_with_tukey <- data.frame()
-  ##################################### Standard derivation #######################################
-  sd_with_tukey <- data.frame()
-  ##################################### Confidence Interval (95%) for 2.5% RI #####################
-  confidence_with_tukey_2_5 <- data.frame()
-  ##################################### Confidence Interval (95%) for 97.5% RI ####################
-  confidence_with_tukey_97_5 <- data.frame()
-
-  n_data_tukey <- data.frame()
+  quantiles_with_reflimR <- data.frame()
+  ##################################### Confidence Interval (95%) for the RI ######################
+  confidence_with_reflimR <- data.frame()
+  n_data_reflimR <- data.frame()
   
   for(i in seq(min(data_[,4])+window, max(data_[,4])+window, by = window)){
     
     age_code <- i
     
-    # The data subset 
+    # The data subset
     age_data <- subset(data_, data_[,4] <= i)                            # Under the condition
     age_data_ready <- subset(age_data, age_data$age_days > i-window)     # Below the lowest condition
     
     if(i-window == 0){
       age_data_ready <- subset(age_data, age_data$age_days >= i-window)}
     
-    n <- nrow(age_data_ready)
     normal_log <- FALSE
-    try(normal_log <- def.distribution(age_data_ready$value, plot.it = FALSE)$lognorm)
-    n_data_tukey <- rbind(n_data_tukey, n)
+    try(normal_log <- lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
+    n_data_reflimR <- rbind(n_data_reflimR, nrow(age_data_ready))
   
-    ##################################### RefLim #################################################
-    if(method == "reflim"){
-   
-      ci_qq <- NA
+    ##################################### reflimR ################################################
+    if (method == "reflim") {
+      try(modi_qq <- reflim(age_data_ready$value, lognormal = normal_log))
       
-      modi_qq <- reflim(age_data_ready$value, n.min = 100, log.mode = normal_log)
-      if(!is.na(modi_qq[3]) || !is.na(modi_qq[4])){
-        if(!(modi_qq[3] >= modi_qq[4]))
-          try(ci_qq <- ci.quant95(n = length(age_data_ready$value), lower.limit = modi_qq[3], upper.limit = modi_qq[4], lognorm = normal_log))
-      }
-      
-      # Mean
-      mean_tukey <- modi_qq[1]
-      mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
-
-      # Quantile
-      quantiles_tukey <- c(modi_qq[[3]], modi_qq[[4]])
-      quantiles_with_tukey <- rbind(quantiles_with_tukey,quantiles_tukey)
-    
-      # 95% Confidence Interval
-      if(!is.na(ci_qq)[[1]]){
-        confidence_tukey_2_5 <- c(ci_qq[[1]], ci_qq[[2]])
-        confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5, confidence_tukey_2_5)
-        confidence_tukey_97_5 <- c(ci_qq[[3]], ci_qq[[4]])
-        confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5, confidence_tukey_97_5)
-      } else{
-        confidence_tukey_2_5 <- c(NA, NA)
-        confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5, confidence_tukey_2_5)
-        confidence_tukey_97_5 <- c(NA, NA)
-        confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5, confidence_tukey_97_5)
-      }
+      mean_with_reflimR <- rbind(mean_with_reflimR, modi_qq$stats)
+      quantiles_with_reflimR <- rbind(quantiles_with_reflimR, modi_qq[[3]])
+      confidence_with_reflimR <- rbind(confidence_with_reflimR, modi_qq$confidence.int)
     }
   }
     
   ##################################### Save the data #############################################
   
-  # Window-Data with the RefLim()
-  window_data_tukey <<- data.frame(age_days = seq(min(data_[,4]), age_code, by = window), 
-                                   mean = c(mean_with_tukey[,1], tail(mean_with_tukey[,1], n=1)), 
-                                   quantile1 = c(quantiles_with_tukey[,1],tail(quantiles_with_tukey[,1], n=1)),
-                                   quantile2 = c(quantiles_with_tukey[,2],tail(quantiles_with_tukey[,2], n=1)))
+  # Window-Data with the reflim()
+  
+  window_data_reflimR <<- data.frame(age_days = seq(min(data_[,4]), age_code, by = window), 
+                                   mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n=1)), 
+                                   quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n=1)),
+                                   quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n=1)))
   
   ##################################### Tables to download ########################################
   
-  window_data_all_tukey <<- data.frame("Age-range from"           = seq(min(data_[,4]), age_code-1, by=window),
+  window_data_all_reflimR <<- data.frame("Age-range from"           = seq(min(data_[,4]), age_code-1, by=window),
                                        "to [Days]"                = c(head(seq(min(data_[,4]) + window, age_code, by = window),-1),max(data_$age_days)),
                                        "Age-range from"           = round_df(seq(min(data_[,4]), age_code-1, by=window)/365, 3),
                                        "to [Years]"               = c(round_df(head(seq(min(data_[,4]) + window, age_code, by = window)/365,-1),3), max(data_$age)),
-                                       "2.5 % RI"                 = c(quantiles_with_tukey[,1]),
-                                       "97.5% RI"                 = c(quantiles_with_tukey[,2]),
-                                       "95% CI (2.5% RI) from"    = c(confidence_with_tukey_2_5[[1]]),
-                                       "to"                       = c(confidence_with_tukey_2_5[[2]]),
-                                       "95% CI (97.5% RI) from"   = c(confidence_with_tukey_97_5[[1]]),
-                                       "to"                       = c(confidence_with_tukey_97_5[[2]]),
-                                       "Number of data points"    = c(n_data_tukey[,1]), check.names = FALSE)
+                                       "2.5 % RI"                 = c(quantiles_with_reflimR[,1]),
+                                       "97.5% RI"                 = c(quantiles_with_reflimR[,2]),
+                                       "95% CI (2.5% RI) from"    = c(confidence_with_reflimR[,1]),
+                                       "to"                       = c(confidence_with_reflimR[,2]),
+                                       "95% CI (97.5% RI) from"   = c(confidence_with_reflimR[,3]),
+                                       "to"                       = c(confidence_with_reflimR[,4]),
+                                       "Number of data points"    = c(n_data_reflimR[,1]), check.names = FALSE)
 }
 
 ####################################### Window-Method coupled to the Decision Tree ################
@@ -156,22 +127,17 @@ window_method <- function(data_, window, method){
 #' 73 35746153   W  16     5981  50.8  0.5 ALBS
 #' 
 #' @param split Age group
-#' @param method RefLim
-#' @param plot_log Plot the function def.distribution() of each age groups
+#' @param method reflim
+#' @param plot_log Plot the function lognorm() of each age groups
 window_method_split <- function(data_window_split, split, method, plot_log = FALSE){
   
   ##################################### Mean ######################################################
-  mean_with_tukey <-  data.frame() 
+  mean_with_reflimR <-  data.frame() 
   ##################################### Quantile ##################################################
-  quantiles_with_tukey <- data.frame() 
-  ##################################### Standard derivation #######################################
-  sd_with_tukey <- data.frame()
-  ##################################### Confidence Interval (95%) for 2.5% RI #####################
-  confidence_with_tukey_2_5 <- data.frame()
-  ##################################### Confidence Interval (95%) for 97.5% RI ####################
-  confidence_with_tukey_97_5 <- data.frame()
-  
-  n_data_tukey <- data.frame()
+  quantiles_with_reflimR <- data.frame() 
+  ##################################### Confidence Interval (95%) for the RI ######################
+  confidence_with_reflimR <- data.frame()
+  n_data_reflimR <- data.frame()
   
   for (i in seq(2,length(split))){
     
@@ -183,72 +149,48 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
     if(split[i-1] == 0){
       age_data_ready <- subset(age_data, age_data$age_days >= split[i-1])}  # Below the lowest condition
 
-    n <- nrow(age_data_ready)
     normal_log <- FALSE
     
     if(!plot_log){
-      try(normal_log <- def.distribution(age_data_ready$value, plot.it = FALSE)$lognorm)
+      try(normal_log <- lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
     } else{
       # Plot the distribution of each group to check for normally distribution
-      try(normal_log <- def.distribution(age_data_ready$value, plot.it = TRUE, main = paste("between", split[i-1], "and", split[i], "days"))$lognorm)
+      try(normal_log <- lognorm(age_data_ready$value, plot.it = TRUE, main = paste("between", split[i-1], "and", split[i], "days"))$lognorm)
     }
-    n_data_tukey <- rbind(n_data_tukey,n)
+    n_data_reflimR <- rbind(n_data_reflimR, nrow(age_data_ready))
     
-    ################################### RefLim ###################################################
+    ################################### reflimR ##################################################
     if(method == "reflim"){
       
-      ci_qq <- NA
-      
-      modi_qq <- reflim(age_data_ready$value, n.min = 100, log.mode = normal_log, plot.it = FALSE)
-      if(!is.na(modi_qq[3]) || !is.na(modi_qq[4])){
-        if(!(modi_qq[3] >= modi_qq[4]))
-          try(ci_qq <- ci.quant95(n = length(age_data_ready$value), lower.limit = modi_qq[3], upper.limit = modi_qq[4], lognorm = normal_log))
-      }
-      
-      # Mean
-      mean_tukey <- modi_qq[1]
-      mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
-      
-      # Quantile
-      quantiles_tukey <- c(modi_qq[[3]], modi_qq[[4]])
-      quantiles_with_tukey <- rbind(quantiles_with_tukey,quantiles_tukey)
-      
-      # 95% Confidence Interval
-      if(!is.na(ci_qq)[[1]]){
-        confidence_tukey_2_5 <- c(ci_qq[[1]], ci_qq[[2]])
-        confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5, confidence_tukey_2_5)
-        confidence_tukey_97_5 <- c(ci_qq[[3]], ci_qq[[4]])
-        confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5, confidence_tukey_97_5)
-      } else{
-        confidence_tukey_2_5 <- c(NA, NA)
-        confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5, confidence_tukey_2_5)
-        confidence_tukey_97_5 <- c(NA, NA)
-        confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5, confidence_tukey_97_5)
-      }
+      try(modi_qq <- reflim(age_data_ready$value, lognormal = normal_log, plot.it = FALSE))
+
+      mean_with_reflimR <- rbind(mean_with_reflimR, modi_qq$stats)
+      quantiles_with_reflimR <- rbind(quantiles_with_reflimR, modi_qq[[3]])
+      confidence_with_reflimR <- rbind(confidence_with_reflimR, modi_qq$confidence.int)
     }
   }
   
   ##################################### Save the data #############################################
   
-  # Window-Data with RefLim
-  window_data_tukey_rpart <<- data.frame(age_days = split,                                    
-                                         mean = c(mean_with_tukey[,1], tail(mean_with_tukey[,1], n=1)), 
-                                         quantile1 = c(quantiles_with_tukey[,1],tail(quantiles_with_tukey[,1], n=1)),
-                                         quantile2 = c(quantiles_with_tukey[,2],tail(quantiles_with_tukey[,2], n=1)))
+  # Window-Data with reflim()
+  window_data_reflimR_rpart <<- data.frame(age_days = split,                                    
+                                         mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n=1)), 
+                                         quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n=1)),
+                                         quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n=1)))
 
   ##################################### Tables to download ########################################
 
-  window_data_split_tukey <<- data.frame("Age-range from"         = split[1:length(split)-1],
+  window_data_split_reflimR <<- data.frame("Age-range from"         = split[1:length(split)-1],
                                          "to [Days]"              = split[2:length(split)],
                                          "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
                                          "to [Years]"             = round_df(split[2:length(split)]/365, 3),
-                                         "2.5 % RI"                 = c(quantiles_with_tukey[,1]),
-                                         "97.5% RI"                 = c(quantiles_with_tukey[,2]),
-                                         "95% CI (2.5% RI) from"    = c(confidence_with_tukey_2_5[[1]]),
-                                         "to"                       = c(confidence_with_tukey_2_5[[2]]),
-                                         "95% CI (97.5% RI) from"   = c(confidence_with_tukey_97_5[[1]]),
-                                         "to"                       = c(confidence_with_tukey_97_5[[2]]),
-                                         "Number of data points"    = c(n_data_tukey[,1]), check.names = FALSE)
+                                         "2.5 % RI"                 = c(quantiles_with_reflimR[,1]),
+                                         "97.5% RI"                 = c(quantiles_with_reflimR[,2]),
+                                         "95% CI (2.5% RI) from"    = c(confidence_with_reflimR[,1]),
+                                         "to"                       = c(confidence_with_reflimR[,2]),
+                                         "95% CI (97.5% RI) from"   = c(confidence_with_reflimR[,3]),
+                                         "to"                       = c(confidence_with_reflimR[,4]),
+                                         "Number of data points"    = c(n_data_reflimR[,1]), check.names = FALSE)
 }
 
 
@@ -265,22 +207,17 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
 #' 73 35746153   W  16     5981  50.8  0.5 ALBS
 #' 
 #' @param split Age group from the LIS
-#' @param method RefLim
-#' @param plot_log Plot the function def.distribution() of each age groups
+#' @param method reflim
+#' @param plot_log Plot the function lognorm() of each age groups
 window_method_lis <- function(data_window_split, split, method, plot_log = FALSE){
   
-  ##################################### Mean  #####################################################
-  mean_with_tukey <-  data.frame() 
-  ##################################### Quantile ##################################################
-  quantiles_with_tukey <- data.frame() 
-  ##################################### Standard derivation #######################################
-  sd_with_tukey <- data.frame()
-  ##################################### Confidence Interval (95%) for 2.5% RI #####################
-  confidence_with_tukey_2_5 <- data.frame()
-  ##################################### Confidence Interval (95%) for 97.5% RI ####################
-  confidence_with_tukey_97_5 <- data.frame()
-
-  n_data_tukey <- data.frame()
+  ##################################### Mean ######################################################
+  mean_with_reflimR <-  data.frame() 
+  ##################################### Quantiles #################################################
+  quantiles_with_reflimR <- data.frame()
+  ##################################### Confidence Interval (95%) for the RI ######################
+  confidence_with_reflimR <- data.frame()
+  n_data_reflimR <- data.frame()
   
   for (i in seq(2,length(split))){
     
@@ -292,71 +229,47 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
     if(split[i-1] == 0){
       age_data_ready <- subset(age_data, age_data$age_days >= split[i-1])}  # Below the lowest condition
     
-    n <- nrow(age_data_ready)
     normal_log <- FALSE
     if(!plot_log){
-      try(normal_log <- def.distribution(age_data_ready$value, plot.it = FALSE)$lognorm)
+      try(normal_log <- lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
     } else{
       # Plot the distribution of each group to check for normally distribution
-      try(normal_log <- def.distribution(age_data_ready$value, plot.it = TRUE, main = paste("between", split[i-1], "and", split[i], "days"))$lognorm)
+      try(normal_log <- lognorm(age_data_ready$value, plot.it = TRUE, main = paste("between", split[i-1], "and", split[i], "days"))$lognorm)
     }
-    n_data_tukey <- rbind(n_data_tukey,n)
+    n_data_reflimR <- rbind(n_data_reflimR, nrow(age_data_ready))
   
-    ################################### RefLim ###################################################
+    ################################### reflimR ##################################################
     if(method == "reflim"){
 
-      ci_qq <- NA
+      try(modi_qq <- reflim(age_data_ready$value, lognormal = normal_log, plot.it = FALSE))
       
-      modi_qq <- reflim(age_data_ready$value, n.min = 100, log.mode = normal_log, plot.it = FALSE)
-      if(!is.na(modi_qq[3]) || !is.na(modi_qq[4])){
-        if(!(modi_qq[3] >= modi_qq[4]))
-          try(ci_qq <- ci.quant95(n = length(age_data_ready$value), lower.limit = modi_qq[3], upper.limit = modi_qq[4], lognorm = normal_log))
-      }
-      
-      # Mean
-      mean_tukey <- modi_qq[1]
-      mean_with_tukey <- rbind(mean_with_tukey,mean_tukey)
-      
-      # Quantile
-      quantiles_tukey <- c(modi_qq[[3]], modi_qq[[4]])
-      quantiles_with_tukey <- rbind(quantiles_with_tukey,quantiles_tukey)
-      
-      # 95% Confidence Interval
-      if(!is.na(ci_qq)[[1]]){
-        confidence_tukey_2_5 <- c(ci_qq[[1]], ci_qq[[2]])
-        confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5, confidence_tukey_2_5)
-        confidence_tukey_97_5 <- c(ci_qq[[3]], ci_qq[[4]])
-        confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5, confidence_tukey_97_5)
-      } else{
-        confidence_tukey_2_5 <- c(NA, NA)
-        confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5, confidence_tukey_2_5)
-        confidence_tukey_97_5 <- c(NA, NA)
-        confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5, confidence_tukey_97_5)
-      }
+      mean_with_reflimR <- rbind(mean_with_reflimR, modi_qq$stats)
+      quantiles_with_reflimR <- rbind(quantiles_with_reflimR, modi_qq[[3]])
+      confidence_with_reflimR <- rbind(confidence_with_reflimR, modi_qq$confidence.int)
     }
   }
   
   ##################################### Save the data #############################################
   
-  # Window-Data with RefLim
-  window_data_tukey_lis <<- data.frame(age_days = split,
-                                       mean = c(mean_with_tukey[,1], tail(mean_with_tukey[,1], n=1)), 
-                                       quantile1 = c(quantiles_with_tukey[,1],tail(quantiles_with_tukey[,1], n=1)),
-                                       quantile2 = c(quantiles_with_tukey[,2],tail(quantiles_with_tukey[,2], n=1)))
+  # Window-Data with reflim()
+  window_data_reflimR_lis <<- data.frame(age_days = split,
+                                       mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n=1)), 
+                                       quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n=1)),
+                                       quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n=1)))
   
   ##################################### Tables to download ########################################
   
-  window_data_lis_tukey <<- data.frame("Age-range from"         = split[1:length(split)-1],
+  window_data_lis_reflimR <<- data.frame("Age-range from"         = split[1:length(split)-1],
                                          "to [Days]"              = split[2:length(split)],
                                          "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
                                          "to [Years]"             = round_df(split[2:length(split)]/365, 3),
-                                         "2.5 % RI"                 = c(quantiles_with_tukey[,1]),
-                                         "97.5% RI"                 = c(quantiles_with_tukey[,2]),
-                                         "95% CI (2.5% RI) from"    = c(confidence_with_tukey_2_5[[1]]),
-                                         "to"                       = c(confidence_with_tukey_2_5[[2]]),
-                                         "95% CI (97.5% RI) from"   = c(confidence_with_tukey_97_5[[1]]),
-                                         "to"                       = c(confidence_with_tukey_97_5[[2]]),
-                                         "Number of data points"    = c(n_data_tukey[,1]), check.names = FALSE)
+                                         "2.5 % RI"                 = c(quantiles_with_reflimR[,1]),
+                                         "97.5% RI"                 = c(quantiles_with_reflimR[,2]),
+                                         "95% CI (2.5% RI) from"    = c(confidence_with_reflimR[,1]),
+                                         "to"                       = c(confidence_with_reflimR[,2]),
+                                         "95% CI (97.5% RI) from"   = c(confidence_with_reflimR[,3]),
+                                         "to"                       = c(confidence_with_reflimR[,4]),
+                                         "Number of data points"    = c(n_data_reflimR[,1]), check.names = FALSE)
 }
 
 
@@ -376,7 +289,7 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
 #' 
 #' @param width_ Range of the window
 #' @param by_ Step for the window
-#' @param outliers RefLim
+#' @param outliers reflim
 sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers){
 
   # Order the data with the Index
@@ -395,7 +308,7 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
                               FUN= mean, na.rm = TRUE, partial =TRUE,align = "left")
 
   ##################################### Data in the window ########################################
-  suppressWarnings(sliding_tukey_data <- rollapply(sliding_window_data$value, width = width_, by = by_, 
+  suppressWarnings(sliding_reflimR_data <- rollapply(sliding_window_data$value, width = width_, by = by_, 
                                   FUN = invisible, partial = TRUE, align = "left"))
 
   ##################################### 2.5% Percentile ###########################################
@@ -406,87 +319,53 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
   sliding_97_5 <- rollapply(sliding_window_data$value, width = width_, by = by_, FUN = quantile, 
                             probs = c(0.975), partial =TRUE, align = "left")
   
-  ##################################### Dataframes for the RefLim and CI ##########################
+  ##################################### Dataframes for the reflim and CI ##########################
   ##################################### Mean  #####################################################
-  sliding_mean_tukey <-  data.frame() 
+  mean_with_reflimR <-  data.frame() 
   ##################################### Quantile ##################################################
-  sliding_2_5_tukey <- data.frame() 
-  sliding_97_5_tukey <- data.frame()
-  ##################################### Standard derivation #######################################
-  sd_with_tukey <- data.frame()
-  ##################################### Confidence Interval (95%) for 2.5% RI #####################
-  confidence_with_tukey_2_5 <- data.frame()
-  ##################################### Confidence Interval (95%) for 97.5% RI ####################
-  confidence_with_tukey_97_5 <- data.frame()
-  
-  n_data_tukey <- data.frame()
+  quantiles_with_reflimR <- data.frame()
+  ##################################### Confidence Interval (95%) for the RI ######################
+  confidence_with_reflimR <- data.frame()
+  n_data_reflimR <- data.frame()
     
-  for (i in seq(1,nrow(sliding_tukey_data))){ 
+  for (i in seq(1,nrow(sliding_reflimR_data))){ 
     
-    n <- ncol(sliding_tukey_data)
     normal_log <- FALSE
-    try(normal_log <- def.distribution(sliding_tukey_data[i,], plot.it = FALSE)$lognorm)
-    n_data_tukey <- rbind(n_data_tukey,n)
+    try(normal_log <- lognorm(sliding_reflimR_data[i,], plot.it = FALSE)$lognorm)
+    n_data_reflimR <- rbind(n_data_reflimR, ncol(sliding_reflimR_data))
     
-    ci_qq <- NA
-    
-    modi_qq <- reflim(sliding_tukey_data[i,], n.min = 100, log.mode = normal_log)
-    if(!is.na(modi_qq[3]) || !is.na(modi_qq[4])){
-      if(!(modi_qq[3] >= modi_qq[4]))
-        try(ci_qq <- ci.quant95(n = length(sliding_tukey_data[i,]), lower.limit = modi_qq[3], upper.limit = modi_qq[4], lognorm = normal_log))
-    }
-    
-    # Mean
-    mean_tukey <- modi_qq[1]
-    sliding_mean_tukey <- rbind(sliding_mean_tukey,mean_tukey)
-    
-    # Quantile
-    quantiles_tukey <- modi_qq[[3]]
-    sliding_2_5_tukey <- rbind(sliding_2_5_tukey,quantiles_tukey)
-    quantiles_tukey <- modi_qq[[4]]
-    sliding_97_5_tukey <- rbind(sliding_97_5_tukey,quantiles_tukey)
-    
-    # 95% Confidence Interval
-    if(!is.na(ci_qq)[[1]]){
-      confidence_tukey_2_5 <- c(ci_qq[[1]], ci_qq[[2]])
-      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5, confidence_tukey_2_5)
-      confidence_tukey_97_5 <- c(ci_qq[[3]], ci_qq[[4]])
-      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5, confidence_tukey_97_5)
-    } else{
-      confidence_tukey_2_5 <- c(NA, NA)
-      confidence_with_tukey_2_5 <- rbind(confidence_with_tukey_2_5, confidence_tukey_2_5)
-      confidence_tukey_97_5 <- c(NA, NA)
-      confidence_with_tukey_97_5 <- rbind(confidence_with_tukey_97_5, confidence_tukey_97_5)
-    }
+    try(modi_qq <- reflim(sliding_reflimR_data[i,], lognormal = normal_log))
+    mean_with_reflimR <- rbind(mean_with_reflimR, modi_qq$stats)
+    quantiles_with_reflimR <- rbind(quantiles_with_reflimR, modi_qq[[3]])
+    confidence_with_reflimR <- rbind(confidence_with_reflimR, modi_qq$confidence.int)
   }
-
-  ##################################### Preprocessing #############################################
   
   sliding_age <- c(0, sliding_age, max(sliding_window_data$age_days))
-  sliding_n_data_tukey <- c(n_data_tukey[1,1], n_data_tukey[,1], n_data_tukey[nrow(n_data_tukey),1])
+  sliding_n_data_reflimR <- c(n_data_reflimR[1,1], n_data_reflimR[,1], n_data_reflimR[nrow(n_data_reflimR),1])
   sliding_age_to <- c(0, sliding_age_to, max(sliding_window_data$age_days))
   
-  sliding_mean_tukey <- c(sliding_mean_tukey[1,1], sliding_mean_tukey[,1], sliding_mean_tukey[length(sliding_mean_tukey[,1]), 1])
-  sliding_2_5_tukey <- c(sliding_2_5_tukey[1, 1], sliding_2_5_tukey[,1], sliding_2_5_tukey[length(sliding_2_5_tukey[,1]), 1])
-  sliding_97_5_tukey <- c(sliding_97_5_tukey[1, 1], sliding_97_5_tukey[,1], sliding_97_5_tukey[length(sliding_97_5_tukey[,1]), 1])
+  n_data_reflimR <- c(n_data_reflimR[1,1], n_data_reflimR[,1], n_data_reflimR[length(n_data_reflimR[,1]), 1])
+  mean_with_reflimR <- c(mean_with_reflimR[1,1], mean_with_reflimR[,1], mean_with_reflimR[length(mean_with_reflimR[,1]), 1])
+  quantiles_with_reflimR_2.5 <- c(quantiles_with_reflimR[1,1], quantiles_with_reflimR[,1], quantiles_with_reflimR[length(quantiles_with_reflimR[,1]), 1])
+  quantiles_with_reflimR_97.5 <- c(quantiles_with_reflimR[1,2], quantiles_with_reflimR[,2], quantiles_with_reflimR[length(quantiles_with_reflimR[,2]), 1])
+  confidence_with_reflimR_2.5_l <- c(confidence_with_reflimR[1,1], confidence_with_reflimR[,1], confidence_with_reflimR[length(confidence_with_reflimR[,1]), 1])
+  confidence_with_reflimR_97.5_l <- c(confidence_with_reflimR[1,2], confidence_with_reflimR[,2], confidence_with_reflimR[length(confidence_with_reflimR[,2]), 1])
+  confidence_with_reflimR_2.5_u <- c(confidence_with_reflimR[1,3], confidence_with_reflimR[,3], confidence_with_reflimR[length(confidence_with_reflimR[,3]), 1])
+  confidence_with_reflimR_97.5_u <- c(confidence_with_reflimR[1,4], confidence_with_reflimR[,4], confidence_with_reflimR[length(confidence_with_reflimR[,4]), 1])
   
-  sliding_with_tukey_2_5_from <- c(confidence_with_tukey_2_5[1,1], confidence_with_tukey_2_5[,1], confidence_with_tukey_2_5[1, length(confidence_with_tukey_2_5)])
-  sliding_with_tukey_2_5_to <- c(confidence_with_tukey_2_5[1,2], confidence_with_tukey_2_5[,2], confidence_with_tukey_2_5[2, length(confidence_with_tukey_2_5)])
-  sliding_with_tukey_97_5_from <- c(confidence_with_tukey_97_5[1,1], confidence_with_tukey_97_5[,1], confidence_with_tukey_97_5[1, length(confidence_with_tukey_97_5)])
-  sliding_with_tukey_97_5_to <- c(confidence_with_tukey_97_5[1,2], confidence_with_tukey_97_5[,2], confidence_with_tukey_97_5[2, length(confidence_with_tukey_97_5)])
+  slide_reflimR <<- data.frame("Age-range from"       = sliding_age,
+                             "to [Days]"              = sliding_age_to,
+                             "Age-Range from"         = round_df(sliding_age/365, 3),
+                             "to [Years]"             = round_df(sliding_age_to/365, 3),
+                             "2.5 % RI"               = c(quantiles_with_reflimR_2.5),
+                             "97.5% RI"               = c(quantiles_with_reflimR_97.5),
+                             "95% CI (2.5% RI) from"  = c(confidence_with_reflimR_2.5_l),
+                             "to"                     = c(confidence_with_reflimR_97.5_l),
+                             "95% CI (97.5% RI) from" = c(confidence_with_reflimR_2.5_u),
+                             "to"                     = c(confidence_with_reflimR_97.5_u),
+                             "Number of data points"  = c(n_data_reflimR), check.names = FALSE)
   
-  slide_tukey <<- data.frame("Age-range from" = sliding_age,
-                             "to [Days]" = sliding_age_to,
-                             "Age-Range from" = round_df(sliding_age/365, 3),
-                             "to [Years]" = round_df(sliding_age_to/365, 3),
-                             "2.5 % RI" = sliding_2_5_tukey,
-                             "97.5% RI" = sliding_97_5_tukey, 
-                             "95% CI (2.5% RI) from"  = sliding_with_tukey_2_5_from,
-                             "to"                     = sliding_with_tukey_2_5_to,
-                             "95% CI (97.5% RI) from" = sliding_with_tukey_97_5_from,
-                             "to"                     = sliding_with_tukey_97_5_to, 
-                             "Number of data points"  = sliding_n_data_tukey, check.names = FALSE)
-  return(slide_tukey)
+  return(slide_reflimR)
 }
 
 ####################################### Metrics ###################################################
@@ -495,44 +374,44 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
 #' mae_window <- function(){
 #'   
 #'   ##################################### Regular Window - Tukey ####################################
-#'   window_data_tukey_age <- window_data_tukey$age_days
-#'   mae_data_window_data_tukey <- data.frame()
+#'   window_data_reflimR_age <- window_data_reflimR$age_days
+#'   mae_data_window_data_reflimR <- data.frame()
 #'   
-#'   for(i in seq(1:(length(window_data_tukey_age)-1))){
-#'     mae_data_save <- data.frame(age_days = seq(window_data_tukey$age_days[i],window_data_tukey$age_days[i+1]), value = window_data_tukey$mean[i])
-#'     mae_data_window_data_tukey <- rbind(mae_data_window_data_tukey, mae_data_save)
+#'   for(i in seq(1:(length(window_data_reflimR_age)-1))){
+#'     mae_data_save <- data.frame(age_days = seq(window_data_reflimR$age_days[i],window_data_reflimR$age_days[i+1]), value = window_data_reflimR$mean[i])
+#'     mae_data_window_data_reflimR <- rbind(mae_data_window_data_reflimR, mae_data_save)
 #'   }
 #'   
-#'   mae_data_window_data_tukey <- mae_data_window_data_tukey[which(mae_data_window_data_tukey$age_days %in% data_analyte_short$age_days),]
+#'   mae_data_window_data_reflimR <- mae_data_window_data_reflimR[which(mae_data_window_data_reflimR$age_days %in% data_analyte_short$age_days),]
 #'   
 #'   value_mae <- data.frame()
 #'   for(i in data_analyte_short$age_days){
-#'     value_mae <- rbind(value_mae, mae_data_window_data_tukey[mae_data_window_data_tukey$age_days == i,][[2]])
+#'     value_mae <- rbind(value_mae, mae_data_window_data_reflimR[mae_data_window_data_reflimR$age_days == i,][[2]])
 #'   }
 #' 
-#'   mae_window_data_tukey <- mae(data_analyte_short$value, value_mae[[1]])
+#'   mae_window_data_reflimR <- mae(data_analyte_short$value, value_mae[[1]])
 #'   
 #'   ##################################### Window with Decision Tree - Tukey #########################
-#'   window_data_tukey_rpart_age <- round(window_data_tukey_rpart$age_days)
-#'   mae_data_window_data_tukey_rpart <- data.frame()
+#'   window_data_reflimR_rpart_age <- round(window_data_reflimR_rpart$age_days)
+#'   mae_data_window_data_reflimR_rpart <- data.frame()
 #'   
-#'   for(i in seq(1:(length(window_data_tukey_rpart_age)-1))){
-#'     mae_data_save <- data.frame(age_days = seq(round(window_data_tukey_rpart$age_days[i]),round(window_data_tukey_rpart$age_days[i+1])), 
-#'                                 value = window_data_tukey_rpart$mean[i])
-#'     mae_data_window_data_tukey_rpart <- rbind(mae_data_window_data_tukey_rpart, mae_data_save)
+#'   for(i in seq(1:(length(window_data_reflimR_rpart_age)-1))){
+#'     mae_data_save <- data.frame(age_days = seq(round(window_data_reflimR_rpart$age_days[i]),round(window_data_reflimR_rpart$age_days[i+1])), 
+#'                                 value = window_data_reflimR_rpart$mean[i])
+#'     mae_data_window_data_reflimR_rpart <- rbind(mae_data_window_data_reflimR_rpart, mae_data_save)
 #'   }
 #'   
-#'   mae_data_window_data_tukey_rpart <- mae_data_window_data_tukey_rpart[which(mae_data_window_data_tukey_rpart$age_days %in% 
+#'   mae_data_window_data_reflimR_rpart <- mae_data_window_data_reflimR_rpart[which(mae_data_window_data_reflimR_rpart$age_days %in% 
 #'                                                                                data_analyte_short$age_days),]
 #'   
 #'   value_mae <- data.frame()
 #'   for(i in data_analyte_short$age_days){
-#'     value_mae <- rbind(value_mae, mae_data_window_data_tukey_rpart[mae_data_window_data_tukey_rpart$age_days == i,][[2]])
+#'     value_mae <- rbind(value_mae, mae_data_window_data_reflimR_rpart[mae_data_window_data_reflimR_rpart$age_days == i,][[2]])
 #'   }
 #' 
-#'   mae_window_data_tukey_rpart <- mae(data_analyte_short$value, value_mae[[1]])
+#'   mae_window_data_reflimR_rpart <- mae(data_analyte_short$value, value_mae[[1]])
 #'   
-#'   return(c(mae_window_data, mae_window_data_tukey, mae_window_data_rpart, mae_window_data_tukey_rpart))
+#'   return(c(mae_window_data, mae_window_data_reflimR, mae_window_data_rpart, mae_window_data_reflimR_rpart))
 #' }
 #' 
 #' 
@@ -540,42 +419,42 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
 #' mse_window <- function(){
 #'   
 #'   ##################################### Regular Window - Tukey ####################################
-#'   window_data_tukey_age <- window_data_tukey$age_days
-#'   mse_data_window_data_tukey <- data.frame()
+#'   window_data_reflimR_age <- window_data_reflimR$age_days
+#'   mse_data_window_data_reflimR <- data.frame()
 #'   
-#'   for(i in seq(1:(length(window_data_tukey_age)-1))){
-#'     mse_data_save <- data.frame(age_days = seq(window_data_tukey$age_days[i],window_data_tukey$age_days[i+1]), value = window_data_tukey$mean[i])
-#'     mse_data_window_data_tukey <- rbind(mse_data_window_data_tukey, mse_data_save)
+#'   for(i in seq(1:(length(window_data_reflimR_age)-1))){
+#'     mse_data_save <- data.frame(age_days = seq(window_data_reflimR$age_days[i],window_data_reflimR$age_days[i+1]), value = window_data_reflimR$mean[i])
+#'     mse_data_window_data_reflimR <- rbind(mse_data_window_data_reflimR, mse_data_save)
 #'   }
 #'   
-#'   mse_data_window_data_tukey <- mse_data_window_data_tukey[which(mse_data_window_data_tukey$age_days  %in% data_analyte_short$age_days),]
+#'   mse_data_window_data_reflimR <- mse_data_window_data_reflimR[which(mse_data_window_data_reflimR$age_days  %in% data_analyte_short$age_days),]
 #'   
 #'   value_mse <- data.frame()
 #'   for(i in data_analyte_short$age_days){
-#'     value_mse <- rbind(value_mse, mse_data_window_data_tukey[mse_data_window_data_tukey$age_days == i,][[2]])
+#'     value_mse <- rbind(value_mse, mse_data_window_data_reflimR[mse_data_window_data_reflimR$age_days == i,][[2]])
 #'   }
 #'  
-#'   mse_window_data_tukey <- mse(data_analyte_short$value, value_mse[[1]])
+#'   mse_window_data_reflimR <- mse(data_analyte_short$value, value_mse[[1]])
 #'   
 #'   ##################################### Window with Decision Tree - Tukey #########################
-#'   window_data_tukey_rpart_age <- round(window_data_tukey_rpart$age_days)
-#'   mse_data_window_data_tukey_rpart <- data.frame()
+#'   window_data_reflimR_rpart_age <- round(window_data_reflimR_rpart$age_days)
+#'   mse_data_window_data_reflimR_rpart <- data.frame()
 #'   
-#'   for(i in seq(1:(length(window_data_tukey_rpart_age)-1))){
-#'     mse_data_save <- data.frame(age_days = seq(round(window_data_tukey_rpart$age_days[i]),round(window_data_tukey_rpart$age_days[i+1])), value = window_data_tukey_rpart$mean[i])
-#'     mse_data_window_data_tukey_rpart <- rbind(mse_data_window_data_tukey_rpart, mse_data_save)
+#'   for(i in seq(1:(length(window_data_reflimR_rpart_age)-1))){
+#'     mse_data_save <- data.frame(age_days = seq(round(window_data_reflimR_rpart$age_days[i]),round(window_data_reflimR_rpart$age_days[i+1])), value = window_data_reflimR_rpart$mean[i])
+#'     mse_data_window_data_reflimR_rpart <- rbind(mse_data_window_data_reflimR_rpart, mse_data_save)
 #'   }
 #'   
-#'   mse_data_window_data_tukey_rpart <- mse_data_window_data_tukey_rpart[which(mse_data_window_data_tukey_rpart$age_days  %in% data_analyte_short$age_days),]
+#'   mse_data_window_data_reflimR_rpart <- mse_data_window_data_reflimR_rpart[which(mse_data_window_data_reflimR_rpart$age_days  %in% data_analyte_short$age_days),]
 #'   
 #'   value_mse <- data.frame()
 #'   for(i in data_analyte_short$age_days){
-#'     value_mse <- rbind(value_mse, mse_data_window_data_tukey_rpart[mse_data_window_data_tukey_rpart$age_days == i,][[2]])
+#'     value_mse <- rbind(value_mse, mse_data_window_data_reflimR_rpart[mse_data_window_data_reflimR_rpart$age_days == i,][[2]])
 #'   }
 #' 
-#'   mse_window_data_tukey_rpart <- mse(data_analyte_short$value, value_mse[[1]])
+#'   mse_window_data_reflimR_rpart <- mse(data_analyte_short$value, value_mse[[1]])
 #'   
-#'   return(c(mse_window_data, mse_window_data_tukey, mse_window_data_rpart,mse_window_data_tukey_rpart))
+#'   return(c(mse_window_data, mse_window_data_reflimR, mse_window_data_rpart,mse_window_data_reflimR_rpart))
 #' }
 #' 
 #' 
@@ -583,44 +462,44 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
 #' rmse_window <- function(){
 #'   
 #'   ##################################### Regular Window - Tukey ####################################
-#'   window_data_tukey_age <- window_data_tukey$age_days
-#'   rmse_data_window_data_tukey <- data.frame()
+#'   window_data_reflimR_age <- window_data_reflimR$age_days
+#'   rmse_data_window_data_reflimR <- data.frame()
 #'   
-#'   for(i in seq(1:(length(window_data_tukey_age)-1))){
-#'     rmse_data_save <- data.frame(age_days = seq(window_data_tukey$age_days[i],window_data_tukey$age_days[i+1]), value = window_data_tukey$mean[i])
-#'     rmse_data_window_data_tukey <- rbind(rmse_data_window_data_tukey, rmse_data_save)
+#'   for(i in seq(1:(length(window_data_reflimR_age)-1))){
+#'     rmse_data_save <- data.frame(age_days = seq(window_data_reflimR$age_days[i],window_data_reflimR$age_days[i+1]), value = window_data_reflimR$mean[i])
+#'     rmse_data_window_data_reflimR <- rbind(rmse_data_window_data_reflimR, rmse_data_save)
 #'   }
 #'   
-#'   rmse_data_window_data_tukey <- rmse_data_window_data_tukey[which(rmse_data_window_data_tukey$age_days  %in% data_analyte_short$age_days),]
+#'   rmse_data_window_data_reflimR <- rmse_data_window_data_reflimR[which(rmse_data_window_data_reflimR$age_days  %in% data_analyte_short$age_days),]
 #'   
 #'   value_rmse <- data.frame()
 #'   for(i in data_analyte_short$age_days){ 
-#'     value_rmse <- rbind(value_rmse, rmse_data_window_data_tukey[rmse_data_window_data_tukey$age_days == i,][[2]])
+#'     value_rmse <- rbind(value_rmse, rmse_data_window_data_reflimR[rmse_data_window_data_reflimR$age_days == i,][[2]])
 #'   }
 #'   
-#'   rmse_window_data_tukey <- rmse(data_analyte_short$value, value_rmse[[1]])
+#'   rmse_window_data_reflimR <- rmse(data_analyte_short$value, value_rmse[[1]])
 #'   
 #'   ##################################### Window with Decision Tree - Tukey #########################
-#'   window_data_tukey_rpart_age <- round(window_data_tukey_rpart$age_days)
-#'   rmse_data_window_data_tukey_rpart <- data.frame()
+#'   window_data_reflimR_rpart_age <- round(window_data_reflimR_rpart$age_days)
+#'   rmse_data_window_data_reflimR_rpart <- data.frame()
 #'   
-#'   for(i in seq(1:(length(window_data_tukey_rpart_age)-1))){
-#'     rmse_data_save <- data.frame(age_days = seq(round(window_data_tukey_rpart$age_days[i]), round(window_data_tukey_rpart$age_days[i+1])), 
-#'                                  value = window_data_tukey_rpart$mean[i])
-#'     rmse_data_window_data_tukey_rpart <- rbind(rmse_data_window_data_tukey_rpart, rmse_data_save)
+#'   for(i in seq(1:(length(window_data_reflimR_rpart_age)-1))){
+#'     rmse_data_save <- data.frame(age_days = seq(round(window_data_reflimR_rpart$age_days[i]), round(window_data_reflimR_rpart$age_days[i+1])), 
+#'                                  value = window_data_reflimR_rpart$mean[i])
+#'     rmse_data_window_data_reflimR_rpart <- rbind(rmse_data_window_data_reflimR_rpart, rmse_data_save)
 #'   }
 #'   
-#'   rmse_data_window_data_tukey_rpart <- rmse_data_window_data_tukey_rpart[which(
-#'     rmse_data_window_data_tukey_rpart$age_days %in% data_analyte_short$age_days),]
+#'   rmse_data_window_data_reflimR_rpart <- rmse_data_window_data_reflimR_rpart[which(
+#'     rmse_data_window_data_reflimR_rpart$age_days %in% data_analyte_short$age_days),]
 #'   
 #'   value_rmse <- data.frame()
 #'   for(i in data_analyte_short$age_days){
-#'     value_rmse <- rbind(value_rmse, rmse_data_window_data_tukey_rpart[rmse_data_window_data_tukey_rpart$age_days == i,][[2]])
+#'     value_rmse <- rbind(value_rmse, rmse_data_window_data_reflimR_rpart[rmse_data_window_data_reflimR_rpart$age_days == i,][[2]])
 #'   }
 #'   
-#'   rmse_window_data_tukey_rpart <- rmse(data_analyte_short$value, value_rmse[[1]])
+#'   rmse_window_data_reflimR_rpart <- rmse(data_analyte_short$value, value_rmse[[1]])
 #'   
-#'   return(c(rmse_window_data, rmse_window_data_tukey, rmse_window_data_rpart, rmse_window_data_tukey_rpart))
+#'   return(c(rmse_window_data, rmse_window_data_reflimR, rmse_window_data_rpart, rmse_window_data_reflimR_rpart))
 #' }
 #' 
 #' 
@@ -628,42 +507,42 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
 #' r_window <- function(){
 #'   
 #'   ##################################### Regular Window - Tukey ####################################
-#'   window_data_tukey_age <- window_data_tukey$age_days
-#'   rsquare_data_window_data_tukey <- data.frame()
+#'   window_data_reflimR_age <- window_data_reflimR$age_days
+#'   rsquare_data_window_data_reflimR <- data.frame()
 #'   
-#'   for(i in seq(1:(length(window_data_tukey_age)-1))){
-#'     rsquare_data_save <- data.frame(age_days = seq(window_data_tukey$age_days[i], window_data_tukey$age_days[i+1]), value = window_data_tukey$mean[i])
-#'     rsquare_data_window_data_tukey <- rbind(rsquare_data_window_data_tukey, rsquare_data_save)
+#'   for(i in seq(1:(length(window_data_reflimR_age)-1))){
+#'     rsquare_data_save <- data.frame(age_days = seq(window_data_reflimR$age_days[i], window_data_reflimR$age_days[i+1]), value = window_data_reflimR$mean[i])
+#'     rsquare_data_window_data_reflimR <- rbind(rsquare_data_window_data_reflimR, rsquare_data_save)
 #'   }
 #'   
-#'   rsquare_data_window_data_tukey <- rsquare_data_window_data_tukey[which(rsquare_data_window_data_tukey$age_days %in% data_analyte_short$age_days),]
+#'   rsquare_data_window_data_reflimR <- rsquare_data_window_data_reflimR[which(rsquare_data_window_data_reflimR$age_days %in% data_analyte_short$age_days),]
 #'   
 #'   value_rsquare <- data.frame()
 #'   for(i in data_analyte_short$age_days){
-#'     value_rsquare <- rbind(value_rsquare, rsquare_data_window_data_tukey[rsquare_data_window_data_tukey$age_days == i,][[2]])
+#'     value_rsquare <- rbind(value_rsquare, rsquare_data_window_data_reflimR[rsquare_data_window_data_reflimR$age_days == i,][[2]])
 #'   }
 #'   
-#'   rsquare_window_data_tukey <- rsq(data_analyte_short$value, value_rsquare[[1]])
+#'   rsquare_window_data_reflimR <- rsq(data_analyte_short$value, value_rsquare[[1]])
 #'   
 #'   
 #'   ##################################### Window with Decision Tree - Tukey #########################
-#'   window_data_tukey_rpart_age <- round(window_data_tukey_rpart$age_days)
-#'   rsquare_data_window_data_tukey_rpart <- data.frame()
+#'   window_data_reflimR_rpart_age <- round(window_data_reflimR_rpart$age_days)
+#'   rsquare_data_window_data_reflimR_rpart <- data.frame()
 #'   
-#'   for(i in seq(1:(length(window_data_tukey_rpart_age)-1))){
-#'     rsquare_data_save <- data.frame(age_days = seq(round(window_data_tukey_rpart$age_days[i]),round(window_data_tukey_rpart$age_days[i+1])), value = window_data_tukey_rpart$mean[i])
-#'     rsquare_data_window_data_tukey_rpart <- rbind(rsquare_data_window_data_tukey_rpart, rsquare_data_save)
+#'   for(i in seq(1:(length(window_data_reflimR_rpart_age)-1))){
+#'     rsquare_data_save <- data.frame(age_days = seq(round(window_data_reflimR_rpart$age_days[i]),round(window_data_reflimR_rpart$age_days[i+1])), value = window_data_reflimR_rpart$mean[i])
+#'     rsquare_data_window_data_reflimR_rpart <- rbind(rsquare_data_window_data_reflimR_rpart, rsquare_data_save)
 #'   }
 #'   
-#'   rsquare_data_window_data_tukey_rpart <- rsquare_data_window_data_tukey_rpart[which(
-#'     rsquare_data_window_data_tukey_rpart$age_days %in% data_analyte_short$age_days),]
+#'   rsquare_data_window_data_reflimR_rpart <- rsquare_data_window_data_reflimR_rpart[which(
+#'     rsquare_data_window_data_reflimR_rpart$age_days %in% data_analyte_short$age_days),]
 #'   
 #'   value_rsquare <- data.frame()
 #'   for(i in data_analyte_short$age_days){
-#'     value_rsquare <- rbind(value_rsquare, rsquare_data_window_data_tukey_rpart[rsquare_data_window_data_tukey_rpart$age_days == i,][[2]])
+#'     value_rsquare <- rbind(value_rsquare, rsquare_data_window_data_reflimR_rpart[rsquare_data_window_data_reflimR_rpart$age_days == i,][[2]])
 #'   }
 #'   
-#'   rsquare_window_data_tukey_rpart <- rsq(data_analyte_short$value, value_rsquare[[1]])
+#'   rsquare_window_data_reflimR_rpart <- rsq(data_analyte_short$value, value_rsquare[[1]])
 #' 
-#'   return(c(rsquare_window_data, rsquare_window_data_tukey, rsquare_window_data_rpart,rsquare_window_data_tukey_rpart))
+#'   return(c(rsquare_window_data, rsquare_window_data_reflimR, rsquare_window_data_rpart,rsquare_window_data_reflimR_rpart))
 #' }

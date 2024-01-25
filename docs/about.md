@@ -49,7 +49,7 @@ Hoffmann, G., Klawonn, F., Lichtinghagen, R. & Orth, M. (2017). The zlog value a
 
 Klawonn, F., Hoffmann, G., & Orth, M. (2020). Quantitative laboratory results: normal or lognormal distribution?, Journal of Laboratory Medicine, 44(3), 143-150. [10.1515/labmed-2020-0005](https://doi.org/10.1515/labmed-2020-0005).
 
-### RefLim
+### reflimR
 
 Georg Hoffmann & Frank Klawonn (2022). RefLim: Quick & Easy Verification of Reference Limits in Laboratory Medicine. https://reflim.github.io/Epub/
 
@@ -69,6 +69,7 @@ Peng, Xiaoxia & Lv, Yaqi & Feng, Guoshuang & Peng, Yaguang & Li, Qiliang & Song,
 * [gamlss](https://cran.r-project.org/web/packages/gamlss/index.html) ≥ 5.4-1
 * [gamlss.add](https://cran.r-project.org/web/packages/gamlss.add/index.html): ≥ 5.1-6 
 * [plotly](https://cran.r-project.org/web/packages/plotly/index.html): ≥ 4.10
+* [reflimR](https://cran.r-project.org/web/packages/reflimR/index.html): ≥ 1.0.6
 * [rpart](https://cran.r-project.org/web/packages/rpart/index.html): ≥ 4.1-15 
 * [rpart.plot](https://cran.r-project.org/web/packages/rpart.plot/index.html): ≥ 3.1.0
 * [shiny](https://cran.r-project.org/web/packages/shiny/index.html): ≥ 1.7.1

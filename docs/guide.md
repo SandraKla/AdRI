@@ -23,7 +23,7 @@ The data set can be presorted:
 <img src="shiny_barplot.png" align="center"/>
 
 * with the use of the **First unique value**. The default is TRUE (double or multiple values of the same patient will not be considered)
-* with the **Outlierdetection** with the iBoxplot95 coupled to a Decision Tree
+* with the **Outlierdetection** with the iboxplot() coupled to a Decision Tree
 
 <img src="shiny_tukey.png" align="center"/>
 

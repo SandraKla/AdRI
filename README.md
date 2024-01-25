@@ -5,7 +5,7 @@
 ![](https://img.shields.io/github/languages/count/SandraKla/AdRI.svg)
 ![](https://img.shields.io/github/languages/top/SandraKla/AdRI.svg)
 
-<img src="www/Logo.svg" width="225px" height="150px" align="right"/>
+<img src="www/Logo.png" width="300px" height="300px" align="right"/>
 
 **Shiny App for calculating Age-dependent Reference Intervals!**
 

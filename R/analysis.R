@@ -106,3 +106,83 @@ select_data_days <- function(data_, age_begin = 0, age_end, sex = "t"){
   if(sex == "f"){data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, code, name))}
   
   return(data_analyte)}
+
+####################################### Statistics ################################################
+
+#' Calculate R^2 
+#' 
+#' @param y Datapoints 
+#' @param y_predict Predicted values
+rsq <- function(y,y_predict){
+  
+  ss_res <- sum((y-y_predict)^2)
+  ss_tot <- sum((y-mean(y))^2)
+  r_sq <- 1 - (ss_res/ss_tot)
+  return(r_sq)
+}
+
+#' Calculate Mean absolute error 
+#' 
+#' @param y Datapoints 
+#' @param y_predict Predicted values
+mae <- function(y, y_predict){
+  1/length(y)* sum(abs(y - y_predict))}
+
+
+#' Calculate Mean squared error 
+#' 
+#' @param y Datapoints 
+#' @param y_predict Predicted values
+mse <- function(y, y_predict){
+  1/length(y) * sum((y - y_predict)^2)}
+
+
+#' Calculate Root mean squared error 
+#' 
+#' @param y Datapoints 
+#' @param y_predict Predicted values
+rmse <- function(y, y_predict){
+  sqrt(1/length(y) * sum((y - y_predict)^2))}
+
+
+#' Function for data preparation
+#' 
+#' @param x Expects a vector
+#' @param no.zero
+numeric.data <- function(x, no.zero = FALSE){
+  xx <- as.numeric(as.character(x))
+  xx <- xx[!is.na(xx)]
+  ifelse(no.zero, xx <- xx[xx > 0], xx <- xx[xx >= 0])
+  return(xx)
+}
+
+#' Round numeric values from a dataframe
+#' 
+#' @param x Expects a dataframe
+#' @param digits Digits to round
+round_df <- function(x, digits) {
+  numeric_columns <- sapply(x, mode) == 'numeric'
+  x[numeric_columns] <-  round(x[numeric_columns], digits)
+  return(x)
+}
+
+#' zlog-Standardization of a single quantitative laboratory result x
+#' 
+#' @param x Expects a dataframe
+#' @param lower.limt Lower Reference Limit
+#' @param upper.limit Upper Reference Limit
+zlog <- function(x, lower.limit, upper.limit){
+  if (x <= 0 | lower.limit <= 0 | upper.limit <= 0){
+    stop("(zlog) All parameters must be greater than 0")
+  }
+  if (upper.limit <= lower.limit){
+    stop("(zlog) upper.limit must be greater than lower.limit")
+  }
+  
+  logl <- log(lower.limit)
+  logu <- log(upper.limit)
+  mu.log <- (logl + logu) / 2
+  sigma.log <- (logu - logl) / 3.919928
+  
+  return((log(x) - mu.log) / sigma.log)
+}
