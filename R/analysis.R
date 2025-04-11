@@ -13,11 +13,11 @@
 select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){  
 
   # Fill ID (patient) and STATION (station) when not given in the dataset
-  if(is.null(data_$ID) || is.null(data_$STATION)) {
-    if(is.null(data_$ID)){
+  if (is.null(data_$ID) || is.null(data_$STATION)) {
+    if (is.null(data_$ID)) {
       data_$ID <- seq(1:nrow(data_))
     }
-    if(is.null(data_$STATION)){
+    if (is.null(data_$STATION)) {
       data_$STATION <- "NA"
     }
   }
@@ -36,22 +36,22 @@ select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){
   # Subset the data with the age_end
   data_analyte <- subset(data_analyte, age <= age_end, select = c(patient, sex, age, age_days, value, code, name))
 
-  if(!(age_begin == 0)){
+  if (!(age_begin == 0)) {
     data_analyte <- subset(data_analyte, age >= age_begin, select = c(patient, sex, age, age_days, value, code, name))}
   
   # Deleted rows because of the subset 
-  if(!(rows_table_ == nrow(data_analyte))){
+  if (!(rows_table_ == nrow(data_analyte))) {
     cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of your subset for the age. ***\n"))}
 
   # Delete NAs
   rows_table_ <- nrow(data_analyte)
   data_analyte <- data_analyte[complete.cases(data_analyte), ]
-  if(!(rows_table_ == nrow(data_analyte))){
+  if (!(rows_table_ == nrow(data_analyte))) {
     cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were NA and are deleted. ***\n"))}
 
   # Separate data on the basis of the sex
-  if(sex == "m"){data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}
-  if(sex == "f"){data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, code, name))}
+  if (sex == "m") {data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}
+  if (sex == "f") {data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, code, name))}
 
   return(data_analyte)}
 
@@ -65,11 +65,11 @@ select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){
 select_data_days <- function(data_, age_begin = 0, age_end, sex = "t"){  
   
   # Fill ID (patient) and STATION (station) when not given in the dataset
-  if(is.null(data_$ID) || is.null(data_$STATION)) {
-    if(is.null(data_$ID)){
+  if (is.null(data_$ID) || is.null(data_$STATION)) {
+    if (is.null(data_$ID)){
       data_$ID <- seq(1:nrow(data_))
     }
-    if(is.null(data_$STATION)){
+    if (is.null(data_$STATION)){
       data_$STATION <- "NA"
     }
   }
@@ -88,22 +88,22 @@ select_data_days <- function(data_, age_begin = 0, age_end, sex = "t"){
   # Subset the data with the age_end
   data_analyte <- subset(data_analyte, age_days <= age_end, select = c(patient, sex, age, age_days, value, code, name)) 
   
-  if(!(age_begin == 0)){
+  if (!(age_begin == 0)) {
     data_analyte <- subset(data_analyte, age_days >= age_begin, select = c(patient, sex, age, age_days, value, code, name))}
   
   # Deleted rows because of the subset 
-  if(!(rows_table_ == nrow(data_analyte))){
+  if (!(rows_table_ == nrow(data_analyte))) {
     cat(paste("*** Information!", rows_table_ - nrow(data_analyte) ,"values were deleted because of your subset for the age. ***\n"))}
   
   # Delete NAs
   rows_table_ <- nrow(data_analyte)
   data_analyte <- data_analyte[complete.cases(data_analyte), ]
-  if(!(rows_table_ == nrow(data_analyte))){
+  if (!(rows_table_ == nrow(data_analyte))) {
     cat(paste("*** Information!", rows_table_ - nrow(data_analyte) ,"values were NA and are deleted. ***\n"))}
   
   # Separate data on the basis of the sex
-  if(sex == "m"){data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}
-  if(sex == "f"){data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, code, name))}
+  if (sex == "m") {data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}
+  if (sex == "f") {data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, code, name))}
   
   return(data_analyte)}
 
@@ -115,8 +115,8 @@ select_data_days <- function(data_, age_begin = 0, age_end, sex = "t"){
 #' @param y_predict Predicted values
 rsq <- function(y,y_predict){
   
-  ss_res <- sum((y-y_predict)^2)
-  ss_tot <- sum((y-mean(y))^2)
+  ss_res <- sum((y - y_predict)^2)
+  ss_tot <- sum((y - mean(y))^2)
   r_sq <- 1 - (ss_res/ss_tot)
   return(r_sq)
 }
@@ -126,7 +126,7 @@ rsq <- function(y,y_predict){
 #' @param y Datapoints 
 #' @param y_predict Predicted values
 mae <- function(y, y_predict){
-  1/length(y)* sum(abs(y - y_predict))}
+  1/length(y) * sum(abs(y - y_predict))}
 
 
 #' Calculate Mean squared error 
@@ -138,6 +138,7 @@ mse <- function(y, y_predict){
 
 
 #' Calculate Root mean squared error 
+
 #' 
 #' @param y Datapoints 
 #' @param y_predict Predicted values
@@ -172,10 +173,10 @@ round_df <- function(x, digits) {
 #' @param lower.limt Lower Reference Limit
 #' @param upper.limit Upper Reference Limit
 zlog <- function(x, lower.limit, upper.limit){
-  if (x <= 0 | lower.limit <= 0 | upper.limit <= 0){
+  if (x <= 0 | lower.limit <= 0 | upper.limit <= 0) {
     stop("(zlog) All parameters must be greater than 0")
   }
-  if (upper.limit <= lower.limit){
+  if (upper.limit <= lower.limit) {
     stop("(zlog) upper.limit must be greater than lower.limit")
   }
   

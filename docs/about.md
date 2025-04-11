@@ -1,9 +1,9 @@
-[Home](./index.md) --- [Installation](./install.md) --- [Data](./data.md) --- [Methods](./methods.md) --- [Guide](./guide.md) --- [About](./about.md)
+[Home](./index.md) --- [Installation](./install.md) --- [Dataset](./data.md) --- [Methods](./methods.md) --- [Guide](./guide.md) --- [About](./about.md)
 
 ---
-1) [Contact](#contact)
-2) [References](#references)
-3) [Version](#version)
+
+[Contact](#contact) --- [References](#references) --- [Version](#version)
+
 ---
 
 ## Contact <a name = "contact"></a>
@@ -13,13 +13,16 @@ You are welcome to:
 - Make a pull request on: https://github.com/SandraKla/AdRI/pulls
 - Write an Email with any questions and problems to: s.klawitter@ostfalia.de
 
-Link to the publication: [A visualization tool for continuous reference intervals based on GAMLSS](https://www.degruyter.com/document/doi/10.1515/labmed-2023-0033/html)
+Link to the publication: 
+[A visualization tool for continuous reference intervals based on GAMLSS](https://doi.org/10.1515/labmed-2023-0033)
+[Automated sex and age partitioning for the estimation of reference intervals using a regression tree model](https://doi.org/10.1515/labmed-2024-0083)
 
 ## References <a name = "references"></a>
 
 ### Abbreviations
 
 RI = Reference Intervals
+
 CI = Confidence Intervals
 
 ### Data
@@ -37,8 +40,6 @@ Stasinopoulos, Dm & Rigby, Robert & Heller, Gillian & Voudouris, Vlasios & De Ba
 
 Stasinopoulos, Dm & Rigby, Robert. (2007). Generalized additive models for Location Scale and Shape (GAMLSS) in R. Journal of Statistical Software. 23. [10.18637/jss.v023.i07](https://doi.org/10.18637/jss.v023.i07). 
 
-### GAMLSS & RI
-
 Klawitter, S. & Kacprowski, T. (2023). A visualization tool for continuous reference intervals based on GAMLSS. Journal of Laboratory Medicine. https://doi.org/10.1515/labmed-2023-0033
 
 ### zlog
@@ -51,11 +52,15 @@ Klawonn, F., Hoffmann, G., & Orth, M. (2020). Quantitative laboratory results: n
 
 ### reflimR
 
-Georg Hoffmann & Frank Klawonn (2022). RefLim: Quick & Easy Verification of Reference Limits in Laboratory Medicine. https://reflim.github.io/Epub/
+Hoffmann, G., Klawitter, S., Trulson, I., Adler, J., Holdenrieder, S., & Klawonn, F. (2024). A Novel Tool for the Rapid and Transparent Verification of Reference Intervals in Clinical Laboratories. Journal of Clinical Medicine, 13.
+
+Klawonn, F., Hoffmann, G., Holdenrieder, S., & Trulson, I. (2024). reflimLOD: A Modified reflimR Approach for Estimating Reference Limits with Tolerance for Values Below the Lower Limit of Detection (LOD). Stats.
 
 Georg Hoffmann & Frank Klawonn (2022).Überprüfung von Referenzintervallen: Schnelle Orientierung. https://www.trillium.de/zeitschriften/trillium-diagnostik/ausgaben-2022/td-heft-2/2022-immunologie/default-167018def5/ueberpruefung-von-referenzintervallen-schnelle-orientierung.html
 
 ### Age partitioning
+
+Klawitter, S., Böhm, J., Tolios, A. & Gebauer, J. (2024). Automated sex and age partitioning for the estimation of reference intervals using a regression tree model. Journal of Laboratory Medicine, 48(5), 223-237. https://doi.org/10.1515/labmed-2024-0083
 
 Yang Q, Lew HY, Peh RH, Metz MP, Loh TP. An automated and objective method for age partitioning of reference intervals based on continuous centile curves. Pathology. 2016;48(6):581-585. [10.1016/j.pathol.2016.07.002](https://doi.org/10.1016/j.pathol.2016.07.002).
 
@@ -75,5 +80,7 @@ Peng, Xiaoxia & Lv, Yaqi & Feng, Guoshuang & Peng, Yaguang & Li, Qiliang & Song,
 * [shiny](https://cran.r-project.org/web/packages/shiny/index.html): ≥ 1.7.1
 * [shinydashboard](https://cran.r-project.org/web/packages/shinydashboard/index.html) ≥ 0.7.2
 * [zoo](https://cran.r-project.org/web/packages/zoo/index.html): ≥ 1.8-9
+
+* [R](https://www.r-project.org/): ≥ 4.3.2
 
 Older versions may also work, but full functionality is not guaranteed.

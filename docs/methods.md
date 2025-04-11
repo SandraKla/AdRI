@@ -1,10 +1,9 @@
-[Home](./index.md) --- [Installation](./install.md) --- [Data](./data.md) --- [Methods](./methods.md) --- [Guide](./guide.md) --- [About](./about.md)
+[Home](./index.md) --- [Installation](./install.md) --- [Dataset](./data.md) --- [Methods](./methods.md) --- [Guide](./guide.md) --- [About](./about.md)
 
 ---
-1) [GAMLSS](#gamlss)
-2) [LMS](#lms)
-3) [Window-Methods](#window)
-4) [Regression](#regression)
+
+[GAMLSS](#gamlss) --- [LMS](#lms) --- [Window-Methods](#window) --- [Regression](#regression)
+
 ---
 
 ## GAMLSS <a name = "gamlss"></a>
@@ -49,7 +48,7 @@ The predicted GAMLSS and [LMS](#lms) can be used to make discrete models, the zl
 
 <img src="shiny_discrete.png" align="center"/>
 
-The data can be downloaded in a suitable form for the Shiny app [Zlog_AdRI](https://github.com/SandraKla/Zlog_AdRI).
+The data can be downloaded in a suitable form for the Shiny Application [Zlog_AdRI](https://github.com/SandraKla/Zlog_AdRI).
 
 The models can be compared to the following metrics:
 
@@ -79,13 +78,7 @@ Hyperparameter:
 
 ## Window-Methods <a name = "window"></a>
 
-The calculation of the reference intervals is performed with **reflim()** with n.min = 100 and **iboxplot()** for all window methods. The results can be downloaded as CSV and include...
-
-* Age-range in days and years
-* 2.5% Reference Interval (+ 95% Confidence Interval)
-* 97.5% Reference Interval (+ 95% Confidence Interval)
-
-The data of all window-methods can be downloaded in a suitable form for the Shiny app [Zlog_AdRI](https://github.com/SandraKla/Zlog_AdRI).
+The calculation of the reference intervals is performed of a basis of **reflim()** from the [reflimR](https://cran.r-project.org/web/packages/reflimR/index.html) package for all Windows methods. The data of all standard window-methods except the Sliding Window Method can be downloaded in a suitable form for the Shiny app [Zlog_AdRI](https://github.com/SandraKla/Zlog_AdRI).
 
 ### Regular Window-Method
 The regular Window-Method separated the data into regular age groups given by the user in years or days. It is only recommended for small changes through the age for analytes with no strong age dependency. With this method you can get the reference interval for the whole data set, when the maximum age range is set.
@@ -93,14 +86,15 @@ The regular Window-Method separated the data into regular age groups given by th
 <img src="shiny_window_regular.png" align="center"/>
 
 ### Window-Method coupled Decision Tree
-Decision Trees are used for machine learning. They can be used for classification (_supervised learning_), but also for clustering (_unsupervised learning_). In the Shiny App the Decision Tree is used as a tool to separate the data into age-groups with similar values. The Decision Tree is built with the package [rpart](https://cran.r-project.org/web/packages/rpart/rpart.pdf) and visualize with [rpart.plot](https://cran.r-project.org/web/packages/rpart.plot/rpart.plot.pdf). The proposed age groups from the Decision Tree are used to calculate the reference intervals.
+
+Decision Trees are used for machine learning. They can be used for classification (supervised learning), but also for clustering (unsupervised learning). In the Shiny App the Decision Tree is used as a tool to separate the data into age-groups. The proposed age groups from the Decision Tree are used to calculate the reference intervals. The Decision Tree is built with the package [rpart](https://cran.r-project.org/web/packages/rpart/rpart.pdf) and visualize with [rpart.plot](https://cran.r-project.org/web/packages/rpart.plot/rpart.plot.pdf).
 
 <img src="shiny_window_tree.png" align="center"/>
 <img src="shiny_tree.png" align="center"/> 
 
-### Sliding Window-Method
+### Weighted Sliding window method
 
-The Sliding window method goes through the data by a windowstep with a given window size with the help of the index (so the data must be roughly evenly distributed) and calculates the reference intervals from each sliding window.
+The weighted Sliding window method goes through the data and calculates the reference intervals from each sliding window. The Sliding window method offers a range of distribution functions, including the Gaussian, triangular, and trapezoidal distributions, with customizable parameters. Users can apply these distributions to assign weights to the data. Based on the weighted data, the program computes and generates a reference interval chart.
 
 ### LIS Window-Method
 
@@ -118,12 +112,3 @@ For the Laboratory Information System (LIS) it is difficult to save complex mode
 * Polynomial Regression (Degree 10)
 
 <img src="shiny_regression.png" align="center"/>
-
-### Comparison
-
-* Akaike Information Criterion (AIC)
-* Bayesian Information Criterion (BIC) / Schwatz Bayesian Criterion (SBC)
-* R-Squared (R<sup>2</sup>)
-* Mean Absolute Error (MAE)
-* Mean squared error (MSE)
-* Root mean squared error (RMSE)

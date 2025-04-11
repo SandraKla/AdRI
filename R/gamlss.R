@@ -2,7 +2,7 @@
 ####################################### Script for the Data analysis ##############################
 ###################################################################################################
 
-helper_make_gamlss <- function(x) {return(eval(parse(text=x)))} 
+helper_make_gamlss <- function(x) {return(eval(parse(text = x)))} 
 
 ####################################### GAMLSS Models #############################################
 
@@ -53,7 +53,7 @@ make_gamlss <- function(data_analyte, age_end, family_gamlss, epochs, method){
 make_lms <- function(data_analyte){
   cat(paste("*** LMS ***\n"))
   new_lms_data <<- data.frame(value_lms = data_analyte[[5]], age_lms = data_analyte[[4]])
-  suppressWarnings({lms_ <<- lms(value_lms, age_lms, k=2, data = new_lms_data, cent=c(2.5,50,97.5), trans.x = TRUE)})
+  suppressWarnings({lms_ <<- lms(value_lms, age_lms, k = 2, data = new_lms_data, cent = c(2.5,50,97.5), trans.x = TRUE)})
 }
 
 ####################################### Residuals #################################################
@@ -145,57 +145,57 @@ split_gamlss <- function(model, max_zlog_value = 1.96){
   i <- 1
   
   # Go through the data to the end and check if the Reference Intervals are changed
-  while (i < nrow(model)){
+  while (i < nrow(model)) {
 
-    if(length(splitsgamlss) == 0){
+    if (length(splitsgamlss) == 0) {
 
-      next.lower.zlog <- abs(zlog(mean(model$`2.5`[para_split:(i+1)]), 
+      next.lower.zlog <- abs(zlog(mean(model$`2.5`[para_split:(i + 1)]), 
                                   model$`2.5`[para_split], 
                                   model$`97.5`[para_split]))
       previous.lower.zlog <- abs(zlog(mean(model$`2.5`[para_split]),
-                                      model$`2.5`[i+1], 
-                                      model$`97.5`[i+1]))
-      next.upper.zlog <- abs(zlog(mean(model$`97.5`[para_split:(i+1)]), 
+                                      model$`2.5`[i + 1], 
+                                      model$`97.5`[i + 1]))
+      next.upper.zlog <- abs(zlog(mean(model$`97.5`[para_split:(i + 1)]), 
                                   model$`2.5`[para_split], 
                                   model$`97.5`[para_split]))
       previous.higher.zlog <- abs(zlog(mean(model$`97.5`[para_split]), 
-                                       model$`2.5`[i+1], 
-                                       model$`97.5`[i+1]))
+                                       model$`2.5`[i + 1], 
+                                       model$`97.5`[i + 1]))
       
     if (next.lower.zlog > max_zlog_value ||
         previous.lower.zlog > max_zlog_value ||
         next.upper.zlog > max_zlog_value ||
-        previous.higher.zlog > max_zlog_value ){
+        previous.higher.zlog > max_zlog_value ) {
 
       para_split <- i # change para_split for the next age group
       splitsgamlss <- rbind(splitsgamlss, para_split)
       }
     } else{
 
-      next.lower.zlog <- abs(zlog(mean(model$`2.5`[para_split:(i+1)]), 
+      next.lower.zlog <- abs(zlog(mean(model$`2.5`[para_split:(i + 1)]), 
                                   mean(model$`2.5`[splitsgamlss[splitsgamlss_jump, 1]:para_split]), 
                                   mean(model$`97.5`[splitsgamlss[splitsgamlss_jump, 1]:para_split])))
       previous.lower.zlog <- abs(zlog(mean(model$`2.5`[splitsgamlss[splitsgamlss_jump, 1]:para_split]), 
-                                      mean(model$`2.5`[para_split:(i+1)]), 
-                                      mean(model$`97.5`[para_split:(i+1)])))
-      next.upper.zlog <- abs(zlog(mean(model$`97.5`[para_split:(i+1)]), 
+                                      mean(model$`2.5`[para_split:(i + 1)]), 
+                                      mean(model$`97.5`[para_split:(i + 1)])))
+      next.upper.zlog <- abs(zlog(mean(model$`97.5`[para_split:(i + 1)]), 
                                   mean(model$`2.5`[splitsgamlss[splitsgamlss_jump, 1]:para_split]), 
                                   mean(model$`97.5`[splitsgamlss[splitsgamlss_jump, 1]:para_split])))
       previous.higher.zlog <- abs(zlog(mean(model$`97.5`[splitsgamlss[splitsgamlss_jump, 1]:para_split]),
-                                       mean(model$`2.5`[para_split:(i+1)]), 
-                                       mean(model$`97.5`[para_split:(i+1)])))
+                                       mean(model$`2.5`[para_split:(i + 1)]), 
+                                       mean(model$`97.5`[para_split:(i + 1)])))
       
       if (next.lower.zlog > max_zlog_value ||
           previous.lower.zlog > max_zlog_value ||
           next.upper.zlog > max_zlog_value ||
-          previous.higher.zlog > max_zlog_value ){
+          previous.higher.zlog > max_zlog_value) {
 
         para_split <- i # change para_split for the next age group
         splitsgamlss_jump = splitsgamlss_jump + 1
         splitsgamlss <- rbind(splitsgamlss, para_split)
         }
     }
-    i = i+1
+    i = i + 1
   }
   return(splitsgamlss)
 }

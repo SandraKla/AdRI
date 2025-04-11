@@ -1,8 +1,9 @@
-[Home](./index.md) --- [Installation](./install.md) --- [Data](./data.md) --- [Methods](./methods.md) --- [Guide](./guide.md) --- [About](./about.md)
+[Home](./index.md) --- [Installation](./install.md) --- [Dataset](./data.md) --- [Methods](./methods.md) --- [Guide](./guide.md) --- [About](./about.md)
 
 ---
-1) [CALIPER Dataset](#caliper)
-2) [AdRI_Generator Dataset](#adri_generator)
+
+[CALIPER Dataset](#caliper) --- [AdRI_Generator Dataset](#adri_generator)
+
 ---
 
 ## CALIPER Dataset <a name = "caliper"></a>
@@ -52,9 +53,9 @@ The biomarker data from the [CALIPER study](https://doi.org/10.1373/clinchem.201
 
 ## AdRI_Generator Dataset <a name = "adri_generator"></a>
 
-The generated data from the Shiny App [AdRI-Generator](https://github.com/SandraKla/AdRI_Generator) can be used in this Shiny App no matter if it is generated with the help of the functions or for given reference intervals.
+The generated data from the Shiny App [AdRI_Generator](https://github.com/SandraKla/AdRI_Generator) can be used in this Shiny App no matter if it is generated with the help of the functions or for given reference intervals.
 
-The Shiny App [AdRI-Generator](https://github.com/SandraKla/AdRI_Generator) is a generator for creating age-dependent analyte data. Available are the following distributions: Normal-Distribution (`NO`), Log-Normal-Distribution (`LOGNO`), Box-Cox Cole & Green Distribution (`BCCG`), Box-Cox _t_-Distribution (`BCT`) and Box-Cox Power Exponential Distribution (`BCPE`). The parameters μ (Mean), σ (Variance), ν (Skewness) and τ (Kurtosis) are changing over the patient age with a linear or an exponential function. 
+The Shiny App [AdRI_Generator](https://github.com/SandraKla/AdRI_Generator) is a generator for creating age-dependent analyte data. Available are the following distributions: Normal-Distribution (`NO`), Log-Normal-Distribution (`LOGNO`), Box-Cox Cole & Green Distribution (`BCCG`), Box-Cox _t_-Distribution (`BCT`) and Box-Cox Power Exponential Distribution (`BCPE`). The parameters μ (Mean), σ (Variance), ν (Skewness) and τ (Kurtosis) are changing over the patient age with a linear or an exponential function. 
 
 The linear function is:  `y = m*x + b` and the exponential `y = a*e^(x*b)`. 
 

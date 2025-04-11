@@ -9,7 +9,7 @@
 
 **Shiny App for calculating Age-dependent Reference Intervals!**
 
-This Shiny App was developed to create **A**ge-**d**ependent **R**eference **I**ntervals (**AdRI**) using different methods: **LMS**, **GAMLSS**, **Window-Methods** and **Regression**.
+This **Shiny App** was developed to generate **A**ge-**d**ependent **R**eference **I**ntervals (**AdRI**) using various statistical methods. These include the **LMS method**, **GAMLSS (Generalized Additive Models for Location, Scale, and Shape)**, **Weighted Sliding Window Methods**, and **Regression Analysis**. These approaches allow for precise modeling and adaptation of reference intervals across different age groups, facilitating robust statistical analysis and visualization of age-dependent measurements.
 
 *** **Warning!** This Shiny App has not been enough validated for the basis of a medical diagnosis! There is no warranty for the app and/or the reference intervals! ***
 
@@ -55,4 +55,6 @@ You are welcome to:
 
 For more information use the [Homepage](https://sandrakla.github.io/AdRI/)!
 
-Link to the publication: [A visualization tool for continuous reference intervals based on GAMLSS](https://www.degruyter.com/document/doi/10.1515/labmed-2023-0033/html)
+Link to the publications: 
+[A visualization tool for continuous reference intervals based on GAMLSS](https://doi.org/10.1515/labmed-2023-0033)
+[Automated sex and age partitioning for the estimation of reference intervals using a regression tree model](https://doi.org/10.1515/labmed-2024-0083)

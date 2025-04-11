@@ -62,16 +62,16 @@ window_method <- function(data_, window, method){
   confidence_with_reflimR <- data.frame()
   n_data_reflimR <- data.frame()
   
-  for(i in seq(min(data_[,4])+window, max(data_[,4])+window, by = window)){
+  for (i in seq(min(data_[,4]) + window, max(data_[,4]) + window, by = window)) {
     
     age_code <- i
     
     # The data subset
     age_data <- subset(data_, data_[,4] <= i)                            # Under the condition
-    age_data_ready <- subset(age_data, age_data$age_days > i-window)     # Below the lowest condition
+    age_data_ready <- subset(age_data, age_data$age_days > i - window)     # Below the lowest condition
     
-    if(i-window == 0){
-      age_data_ready <- subset(age_data, age_data$age_days >= i-window)}
+    if (i - window == 0) {
+      age_data_ready <- subset(age_data, age_data$age_days >= i - window)}
     
     normal_log <- FALSE
     try(normal_log <- lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
@@ -92,15 +92,15 @@ window_method <- function(data_, window, method){
   # Window-Data with the reflim()
   
   window_data_reflimR <<- data.frame(age_days = seq(min(data_[,4]), age_code, by = window), 
-                                   mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n=1)), 
-                                   quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n=1)),
-                                   quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n=1)))
+                                   mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n = 1)), 
+                                   quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n = 1)),
+                                   quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n = 1)))
   
   ##################################### Tables to download ########################################
   
-  window_data_all_reflimR <<- data.frame("Age-range from"           = seq(min(data_[,4]), age_code-1, by=window),
+  window_data_all_reflimR <<- data.frame("Age-range from"           = seq(min(data_[,4]), age_code - 1, by = window),
                                        "to [Days]"                = c(head(seq(min(data_[,4]) + window, age_code, by = window),-1),max(data_$age_days)),
-                                       "Age-range from"           = round_df(seq(min(data_[,4]), age_code-1, by=window)/365, 3),
+                                       "Age-range from"           = round_df(seq(min(data_[,4]), age_code - 1, by = window)/365, 3),
                                        "to [Years]"               = c(round_df(head(seq(min(data_[,4]) + window, age_code, by = window)/365,-1),3), max(data_$age)),
                                        "2.5 % RI"                 = c(quantiles_with_reflimR[,1]),
                                        "97.5% RI"                 = c(quantiles_with_reflimR[,2]),
@@ -139,19 +139,19 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
   confidence_with_reflimR <- data.frame()
   n_data_reflimR <- data.frame()
   
-  for (i in seq(2,length(split))){
+  for (i in seq(2,length(split))) {
     
     age_code <- split[i]
 
     # The data subset 
     age_data <- subset(data_window_split, data_window_split$age_days <= split[i])  # Under the condition
-    age_data_ready <- subset(age_data, age_data$age_days > split[i-1])             # Below the lowest condition
-    if(split[i-1] == 0){
-      age_data_ready <- subset(age_data, age_data$age_days >= split[i-1])}  # Below the lowest condition
+    age_data_ready <- subset(age_data, age_data$age_days > split[i - 1])             # Below the lowest condition
+    if (split[i - 1] == 0) {
+      age_data_ready <- subset(age_data, age_data$age_days >= split[i - 1])}  # Below the lowest condition
 
     normal_log <- FALSE
     
-    if(!plot_log){
+    if (!plot_log) {
       try(normal_log <- lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
     } else{
       # Plot the distribution of each group to check for normally distribution
@@ -160,7 +160,7 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
     n_data_reflimR <- rbind(n_data_reflimR, nrow(age_data_ready))
     
     ################################### reflimR ##################################################
-    if(method == "reflim"){
+    if (method == "reflim") {
       
       try(modi_qq <- reflim(age_data_ready$value, lognormal = normal_log, plot.it = FALSE))
 
@@ -174,15 +174,15 @@ window_method_split <- function(data_window_split, split, method, plot_log = FAL
   
   # Window-Data with reflim()
   window_data_reflimR_rpart <<- data.frame(age_days = split,                                    
-                                         mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n=1)), 
-                                         quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n=1)),
-                                         quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n=1)))
+                                         mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n = 1)), 
+                                         quantile1 = c(quantiles_with_reflimR[,1], tail(quantiles_with_reflimR[,1], n = 1)),
+                                         quantile2 = c(quantiles_with_reflimR[,2], tail(quantiles_with_reflimR[,2], n = 1)))
 
   ##################################### Tables to download ########################################
 
-  window_data_split_reflimR <<- data.frame("Age-range from"         = split[1:length(split)-1],
+  window_data_split_reflimR <<- data.frame("Age-range from"         = split[1:length(split) - 1],
                                          "to [Days]"              = split[2:length(split)],
-                                         "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                         "Age-range from"         = round_df(split[1:length(split) - 1]/365, 3),
                                          "to [Years]"             = round_df(split[2:length(split)]/365, 3),
                                          "2.5 % RI"                 = c(quantiles_with_reflimR[,1]),
                                          "97.5% RI"                 = c(quantiles_with_reflimR[,2]),
@@ -219,18 +219,18 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
   confidence_with_reflimR <- data.frame()
   n_data_reflimR <- data.frame()
   
-  for (i in seq(2,length(split))){
+  for (i in seq(2,length(split))) {
     
     age_code <- split[i]
     
     # The data subset 
     age_data <- subset(data_window_split, data_window_split$age_days <= split[i])  # Under the condition
-    age_data_ready <- subset(age_data, age_data$age_days > split[i-1])             # Below the lowest condition
-    if(split[i-1] == 0){
-      age_data_ready <- subset(age_data, age_data$age_days >= split[i-1])}  # Below the lowest condition
+    age_data_ready <- subset(age_data, age_data$age_days > split[i - 1])             # Below the lowest condition
+    if (split[i - 1] == 0) {
+      age_data_ready <- subset(age_data, age_data$age_days >= split[i - 1])}  # Below the lowest condition
     
     normal_log <- FALSE
-    if(!plot_log){
+    if (!plot_log) {
       try(normal_log <- lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
     } else{
       # Plot the distribution of each group to check for normally distribution
@@ -239,7 +239,7 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
     n_data_reflimR <- rbind(n_data_reflimR, nrow(age_data_ready))
   
     ################################### reflimR ##################################################
-    if(method == "reflim"){
+    if (method == "reflim") {
 
       try(modi_qq <- reflim(age_data_ready$value, lognormal = normal_log, plot.it = FALSE))
       
@@ -253,15 +253,15 @@ window_method_lis <- function(data_window_split, split, method, plot_log = FALSE
   
   # Window-Data with reflim()
   window_data_reflimR_lis <<- data.frame(age_days = split,
-                                       mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n=1)), 
-                                       quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n=1)),
-                                       quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n=1)))
+                                       mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n = 1)), 
+                                       quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n = 1)),
+                                       quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n = 1)))
   
   ##################################### Tables to download ########################################
   
-  window_data_lis_reflimR <<- data.frame("Age-range from"         = split[1:length(split)-1],
+  window_data_lis_reflimR <<- data.frame("Age-range from"         = split[1:length(split) - 1],
                                          "to [Days]"              = split[2:length(split)],
-                                         "Age-range from"         = round_df(split[1:length(split)-1]/365, 3),
+                                         "Age-range from"         = round_df(split[1:length(split) - 1]/365, 3),
                                          "to [Years]"             = round_df(split[2:length(split)]/365, 3),
                                          "2.5 % RI"                 = c(quantiles_with_reflimR[,1]),
                                          "97.5% RI"                 = c(quantiles_with_reflimR[,2]),
@@ -301,11 +301,11 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
                            FUN = min, na.rm = TRUE, partial = TRUE,align = "left")
   # End of the Sliding Window
   sliding_age_to <- rollapply(sliding_window_data$age_days, width = width_, by = by_, 
-                             FUN = max, na.rm = TRUE, partial =TRUE,align = "left")
+                             FUN = max, na.rm = TRUE, partial = TRUE,align = "left")
 
   ##################################### Mean of the subset generated by rollapply() ###############
   sliding_mean <- rollapply(sliding_window_data$value, width = width_, by = by_, 
-                              FUN= mean, na.rm = TRUE, partial =TRUE,align = "left")
+                              FUN = mean, na.rm = TRUE, partial = TRUE,align = "left")
 
   ##################################### Data in the window ########################################
   suppressWarnings(sliding_reflimR_data <- rollapply(sliding_window_data$value, width = width_, by = by_, 
@@ -313,11 +313,11 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
 
   ##################################### 2.5% Percentile ###########################################
   sliding_2_5 <- rollapply(sliding_window_data$value, width = width_, by = by_, 
-                           FUN = quantile, probs = c(0.025), partial =TRUE, align = "left")
+                           FUN = quantile, probs = c(0.025), partial = TRUE, align = "left")
   
   ##################################### 97.5% Percentile ##########################################
   sliding_97_5 <- rollapply(sliding_window_data$value, width = width_, by = by_, FUN = quantile, 
-                            probs = c(0.975), partial =TRUE, align = "left")
+                            probs = c(0.975), partial = TRUE, align = "left")
   
   ##################################### Dataframes for the reflim and CI ##########################
   ##################################### Mean  #####################################################
@@ -328,7 +328,7 @@ sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers
   confidence_with_reflimR <- data.frame()
   n_data_reflimR <- data.frame()
     
-  for (i in seq(1,nrow(sliding_reflimR_data))){ 
+  for (i in seq(1,nrow(sliding_reflimR_data))) { 
     
     normal_log <- FALSE
     try(normal_log <- lognorm(sliding_reflimR_data[i,], plot.it = FALSE)$lognorm)
