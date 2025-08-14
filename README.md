@@ -55,6 +55,6 @@ You are welcome to:
 
 For more information use the [Homepage](https://sandrakla.github.io/AdRI/)!
 
-Link to the publications: 
-[A visualization tool for continuous reference intervals based on GAMLSS](https://doi.org/10.1515/labmed-2023-0033)
-[Automated sex and age partitioning for the estimation of reference intervals using a regression tree model](https://doi.org/10.1515/labmed-2024-0083)
+Link to the publications:
+- [A visualization tool for continuous reference intervals based on GAMLSS](https://doi.org/10.1515/labmed-2023-0033)
+- [Automated sex and age partitioning for the estimation of reference intervals using a regression tree model](https://doi.org/10.1515/labmed-2024-0083)

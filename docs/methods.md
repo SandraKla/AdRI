@@ -78,9 +78,10 @@ Hyperparameter:
 
 ## Window-Methods <a name = "window"></a>
 
-The calculation of the reference intervals is performed of a basis of **reflim()** from the [reflimR](https://cran.r-project.org/web/packages/reflimR/index.html) package for all Windows methods. The data of all standard window-methods except the Sliding Window Method can be downloaded in a suitable form for the Shiny app [Zlog_AdRI](https://github.com/SandraKla/Zlog_AdRI).
+The calculation of the reference intervals is performed of a basis of **reflim()** from the [reflimR](https://cran.r-project.org/web/packages/reflimR/index.html) package for all Windows methods. The data of all standard window-methods except the weighted Sliding Window Method can be downloaded in a suitable form for the Shiny App [Zlog_AdRI](https://github.com/SandraKla/Zlog_AdRI).
 
 ### Regular Window-Method
+
 The regular Window-Method separated the data into regular age groups given by the user in years or days. It is only recommended for small changes through the age for analytes with no strong age dependency. With this method you can get the reference interval for the whole data set, when the maximum age range is set.
 
 <img src="shiny_window_regular.png" align="center"/>
@@ -95,6 +96,8 @@ Decision Trees are used for machine learning. They can be used for classificatio
 ### Weighted Sliding window method
 
 The weighted Sliding window method goes through the data and calculates the reference intervals from each sliding window. The Sliding window method offers a range of distribution functions, including the Gaussian, triangular, and trapezoidal distributions, with customizable parameters. Users can apply these distributions to assign weights to the data. Based on the weighted data, the program computes and generates a reference interval chart.
+
+<img src="shiny_window_sliding.png" align="center"/>
 
 ### LIS Window-Method
 

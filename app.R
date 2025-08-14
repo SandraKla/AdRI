@@ -35,15 +35,10 @@ if ("gamlss.add" %in% rownames(installed.packages())) {
     install.packages("gamlss.add")
     library(gamlss.add)}
 
-#if("hexbin" %in% rownames(installed.packages())){
-#  library(hexbin)} else{
-#    install.packages("hexbin")
-#    library(hexbin)}
-
-#if("MASS" %in% rownames(installed.packages())){
-#  library(MASS)} else{
-#    install.packages("MASS")
-#    library(MASS)}
+if ("ggplot2" %in% rownames(installed.packages())) {
+  library(ggplot2)} else{
+    install.packages("ggplot2")
+    library(ggplot2)}
 
 if ("plotly" %in% rownames(installed.packages())) {
   library(plotly)} else{
@@ -54,6 +49,17 @@ if ("reflimR" %in% rownames(installed.packages())) {
   library(reflimR)} else{
     install.packages("reflimR")
     library(reflimR)}
+
+if ("reflimR.expand" %in% rownames(installed.packages())) {
+  library(reflimR.expand)} else{
+
+    if ("devtools" %in% rownames(installed.packages())) {
+      library(reflimR)} else{
+        install.packages("devtools")
+        library(devtools)}
+
+    devtools::install_github("SandraKla/reflimR.expand")
+    library(reflimR.expand)}
 
 if ("rpart" %in% rownames(installed.packages())) {
   library(rpart)} else{
@@ -90,7 +96,7 @@ and the Reference Intervals will be calculated."))
 windowtext3 <- HTML(paste0("Decision Trees are used for machine learning. It can be used for classification (supervised learning), but also
 for clustering (unsupervised learning). Here it used to cluster the data into subgroups with similar values.
 The Decision Tree is from the package rpart and is visualized with rpart.plot. The subgroups according to the Decision Tree
-are used to calculate the reference intervals."))
+are used to calculate the reference intervals. For futher informations read the ", a("publication", href = "https://doi.org/10.1515/labmed-2024-0083"),"!"))
 
 windowtext4 <- HTML(paste0("The weighted Sliding window method goes through the data and calculates the reference intervals from each sliding window. 
 The Sliding window method offers a range of distribution functions, including the Gaussian, triangular, and trapezoidal distributions,
@@ -103,7 +109,7 @@ line show the 95% Confindence interval from the regression in black and the red 
 gamlsstext1 <- HTML(paste0("Models can be compared visually or with the Akaike Information Criterion (AIC),
 Generalized Information Criterion (GAIC), Bayesian Information Criterion (BIC),
 or Pseudo R-Squared (R^2). The model with the smallest value for AIC, BIC and GAIC is the best model for the data.
-The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored."))
+The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored. For futher informations read the publication", a("Homepage", href = "https://doi.org/10.1515/labmed-2023-0033"),"!"))
 
 gamlsstext2 <- HTML(paste0("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
 outliers from the model and refit the model. High residuals values are in red, low in blue", 
@@ -169,18 +175,8 @@ ui <- dashboardPage(
                   
                   textInput("text_unit", "Unit of the analyte:", value = "Unit"),
                   checkboxInput("unique", "First unique values", value = TRUE),  hr(),
-                  
-                  helpText("Outlierdetection:"), 
-                  
-                  helpText("Hyperparameter for the Decision Tree (minbucket -", br(),
-                           "minimum number of observations in an age group (leaf node))"),
-                  
-                  checkboxInput("checkboxtukey", "Use Outlierdetection with iboxplot()", value = FALSE),
-                  selectInput("tree_minsplit", "",
-                              choices = list("Each group with > 120 patients (for RI according to CLSI)" = 360,
-                                             "> 40 patients" = 120,
-                                             "> 20 patients" = 60))
-                ),
+
+                  checkboxInput("checkboxtukey", "Use Outlierdetection with iboxplot()", value = FALSE)),
                 
                 ### MainPanel - Analysis ###
                 column(
@@ -201,15 +197,7 @@ ui <- dashboardPage(
                              p(text),
                              
                              plotOutput("barplot_sex", height = "375px"),
-                             #plotOutput("barplot_station_and_age", height="375px"),
-                             plotOutput("barplot_value", height = "375px"))#,
-                    
-                    #tabPanel("Statistics", icon = icon("calculator"),
-                             
-                            #p(text),     
-                             
-                             #plotOutput("qqplot", height = "375px"),
-                             #plotOutput("lognorm", height = "375px"))
+                             plotOutput("barplot_value", height = "375px"))
                   )
                 )
               )),
@@ -230,7 +218,8 @@ ui <- dashboardPage(
                   sliderInput("window_age", "Regular Window-range for the age-subgroups in years:", 1, 10, 10),
                   conditionalPanel(condition = "input.window_age <= 1", 
                                    numericInput("window_agedays", "Regular Window-range for the age-subgroups in days:", 
-                                                365, min = 1, max = 100*365))
+                                                365, min = 1, max = 100*365)),
+                  numericInput("window_age_nmin", "reflimR: n.min", 120, min = 40, max = 10000)
                 ),
                 
                 ### MainPanel - Regular Window-Method ###
@@ -253,8 +242,7 @@ ui <- dashboardPage(
                              class = "custom-scrollbox",
                              
                              DT::dataTableOutput("windowtable_t"),
-                             downloadButton("Download_window_data_all_reflimR", "Table with Reference intervals with reflim()"),
-                             downloadButton("Download_zlog_table_window_data_all_reflimR", "Table with Reference intervals for Zlog_AdRI")
+                             downloadButton("Download_zlog_table_window_data_all_reflimR", "Table with Reference Intervals for Zlog_AdRI")
                          ))
                 ))),
       
@@ -273,7 +261,8 @@ ui <- dashboardPage(
                   
                   selectInput("lis_data", "Select preinstalled dataset:", choices = list.files(pattern = "txt", recursive = TRUE)),
                   uiOutput("lis_data_file"),
-                  actionButton('reset_lis', 'Reset Input', icon = icon("trash"))
+                  actionButton('reset_lis', 'Reset Input', icon = icon("trash")),
+                  numericInput("lis_data_nmin", "reflimR: n.min", 120, min = 40, max = 10000)
                   ),
                 
                 ### MainPanel - LIS Window-Method ###
@@ -305,8 +294,7 @@ ui <- dashboardPage(
                              class = "custom-scrollbox",
                              
                              DT::dataTableOutput("lis_table_t"),
-                             downloadButton("Download_lis_table_t","Table with Reference Intervals with reflim()"),
-                             downloadButton("Download_zlog_lis_table_t", "Table with Reference intervals for Zlog_AdRI")
+                             downloadButton("Download_zlog_lis_table_t", "Table with Reference Intervals for Zlog_AdRI")
                          ))
                 ))),
       
@@ -321,7 +309,11 @@ ui <- dashboardPage(
                   solidHeader = TRUE,
                   status = "primary",
                   
-                  p(windowtext3)
+                  p(windowtext3),
+                 
+                  numericInput("tree_window_minsplit", "rpart: minsplit", 20, min = 10, max = 100),
+                  numericInput("tree_window_cp", "rpart: Complexity parameter", 0.01, min = 0, max = 10),
+                  numericInput("tree_window_nmin", "reflimR: n.min", 120, min = 40, max = 10000)
                 ),
                 
                 ### MainPanel - Decision Tree Window-Method ###
@@ -343,7 +335,6 @@ ui <- dashboardPage(
                              status = "info",
                              
                              plotOutput("tree_rpart", height = "475px"),
-                             plotOutput("tree_window_analysis"),
                              downloadButton("download_tree", "Decision Tree")
                          ),
                          
@@ -353,54 +344,43 @@ ui <- dashboardPage(
                              collapsible = TRUE,
                              status = "info",
                              class = "custom-scrollbox",
-                             
-                             DT::dataTableOutput("tree_windowtable_t"),
-                             downloadButton("Download_window_data_split_reflimR", "Table with Reference Intervals with reflim()"),
-                             downloadButton("Download_zlog_window_data_split_reflimR", "Table with Reference intervals for Zlog_AdRI")
+
+                            downloadButton("Download_zlog_window_data_split_reflimR", "Table with Reference Intervals for Zlog_AdRI")
                          ))
                 ))),
       
-      ##### Sliding Window-Method ##### 
-      # tabItem(tabName = "windowsliding",
-      #         fluidRow(
-      #           
-      #           ### Sidebar - Sliding Window-Method ###
-      #           box(
-      #             title = tagList(shiny::icon("gear"), "Settings"),
-      #             width = 3,
-      #             solidHeader = TRUE,
-      #             status = "primary",
-      #             
-      #             p(windowtext4),
-      #             
-      #             numericInput("sliding_width", "Sliding Window-Method Width:", 500, min = 10, max = 10000),
-      #             numericInput("sliding_by", "Steps for the Sliding Window-Method:", 100, min = 10, max = 500)
-      #           ),
-      #           
-      #           ### MainPanel - Sliding Window-Method ###
-      #           column(width = 9,
-      #                  fluidRow(
-      #                    box(title = tagList(shiny::icon("chart-line"), "Plot"),
-      #                        width = 12,
-      #                        solidHeader = TRUE,
-      #                        collapsible = TRUE,
-      #                        status = "primary",
-      #                        
-      #                        plotOutput("slidingwindow", height = "475px")
-      #                    ),
-      #                    
-      #                    box(title = tagList(shiny::icon("table"), "Table"),
-      #                        width = 12,
-      #                        solidHeader = TRUE,
-      #                        collapsible = TRUE,
-      #                        status = "info",
-      #                        class = "custom-scrollbox",
-      #                        
-      #                        DT::dataTableOutput("sliding_reflimR"),
-      #                        downloadButton("Download_sliding_reflimR", "Table with Reference Intervals with reflim()"),
-      #                        downloadButton("Download_zlog_sliding_window", "Table with Reference intervals for Zlog_AdRI")
-      #                    ))
-      #           ))),
+      # ##### Sliding Window-Method ##### 
+      tabItem(tabName = "windowsliding",
+              fluidRow(
+
+                ### Sidebar - Sliding Window-Method ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+
+                  p(windowtext4)
+                ),
+
+                ### MainPanel - Sliding Window-Method ###
+                column(width = 9,
+                       fluidRow(
+                         box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "primary"
+                         ),
+
+                         box(title = tagList(shiny::icon("table"), "Table"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "info",
+                             class = "custom-scrollbox"
+                         ))
+                ))),
       
       ### Regression ###
       tabItem(tabName = "regressionoverview",
@@ -907,157 +887,63 @@ server <- function(input, output, session) {
     progress <- shiny::Progress$new()
     progress$set(message = "Load data...", detail = "", value = 2)
     
-    cat(paste("*** Welcome to the Shiny App AdRI! ***\n"))
-    
     req(input$dataset, input$age_end)
     
+    ri_results <<- data.frame()
     lms_ready <<- FALSE        # To check if the lms method was used
     modelsprediction <<- FALSE # To check if the models are build 
     residuals_ready <<- FALSE  # Check if the residuals are calculated
     
-    # Read the data (from the CALIPER study or from the generator)
-    if (is.null(dataset_input())) {
-    data_data <- read.csv2(input$dataset, header = TRUE, 
-                           stringsAsFactors = FALSE, sep = ";", dec = ",", na.strings = "")}
-    if (!is.null(dataset_input()))
-    {data_data <- read.csv2(dataset_input()[["datapath"]], header = TRUE, 
-                            stringsAsFactors = FALSE, sep = ";", dec = ",", na.strings = "")}
+    # Read the data
+    file_path <- if (is.null(dataset_input())) {
+      input$dataset
+    } else {
+      dataset_input()[["datapath"]]
+    }
+    
+    data_data <- read.csv2(file_path, header = TRUE, stringsAsFactors = FALSE, sep = ";", dec = ",", na.strings = "")
+    
     ################################### Age is given by days ######################################
     if (input$days_or_years == "age_days") {
       
       # Preprocessing the data
-      data_analyte <- select_data_days(data_data, input$age_input_min, input$age_input, input$sex)
-      
-      ################################# First samples #############################################
-      
-      rows_table_ <- nrow(data_analyte) 
-      
-      # Take only the first and unique samples from the data if ID is given
-      if (input$unique == TRUE) {
-        
-        data_analyte <- 
-          data_analyte %>% 
-          group_by(patient) %>% 
-          filter(row_number() == 1)
-        # Convert into tibble so as.data.frame()
-        data_analyte <- as.data.frame(data_analyte)
-        
-        if (!(rows_table_ == nrow(data_analyte))) {
-          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values of the patients were present several times and were deleted. ***\n"))}
-      }
-      
-      try(if (input$checkboxtukey == TRUE) {
-        
-        rows_table_ <- nrow(data_analyte) 
-        
-        data_analyte_reflimR <- data.frame()
-        # Make Decision Tree to group the data in groups
-        rpart_ready <- make_rpart(data_analyte, as.numeric(input$tree_minsplit))
-        # Read the splits from the Decision Tree
-        splits <- data.frame(rpart_$splits)
-        
-        split <- round(c(0,sort(splits$index), max(data_analyte$age_days))) 
-        
-        # Select each range of the splits and delete outliers with the iboxplot()
-        for (i in 2:length(split)) {
-          
-          data_analyte_split <- subset(data_analyte, age_days <= split[i], select = c(patient, sex, age, age_days, value, code, name)) 
-          data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days > split[i - 1])
-          
-          if(split[i - 1] == 0){
-            data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days >= split[i - 1])}
-          
-          normal_log <- FALSE
-          try(normal_log <- lognorm(data_analyte_subset$value, plot.it = FALSE)$lognorm)
-          
-          if(normal_log == TRUE){modi <- iboxplot(data_analyte_subset$value, plot.it = FALSE, lognormal = TRUE)}
-          else{modi <- iboxplot(data_analyte_subset$value, plot.it = FALSE)}
-          
-          data_analyte_save <- data_analyte_subset[data_analyte_subset$value %in% modi,]
-          data_analyte_reflimR <- rbind(data_analyte_reflimR, data_analyte_save)}
-        
-        data_analyte <- data_analyte_reflimR
-        
-        if (!(rows_table_ == nrow(data_analyte))) {
-          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the reflim(). ***\n"))}
-      })
-    } 
-    
+      data_analyte <- select_data(data_data, input$age_input_min, input$age_input, input$sex, "days", input$unique)
+    }
     else{
-      
       ################################# Age in years (default) ####################################
       
       # Preprocessing the data
-      data_analyte <- select_data(data_data,input$age_end[1] ,input$age_end[2], input$sex)
-      
-      ################################# First samples #############################################
-      
-      rows_table_ <- nrow(data_analyte) 
-      
-      if (input$unique == TRUE) {
-        
-        data_analyte <- 
-          data_analyte %>% 
-          group_by(patient) %>% 
-          filter(row_number() == 1)
-        # Convert into tibble so as.data.frame()
-        data_analyte <- as.data.frame(data_analyte)
-        
-        if (!(rows_table_ == nrow(data_analyte))) {
-          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values of the patients were present several times and were deleted. ***\n"))}
-      }
-      
-      try(if (input$checkboxtukey == TRUE) {
-        
-        rows_table_ <- nrow(data_analyte) 
-        
-        data_analyte_reflimR <- data.frame()
-        # Make Decision Tree to group the data in groups
-        rpart_ready <- make_rpart(data_analyte, as.numeric(input$tree_minsplit))
-        
-        # Read the splits from the Decision Tree
-        splits <- data.frame(rpart_$splits) 
-        
-        split <- round(c(0,sort(splits$index), max(data_analyte$age_days)))
-
-        # Select each range of the splits and delete outliers with the iboxplot()
-        for (i in 2:length(split)) {
-          
-          data_analyte_split <- subset(data_analyte, age_days <= split[i], select = c(patient, sex, age, age_days, value, code, name)) 
-          data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days > split[i - 1])
-          
-          if(split[i-1] == 0){
-            data_analyte_subset <- subset(data_analyte_split, data_analyte_split$age_days >= split[i - 1])}
-          
-          normal_log <- FALSE
-          try(normal_log <- lognorm(data_analyte_subset$value, plot.it = FALSE)$lognorm)
-          
-          if(normal_log == TRUE){modi <- iboxplot(data_analyte_subset$value, plot.it = FALSE, lognormal = TRUE)$trunc}
-          else{modi <- iboxplot(data_analyte_subset$value, plot.it = FALSE)$trunc}
-          
-          data_analyte_save <- data_analyte_subset[data_analyte_subset$value %in% modi,] 
-          data_analyte_reflimR <- rbind(data_analyte_reflimR, data_analyte_save)}
-        
-        data_analyte <- data_analyte_reflimR
-        
-        if (!(rows_table_ == nrow(data_analyte))) {
-          cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of the reflim(). ***\n"))}
-      })
+      data_analyte <- select_data(data_data, input$age_end[1] ,input$age_end[2], input$sex, "years", input$unique)
     }
+    
+    try(if (input$checkboxtukey == TRUE) {
+      data_analyte <- outlier.detection(data_analyte)
+    })
     
     cat("\n")
     
-    ylab_ <<- paste0(data_analyte[1,7]," [", input$text_unit,"]")
-
     data_analyte_short <<- data_analyte
     on.exit(progress$close())
     data_analyte
   })
   
+  y.axis.name <- reactive({
+    ylab <- paste0(data_analyte()[1,6]," [", input$text_unit,"]")
+    ylab
+  })
+  
   ##################################### Build rpart Decision Tree #################################
   
   build_rpart <- reactive({
-    rpart_ready <- make_rpart(data_analyte(), as.numeric(input$tree_minsplit))
+    
+    input$tree_window_nmin
+      
+    progress <- shiny::Progress$new()
+    progress$set(message = "Calculate decision tree...", detail = "", value = 2)
+    
+    rpart_ready <- make_rpart(data_analyte(), as.numeric(input$tree_window_cp), as.numeric(input$tree_window_minsplit))
+    on.exit(progress$close())
+    rpart_ready
   })
   
   ##################################### Reactive Regular Window ###################################
@@ -1071,62 +957,44 @@ server <- function(input, output, session) {
     if (input$window_age <= 1) {
       days <- input$window_agedays}
     
-    window_method(data_analyte(), days, "reflim")
-    
+    window_data <- window_method(data_analyte(), days, "reflim", input$window_age_nmin)
     on.exit(progress$close())
+    window_data
   })
   
   ##################################### Reactive LIS ##############################################
   
+  read_lis_data <- reactive({
+    
+    if (is.null(dataset_input_lis())) {
+      lis_data <- read.delim2(input$lis_data)}
+    if (!is.null(dataset_input_lis())) {
+      lis_data <- read.delim2(dataset_input_lis()[["datapath"]])}
+    lis_data
+  })
+  
   window_lis <- reactive({
     
     progress <- shiny::Progress$new()
-    progress$set(message = "Make groups with the given intervals from the Laboratory Information System (LIS)...", detail = "", value = 2)
+    progress$set(message = "Calculate RI with the groups from the Laboratory Information System (LIS)...", detail = "", value = 2)
     
-    if (is.null(dataset_input_lis())) {
-      lis_data <<- read.delim2(input$lis_data)}
-    if (!is.null(dataset_input_lis())) {
-      lis_data <<- read.delim2(dataset_input_lis()[["datapath"]])}
-    
-    lis <- subset(lis_data, AGE_TO <= input$age_input)
-    
-    lis <- data.frame(lis_data[,2])
+    lis <- data.frame(read_lis_data()[,2])
     splits <- data.frame(index = lis)
+    lis_split <- round(c(0,sort(splits[,1])))
     
-    split <- round(c(0,sort(splits[,1])))
-    window_method_lis(data_analyte(), split, "reflim", FALSE)
-    
+    window_lis <- window_method_lis(data_analyte(), lis_split, "reflim", input$lis_data_nmin)
     on.exit(progress$close())
-  })
-  
-  ##################################### Reactive Window with Decision Tree ########################
-  
-  windowtree <- reactive({
-    
-    progress <- shiny::Progress$new()
-    progress$set(message = "Make groups with the Decision Tree and calculate RI...", detail = "", value = 2)
-    
-    build_rpart()
-    splits <- data.frame(rpart_$splits)
-  
-    split <- round(c(0,sort(splits$index), max(data_analyte()$age_days)))
-    window_method_split(data_analyte(), split, "reflim", FALSE)
-    
-    on.exit(progress$close())
+    window_lis
   })
   
   ##################################### Reactive Sliding Window ###################################
   
   slidingwindow <- reactive({
-    
+
     progress <- shiny::Progress$new()
     progress$set(message = "Calculate Sliding Window RI...", detail = "", value = 2)
-    
-    req(input$sliding_width, input$sliding_by)
-    slide <- sliding_window(data_analyte(), input$sliding_width, input$sliding_by, "reflim")
 
     on.exit(progress$close())
-    slide
   })
   
   ##################################### Reactive GAMLSS ###########################################
@@ -1218,19 +1086,11 @@ server <- function(input, output, session) {
 
   ##################################### Overview ##################################################
   
-  # Scatterplot from the data_analyte()
-  # output$scatterplot <- renderPlot({
-  # 
-  #   plot(data_analyte()$value ~ data_analyte()$age_days , pch = 20, cex = 1, col = "grey", xlab = "Age [Days]", ylab = ylab_)
-  # })
-  
   # Scatterplot from the data_analyte() with plotly
   output$scatterplot_plotly <- renderPlotly({
     
-    #if(input$fast == FALSE){
       fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value,
                    text = ~ paste('</br>Patient: ', patient,
-                                  '</br>Station: ', code,
                                   '</br>Age [Years]: ', age,
                                   '</br>Age [Days]: ', age_days,
                                   '</br>Value: ', value),
@@ -1242,20 +1102,7 @@ server <- function(input, output, session) {
                    mode = "markers",
                    marker = list(size = 10)) %>%
           layout(xaxis = list(title = "Age [Days]", titlefont = list(size = 20), tickfont = list(size = 15)),
-                 yaxis = list(title = ylab_, titlefont = list(size = 20), tickfont = list(size = 15)))#}
-    # else{
-    #   fig <- plot_ly(data_analyte(), x = ~age_days, y = ~value, color = ~sex, colors = c("cornflowerblue", "indianred"),
-    #                  text = ~ paste('</br>Patient: ', patient,
-    #                                 '</br>Station: ', code,
-    #                                 '</br>Age [Years]: ', age,
-    #                                 '</br>Age [Days]: ', age_days,
-    #                                 '</br>Value: ', value),
-    #                  type = "scattergl",
-    #                  mode = "markers",
-    #                  marker = list(size = 5)) %>%
-    #     layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)),
-    #            yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15)))
-    #   }
+                 yaxis = list(title = y.axis.name(), titlefont = list(size = 20), tickfont = list(size = 15)))
   })
   
   # Barplot with the distribution of the sex
@@ -1284,79 +1131,23 @@ server <- function(input, output, session) {
       
       if (input$sex == "m") {
         boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
-                ylab = ylab_, col = "cornflowerblue", las = 2)
+                ylab = y.axis.name(), col = "cornflowerblue", las = 2)
       }
       else if (input$sex == "f") {
         boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
-                ylab = ylab_, col = "indianred", las = 2)
+                ylab = y.axis.name(), col = "indianred", las = 2)
       } else{
         boxplot(data_analyte()[,5]~interaction(data_analyte()[,2], data_analyte()[,3]), xlab = "Age", 
-                ylab = ylab_, col = c("indianred", "cornflowerblue"), las = 2)
+                ylab = y.axis.name(), col = c("indianred", "cornflowerblue"), las = 2)
       }
     }
   })
 
-  # Barplot with the distribution of the stations
-  # output$barplot_station_and_age <- renderPlot({
-  #   
-  #   par(mfrow=c(1,2))
-  #   
-  #   # Barplot Stations
-  #   barplot(table(data_analyte()[,6]), las=1, col = "grey", xlab = "STATION")
-  #   abline(h=0)
-  #   
-  #   # Boxplot Age
-  #   if(input$days_or_years == 'age'){
-  #     boxplot(data_analyte()[,3], col = "grey", xlab = "AGE_YEARS")
-  #   } else{
-  #     boxplot(data_analyte()[,4], col = "grey", xlab = "AGE_DAYS")
-  #   }
-  #   abline(h=0)
-  # })
-  
-  # QQ-Plot for the complete dataset  
-  output$qqplot <- renderPlot({
-    
-    if (!(nrow(data_analyte())) == 0) {
-      qqnorm(data_analyte()[,5], pch = 20, col = "grey")
-      qqline(data_analyte()[,5])
-    }
-  })
-  
-  # Bowley and Lognormfunction
-  output$lognorm <- renderPlot({
-    if (!(nrow(data_analyte())) == 0) {
-      try(lognorm(data_analyte()[,5]))
-    }
-  })
-  
-  #Hexbin for the Data with the package hexbin
-  # output$hexbin <- renderPlot({
-  # 
-  #   hexbin_data <- data_analyte()
-  #   try(plot(hexbin(hexbin_data$value ~ hexbin_data$age_days, ylab = ylab_, xlab = "Age [Days]", shape = 0.5, xbins = 100)))
-  # })
-  
-  # output$hexbinplotly <- renderPlotly({
-  #   
-  #   hexbin_data <- data_analyte()
-  #   s <- subplot(
-  #     plot_ly(data_analyte(), x = ~age_days, type = "histogram", nbinsx = 100),
-  #     plotly_empty(type = "scatter", mode = "markers"),
-  #     plot_ly(data_analyte(), x = ~age_days, y = ~value, type = "histogram2dcontour", nbinsx = 100) %>%
-  #       layout(xaxis = list(title="Age [Days]", titlefont=list(size=20), tickfont = list(size = 15)), 
-  #              yaxis = list(title=ylab_, titlefont=list(size=20), tickfont = list(size = 15))),
-  #     plot_ly(data_analyte(), y = ~value, type = "histogram", nbinsx = 100),
-  #     nrows = 2, heights = c(0.2, 0.8), widths = c(0.8, 0.2), margin = 0,
-  #     shareX = TRUE, shareY = TRUE)
-  #   fig <- layout(s, showlegend = FALSE)
-  # })
-  
   # Data-Table
   output$datatable <- DT::renderDataTable({
     
     data_table <- data_analyte()
-    colnames(data_table) <- c("ID", "SEX", "AGE_YEARS", "AGE_DAYS", "VALUE", "STATION", "ANALYTE")
+    colnames(data_table) <- c("ID", "SEX", "AGE_YEARS", "AGE_DAYS", "VALUE", "ANALYTE")
     
     DT::datatable(data_table, extensions = 'Buttons', rownames = FALSE, 
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')),
@@ -1368,19 +1159,20 @@ server <- function(input, output, session) {
   # Regular Window method
   output$window <- renderPlot({
     
-    window_reactive()
-   
+    result <- window_reactive()
+    window_data <- result$window_data
+    
     plot(value~age_days, data = data_analyte(), pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
-           ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
+           ylab = y.axis.name(), cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
       
-    x_lower <- window_data_reflimR$age_days
-    y_lower <- window_data_reflimR$quantile1
+    x_lower <- window_data$age_days
+    y_lower <- window_data$quantile1
       
     segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
     lowerlimit <- data.frame(x = x_lower, y = y_lower)
 
-    x_upper <- window_data_reflimR$age_days
-    y_upper <- window_data_reflimR$quantile2
+    x_upper <- window_data$age_days
+    y_upper <- window_data$quantile2
       
     segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
     upperlimit <- data.frame(x = x_upper, y = y_upper)
@@ -1401,32 +1193,34 @@ server <- function(input, output, session) {
   # Tables to the regular windowmethod - with reflimR
   output$windowtable_t <- DT::renderDataTable({
     
-    window_reactive()
+    result <- window_reactive()
+    window_data_all <- result$window_data_all
     
-    DT::datatable(window_data_all_reflimR, rownames = FALSE, extensions = 'Buttons',
+    DT::datatable(window_data_all, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Regular Window-Method with reflimR')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
-      DT::formatRound(c(3:length(window_data_all_reflimR)), 2)
+      DT::formatRound(c(3:length(window_data_all)), 2)
   })
   
   
   # LIS-Method
   output$lis_window <- renderPlot({
     
-    window_lis()
+    result <- window_lis()
+    window_data <- result$window_data
     
     plot(value~age_days, data = data_analyte(), pch = 20, cex = 1, col = "grey", 
-         xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
+         xlab = "Age [Days]", ylab = y.axis.name(), cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
     
-    x_lower <- window_data_reflimR_lis$age_days
-    y_lower <- window_data_reflimR_lis$quantile1
+    x_lower <- window_data$age_days
+    y_lower <- window_data$quantile1
     
     segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
     lowerlimit <- data.frame(x = x_lower, y = y_lower)
     
-    x_upper <- window_data_reflimR_lis$age_days
-    y_upper <- window_data_reflimR_lis$quantile2
+    x_upper <- window_data$age_days
+    y_upper <- window_data$quantile2
     
     segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
     upperlimit <- data.frame(x = x_upper, y = y_upper)
@@ -1445,209 +1239,63 @@ server <- function(input, output, session) {
     }
   })
   
-  # Window-Method coupled to a Decision Tree - Analysis for Normal- and Lognormaldistribution
+  # Window-Method coupled to the LIS-Method - Analysis for Normal- and Lognormaldistribution
   output$lis_window_analysis <- renderPlot({
     
-    if (is.null(dataset_input_lis())) {
-      lis_data <<- read.delim2(input$lis_data)}
-    if (!is.null(dataset_input_lis())) {
-      lis_data <<- read.delim2(dataset_input_lis()[["datapath"]])}
-    
-    lis <- subset(lis_data, AGE_TO <= input$age_input)
-    
-    lis <- data.frame(lis_data[,2])
+    lis <- data.frame(read_lis_data()[,2])
     splits <- data.frame(index = lis)
+    lis_split <- round(c(0,sort(splits[,1])))
+ 
+    par(mfrow = c(1,length(lis_split) - 1))
     
-    split <- round(c(0,sort(splits[,1])))
-    
-    par(mfrow = c(1,length(split) - 1))
-    window_method_lis(data_analyte(), split, "reflim", TRUE)
+    window_method_lis(data_analyte(), lis_split, "reflim", input$lis_data_nmin, TRUE)
   })
   
-  # Tables to the Window-method with Decision Tree - with reflimR
+  # Tables to the Window-method coupled to the LIS-Method - with reflimR
   output$lis_table_t <- DT::renderDataTable({
     
-    window_lis()
+    result <- window_lis()
+    window_data_all <- result$window_data_all
     
-    DT::datatable(window_data_lis_reflimR, rownames = FALSE, extensions = 'Buttons',
+    DT::datatable(window_data_all, rownames = FALSE, extensions = 'Buttons',
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Laboratory Information System (LIS)-Method with reflim()')) %>%
       DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
-      DT::formatRound(c(3:length(window_data_lis_reflimR)), 2)
+      DT::formatRound(c(3:length(window_data_all)), 2)
   })
   
   # Window-Method coupled to a Decision Tree
   output$tree_window <- renderPlot({
     
     # Build Decision Tree
-    build_rpart()
-    windowtree()
+    df <- data_analyte()
+    sex_age_rpart <- build_rpart()
+    df$leaf <- sex_age_rpart$where
+    
+    gr <- ggplot(df, aes(x = age_days, y = value, color = sex)) + geom_point() + theme_bw() + 
+      labs(x = 'Age (days)', y = y.axis.name()) + scale_color_manual(values = c("F" = "indianred", "M" = "cornflowerblue"))
 
-    plot(value~age_days, data = data_analyte(), pch = 20, cex = 1, col = "grey", 
-         xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-         
-    x_lower <- window_data_reflimR_rpart$age_days
-    y_lower <- window_data_reflimR_rpart$quantile1
-         
-    segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
-    lowerlimit <- data.frame(x = x_lower, y = y_lower)
-         
-    x_upper <- window_data_reflimR_rpart$age_days
-    y_upper <- window_data_reflimR_rpart$quantile2
-         
-    segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
-    upperlimit <- data.frame(x = x_upper, y = y_upper)
-         
-    for (i in 1:(nrow(lowerlimit) - 1)) {
-           
-      age <- c(lowerlimit$x[i + 1], lowerlimit$x[i], lowerlimit$x[i], lowerlimit$x[i + 1])
-           
-      lowerlimit_polygon <- c(lowerlimit$y[i], lowerlimit$y[i])
-      upperlimit_polygon <- c(upperlimit$y[i], upperlimit$y[i])
-      if (length(lowerlimit_polygon > 1)) {
-          polygon(age, c(upperlimit_polygon[2], upperlimit_polygon[1], lowerlimit_polygon[1], lowerlimit_polygon[2]), 
-                  col = rgb(red = 0 , green = 0, blue = 0, alpha = 0.25), border = NA)
-      }
-    }         
+    gr <- draw_ri_rpart(df, gr, sex = "M", is_unisex = TRUE, reflim_n.min = input$tree_window_nmin)
+    gr <- draw_ri_rpart(df, gr, sex = "M", is_unisex = FALSE, reflim_n.min = input$tree_window_nmin)
+    gr <- draw_ri_rpart(df, gr, sex = "F", is_unisex = FALSE, reflim_n.min = input$tree_window_nmin)
+
+    print(gr)    
   })
   
   # Plot used Decision Tree
   output$tree_rpart <- renderPlot({
     
-    build_rpart()
-    rpart.plot(rpart_, box.palette = "RdBu", roundint = FALSE)
-    #rsq.rpart(rpart_)
+    rpart.plot(build_rpart(), box.palette = "RdBu", roundint = FALSE)
+    #rsq.rpart(build_rpart())
   })
-  
-  # Window-Method coupled to a Decision Tree - Analysis for Normal- and Lognormaldistribution
-  output$tree_window_analysis <- renderPlot({
-    
-    # Build Decision Tree
-    build_rpart()
-    windowtree()
-    
-    splits <- data.frame(rpart_$splits)
-    split <- round(c(0,sort(splits$index), max(data_analyte()$age_days)))
-    par(mfrow = c(1,length(split) - 1))
-    
-    window_method_split(data_analyte(), split, "reflim", TRUE)
-  })
-  
-  # Tables to the Window-method with Decision Tree - with reflimR
-  output$tree_windowtable_t <- DT::renderDataTable({
-  
-    build_rpart()  
-    windowtree()
-    
-    DT::datatable(window_data_split_reflimR, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Window Method with Decision Tree with reflim()')) %>%
-      DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
-      DT::formatRound(c(3:length(window_data_split_reflimR)), 2)
-  })
-  
-  # Sliding Window-Method 
-  output$slidingwindow <- renderPlot({
-  
-    slidingwindow()
-   
-    plot(value~age_days, data = data_analyte(), pch = 20, cex = 1, col = "grey",
-         xlab = "Age [Days]", ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i")
-    
-    x_lower <- slide_reflimR[,2]
-    y_lower <- slide_reflimR[,5]
-    
-    segments(x_lower[-length(x_lower)],y_lower[-length(x_lower)],x_lower[-1],y_lower[-length(x_lower)])
-    lowerlimit <- data.frame(x = x_lower, y = y_lower)
-    
-    x_upper <- slide_reflimR[,2]
-    y_upper <- slide_reflimR[,6]
-    
-    segments(x_upper[-length(x_upper)],y_upper[-length(x_upper)],x_upper[-1],y_upper[-length(x_upper)])
-    upperlimit <- data.frame(x = x_upper, y = y_upper)
-    
-    for (i in 1:(nrow(lowerlimit) - 1)) {
-      
-      age <- c(lowerlimit$x[i + 1], lowerlimit$x[i], lowerlimit$x[i], lowerlimit$x[i + 1])
-      
-      lowerlimit_polygon <- c(lowerlimit$y[i], lowerlimit$y[i])
-      upperlimit_polygon <- c(upperlimit$y[i], upperlimit$y[i])
-      if (length(lowerlimit_polygon > 1)) {
-        polygon(age, c(upperlimit_polygon[2], upperlimit_polygon[1], lowerlimit_polygon[1], lowerlimit_polygon[2]), 
-                col = rgb(red = 0 , green = 0, blue = 0, alpha = 0.25), border = NA)
-      }
-    }
-  })
-  
-  # Tables to the Sliding Window-method - with reflimR
-  output$sliding_reflimR <- DT::renderDataTable({
-    
-    slidingwindow()
-    
-    DT::datatable(slide_reflimR, rownames = FALSE, extensions = 'Buttons',
-                  options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
-                  caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;', 'Table: Sliding Window-Method with reflim()')) %>%
-      DT::formatStyle(columns = c(1,2), backgroundColor = "seagreen") %>% 
-      DT::formatRound(c(3:length(slide_reflimR)), 2)
-  })
-  
-  # # Comparison Regular Window and Sliding Window
-  # output$rsquared_table <- DT::renderDataTable({
-  # 
-  #   data_analyte()
-  #   window_reactive()
-  #   build_rpart()
-  #   windowtree()
-  #   
-  #   mae_window <- mae_window()
-  #   mse_window <- mse_window()
-  #   rmse_window <- rmse_window()
-  #   r_test <- r_window()
-  # 
-  #   rsquared_table <<- data.frame("Method" = c("Regular Window (reflim())", "Decision Tree Window (reflim())"),
-  #                                 MAE = c(mae_window),
-  #                                 MSE = c(mse_window),
-  #                                 RMSE = c(rmse_window),
-  #                                 R2 = c(r_test), check.names = FALSE)
-  #   # Round the data
-  #   rsquared_table[2] <- round_df(rsquared_table[2], 3)
-  #   rsquared_table[3] <- round_df(rsquared_table[3], 3)
-  #   rsquared_table[4] <- round_df(rsquared_table[4], 3)
-  #   rsquared_table[5] <- round_df(rsquared_table[5], 3)
-  #   
-  #   biggest_r2 <- rsquared_table[which.max(rsquared_table$R2),]$R2
-  #   smallest_mae <- rsquared_table[which.min(rsquared_table$MAE),]$MAE
-  #   smallest_mse <- rsquared_table[which.min(rsquared_table$MSE),]$MSE
-  #   smallest_rmse <- rsquared_table[which.min(rsquared_table$RMSE),]$RMSE
-  #   
-  #   DT::datatable(rsquared_table, rownames= FALSE, extensions = 'Buttons',
-  #                 options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print'))) %>%
-  #     DT:: formatStyle(columns = "R2", background = styleEqual(biggest_r2, "lavender")) %>%
-  #     DT:: formatStyle(columns = "MAE", background = styleEqual(smallest_mae, "lavender")) %>%
-  #     DT:: formatStyle(columns = "MSE", background = styleEqual(smallest_mse, "lavender")) %>%
-  #     DT:: formatStyle(columns = "RMSE", background = styleEqual(smallest_rmse, "lavender"))
-  # })
  
-  ################################ Quant Sheets ####################################
-  
-  # output$quantsheets <- renderPlot({
-  # 
-  #   data_analyte()
-  # 
-  #   # Check transformation for x
-  #   data_power <- findPower(data_analyte_short[,3],data_analyte_short[,4])
-  #   # Make Quant sheets with the power of the transformation
-  #   quantsheets <<- quantSheets(value, age_days, data = data_analyte_short,
-  #                      cent = c(2.5, 50, 97.5), power = data_power)
-  # })
-  
   ################################ LMS #############################################
   
   # LMS-Percentile Plot
   output$lms <- renderPlot({
     
     lms_reactive()
-    centiles(lms_, cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1, 
+    centiles(lms_, cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1, 
              col.cent = c("indianred","black","cornflowerblue"), lty.centiles = c(3,1,3),lwd.centiles = 2, 
              legend = FALSE, col = "lightgrey")
   })
@@ -1688,7 +1336,7 @@ server <- function(input, output, session) {
   ##################################### GAMLSS ####################################################
   
   output$all_gamlss <- renderPlot({
-    centiles.com(pb_, cs_, poly_, poly4_, nn_, tr_, cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, 
+    centiles.com(pb_, cs_, poly_, poly4_, nn_, tr_, cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), 
                   legend = TRUE, main = "GAMLSS")
   })
   
@@ -1709,10 +1357,10 @@ server <- function(input, output, session) {
     par(mfrow = c(1,2))
     
     centiles(pb_, main = "GAMLSS with P-Splines", cent = c(2.5,50,97.5), xlab = "Age [Days]", 
-             ylab = ylab_, pch = 20, cex = 1, col.cent = c("indianred","black","cornflowerblue"), 
+             ylab = y.axis.name(), pch = 20, cex = 1, col.cent = c("indianred","black","cornflowerblue"), 
              lty.centiles = c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
     centiles(cs_, main = "GAMLSS with Cubic Splines", cent = c(2.5,50,97.5), xlab = "Age [Days]", 
-             ylab = ylab_, pch = 20, cex = 1, col.cent = c("indianred","black","cornflowerblue"), 
+             ylab = y.axis.name(), pch = 20, cex = 1, col.cent = c("indianred","black","cornflowerblue"), 
              lty.centiles = c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
   
@@ -1723,10 +1371,10 @@ server <- function(input, output, session) {
     par(mfrow = c(1,2))
  
     centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent = c(2.5,50,97.5), xlab = "Age [Days]",
-             ylab = ylab_, pch = 20, cex = 1, col.cent = c("indianred","black","cornflowerblue"), 
+             ylab = y.axis.name(), pch = 20, cex = 1, col.cent = c("indianred","black","cornflowerblue"), 
              lty.centiles = c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
     centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent = c(2.5,50,97.5), xlab = "Age [Days]", 
-             ylab = ylab_, pch = 20, cex = 1, col.cent = c("indianred","black","cornflowerblue"), 
+             ylab = y.axis.name(), pch = 20, cex = 1, col.cent = c("indianred","black","cornflowerblue"), 
              lty.centiles = c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
   
@@ -1851,13 +1499,13 @@ server <- function(input, output, session) {
     try(wp(poly4_, ylim.all = 3, col = "cornflowerblue", n.inter = 9))
   })
   
-  # Neural Network (machine learning) ##############################################
+  # Neural Network (machine learning) #############################################################
   
   # Centiles Plot with the Neural Network 
   output$gamlss_net <- renderPlot({
     
     build_gamlss_model()
-    centiles(nn_, main = "GAMLSS with Neural Network", cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+    centiles(nn_, main = "GAMLSS with Neural Network", cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
              col.cent = c("indianred","black","cornflowerblue"), lty.centiles = c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
 
@@ -1899,7 +1547,7 @@ server <- function(input, output, session) {
     
     build_gamlss_model()
     
-    centiles(tr_, main = "GAMLSS with Decision Tree", cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+    centiles(tr_, main = "GAMLSS with Decision Tree", cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
              col.cent = c("indianred","black","cornflowerblue"), lty.centiles = c(3,1,3), lwd.centiles = 2, legend = FALSE, col = "lightgrey")
   })
   
@@ -2150,7 +1798,7 @@ server <- function(input, output, session) {
     
     model <- eval(parse(text = input$select_model))
     
-    plot(model$x, model$`2.5`, xlab = "Age [Days]", ylab = ylab_, cex = 0.5, lty = 3, type = "l", col = "indianred", ylim = c(0,max(model$`97.5`)))
+    plot(model$x, model$`2.5`, xlab = "Age [Days]", ylab = y.axis.name(), cex = 0.5, lty = 3, type = "l", col = "indianred", ylim = c(0,max(model$`97.5`)))
     lines(model$x, model$`50`, cex = 0.5, lty = 1, col = "black")
     lines(model$x, model$`97.5`, cex = 0.5, lty = 3, col = "cornflowerblue")
   })
@@ -2322,7 +1970,7 @@ server <- function(input, output, session) {
         stop()}}
     
     plot(value~age_days, data = data_analyte(), pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
-         ylab = ylab_, cex.lab = 1.25, cex.axis = 1.25, xaxs = "i",  
+         ylab = y.axis.name(), cex.lab = 1.25, cex.axis = 1.25, xaxs = "i",  
          ylim = c(min(deviation_gamlss$`2.5% Percentil`, na.rm = TRUE), max(deviation_gamlss$`97.5% Percentil`, na.rm = TRUE)))
     
     x_lower <- c(deviation_gamlss$`Age-range from`, tail(deviation_gamlss$`to [Days]`, 1))
@@ -2350,7 +1998,7 @@ server <- function(input, output, session) {
     }
   })
   
-  ################################ Residuals #######################################
+  ################################ Residuals ######################################################
   
   # Plot the residuals from the GAMLSS
   output$outlier <- renderPlot({
@@ -2375,7 +2023,7 @@ server <- function(input, output, session) {
     palette <- colorRampPalette(c("indianred","seagreen3","cornflowerblue","seagreen3","indianred"))(50)
     
     plot(data_analyte()[,4],data_analyte()[,5], col = palette[cut(residuals_gamlss$resid, 50)], pch = 20, cex = 1.5, xaxs = "i",
-         xlab = "Age [Days]", ylab = ylab_, main = "Residuals")
+         xlab = "Age [Days]", ylab = y.axis.name(), main = "Residuals")
   })
   
   # Plot the centiles from the cutted dataset with a small residual
@@ -2386,7 +2034,7 @@ server <- function(input, output, session) {
 
     model <- eval(parse(text = paste0("o", input$select_model_resi)))
     
-    centiles(model, cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+    centiles(model, cent = c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
              col.cent = c("indianred","black","cornflowerblue"), lty.centiles = c(3,1,3), legend = FALSE, lwd.centiles = 2)
   })
   
@@ -2402,7 +2050,7 @@ server <- function(input, output, session) {
                               col.lab = "black", pch = 20, cex = 0.5, cex.lab = 1.5, cex.axis = 1, cex.main = 1.5))
   })
   
-  # Tables with the cutted datatsets #################################################
+  # Tables with the cutted datatsets ##############################################################
   
   # Table for prediction for the P-Splines
   output$gamlss_residuals_pb <- DT::renderDataTable({
@@ -2501,7 +2149,7 @@ server <- function(input, output, session) {
     
     linear_regression <<- lm(value~age_days, data = data_regression)
     plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
-         ylab = ylab_, main = paste("Linear Regression of the data from", data_analyte()[1,7]), xaxs = "i")
+         ylab = y.axis.name(), main = paste("Linear Regression of the data from", data_analyte()[1,7]), xaxs = "i")
     abline(linear_regression)
     
     reg_p <- predict(linear_regression, newdata = data.frame(age_days = regression_pred), interval = "prediction")
@@ -2515,7 +2163,7 @@ server <- function(input, output, session) {
     
     poly_2_regression <<- lm(value ~ poly(age_days,10), data = data_regression)
     plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
-         ylab = ylab_, main = paste(" Polynomials (10) of the data from", data_analyte()[1,7]), xaxs = "i")
+         ylab = y.axis.name(), main = paste(" Polynomials (10) of the data from", data_analyte()[1,7]), xaxs = "i")
     lines(sort(data_analyte()[,4]), fitted(poly_2_regression)[order(data_analyte()[,4])])
     
     reg_p <- predict(poly_2_regression, newdata = data.frame(age_days = regression_pred), interval = "prediction")
@@ -2529,7 +2177,7 @@ server <- function(input, output, session) {
     
     poly_3_regression <<- lm(value ~ poly(age_days,3), data = data_regression)
     plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
-         ylab = ylab_, main = paste(" Polynomials (3) of the data from", data_analyte()[1,7]), xaxs = "i")
+         ylab = y.axis.name(), main = paste(" Polynomials (3) of the data from", data_analyte()[1,7]), xaxs = "i")
     lines(sort(data_analyte()[,4]), fitted(poly_3_regression)[order(data_analyte()[,4])])
     
     reg_p <- predict(poly_3_regression, newdata = data.frame(age_days = regression_pred), interval = "prediction")
@@ -2543,7 +2191,7 @@ server <- function(input, output, session) {
     
     poly_4_regression <<- lm(value ~ poly(age_days,4), data = data_regression)
     plot(data_analyte()[,5] ~ data_analyte()[,4], pch = 20, cex = 1, col = "grey", xlab = "Age [Days]",
-         ylab = ylab_, main = paste(" Polynomials (4) of the data from", data_analyte()[1,7]), xaxs = "i")
+         ylab = y.axis.name(), main = paste(" Polynomials (4) of the data from", data_analyte()[1,7]), xaxs = "i")
     lines(sort(data_analyte()[,4]), fitted(poly_4_regression)[order(data_analyte()[,4])])
     
     reg_p <- predict(poly_4_regression, newdata = data.frame(age_days = regression_pred), interval = "prediction")
@@ -2694,44 +2342,6 @@ server <- function(input, output, session) {
                   options = list(dom = 'Blfrtip', pageLength = 15, buttons = c('copy', 'csv', 'pdf', 'print')), 
                   caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table: Polynomial Regression (3)'))
   })
-  
-  ##################################### Download ##################################################
-
-  # Regular Window with reflim()
-  output$Download_window_data_all_reflimR <- downloadHandler(
-    filename = function() {
-      paste0(Sys.Date(),"_Regular_Window_With_reflim.csv")},
-    content = function(file) {
-      write.csv2(window_data_all_reflimR, file, row.names = FALSE)})
-
-  # Window-Method coupled Decision Tree with reflim()
-  output$Download_window_data_split_reflimR <- downloadHandler(
-    filename = function() {
-      paste0(Sys.Date(),"_Windowtree_With_reflim.csv")},
-    content = function(file) {
-      write.csv2(window_data_split_reflimR, file, row.names = FALSE)})
-  
-  # Sliding-Windowmethod with reflim()
-  output$Download_sliding_reflimR <- downloadHandler(
-    filename = function() {
-      paste0(Sys.Date(),"_SlidingWindow_With_reflim.csv")},
-    content = function(file) {
-      write.csv2(slide_reflimR, file, row.names = FALSE)})
-  
-  # LIS Window-Method with reflim()
-  output$Download_lis_table_t <- downloadHandler(
-    filename = function() {
-      paste0(Sys.Date(),"_LIS_With_reflim.csv")},
-    content = function(file) {
-      write.csv2(window_data_lis_reflimR, file, row.names = FALSE)})
-  
-  # Discrete GAMLSS-Models
-  output$Download_deviation_gamlss <- downloadHandler(
-    filename = function() {
-      paste0(Sys.Date(),"_GAMLSS.csv")},
-    content = function(file) {
-      write.csv2(deviation_gamlss, file, row.names = FALSE)})
-
 
   ################################ Predictions #####################################
 
@@ -2782,7 +2392,7 @@ server <- function(input, output, session) {
   # Regular Window with reflim()
   output$Download_zlog_table_window_data_all_reflimR <- downloadHandler(
     filename = function(){
-      paste0(Sys.Date(),"_Zlog_AdRI_Regular_Window_With_reflim.csv")},
+      paste0(Sys.Date(),"_Zlog_AdRI_Regular_Window.csv")},
     content = function(file) {
       
       if (input$sex == "t")
@@ -2792,11 +2402,12 @@ server <- function(input, output, session) {
       if (input$sex == "f")
         sex_zlog <- "F"
       
-      window_data_all_reflimR
+      result <- window_reactive()
+      window_data_all <- result$window_data_all
       
       zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
-                              AgeFrom = window_data_all_reflimR$`Age-range from`, AgeUntil = window_data_all_reflimR$`to [Days]`,
-                              LowerLimit = window_data_all_reflimR$`2.5 % RI`, UpperLimit = window_data_all_reflimR$`97.5% RI`, 
+                              AgeFrom = window_data_all$`Age-range from [days]`, AgeUntil = window_data_all$`to [days]`,
+                              LowerLimit = window_data_all$`2.5% RI`, UpperLimit = window_data_all$`97.5% RI`, 
                               check.names = FALSE)
       
       write.csv(zlog_adri, file, row.names = FALSE)})
@@ -2804,47 +2415,22 @@ server <- function(input, output, session) {
   # Window-Method coupled Decision Tree with reflim()
   output$Download_zlog_window_data_split_reflimR <- downloadHandler(
     filename = function(){
-      paste0(Sys.Date(),"_Zlog_AdRI_Windowtree_With_reflim.csv")},
+      paste0(Sys.Date(),"_Zlog_AdRI_Windowtree.csv")},
     content = function(file) {
       
-      if (input$sex == "t")
-        sex_zlog <- "MF"
-      if (input$sex == "m")
-        sex_zlog <- "M"
-      if (input$sex == "f")
-        sex_zlog <- "F"
+      colnames(ri_results) <- c("Age_L", "Age_U", "SEX", "LL", "UL")
       
-      zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
-                              AgeFrom = window_data_split_reflimR$`Age-range from`, AgeUntil = window_data_split_reflimR$`to [Days]`,
-                              LowerLimit = window_data_split_reflimR$`2.5 % RI`, UpperLimit = window_data_split_reflimR$`97.5% RI`, 
-                              check.names = FALSE)
+      zlog_adri <- data.frame(CODE = as.factor(data_analyte_short$name[1]), LABUNIT = input$text_unit,
+        SEX =  as.character(ri_results$SEX), UNIT = "day", AgeFrom = as.numeric(ri_results$Age_L), AgeUntil = as.numeric(ri_results$Age_U),
+        LowerLimit = as.numeric(ri_results$LL), UpperLimit = as.numeric(ri_results$UL), check.names = FALSE)
       
-      write.csv(zlog_adri, file, row.names = FALSE)})
-  
-  # Sliding-Windowmethod with reflim()
-  output$Download_zlog_sliding_window <- downloadHandler(
-    filename = function(){
-      paste0(Sys.Date(),"_Zlog_AdRI_SlidingWindow_With_reflim.csv")},
-    content = function(file) {
-      
-      if (input$sex == "t")
-        sex_zlog <- "MF"
-      if (input$sex == "m")
-        sex_zlog <- "M"
-      if (input$sex == "f")
-        sex_zlog <- "F"
-      
-      zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
-                              AgeFrom = slide_reflimR$`Age-range from`, AgeUntil = slide_reflimR$`to [Days]`,
-                              LowerLimit = slide_reflimR$`2.5 % RI`, UpperLimit = slide_reflimR$`97.5% RI`, 
-                              check.names = FALSE)
-      
-      write.csv(zlog_adri, file, row.names = FALSE)})
+      write.csv(zlog_adri, file, row.names = FALSE, quote = FALSE)
+    })
   
   # LIS Window-Method with reflim()
   output$Download_zlog_lis_table_t <- downloadHandler(
     filename = function(){
-      paste0(Sys.Date(),"_Zlog_AdRI_LIS_With_reflim.csv")},
+      paste0(Sys.Date(),"_Zlog_AdRI_LIS.csv")},
     content = function(file) {
       
       if (input$sex == "t")
@@ -2854,9 +2440,12 @@ server <- function(input, output, session) {
       if (input$sex == "f")
         sex_zlog <- "F"
       
+      result <- window_lis()
+      window_data_all <- result$window_data_all
+      
       zlog_adri <- data.frame(CODE = data_analyte_short$name[1], LABUNIT = input$text_unit, SEX =  sex_zlog, UNIT = "day",
-                              AgeFrom = window_data_lis_reflimR$`Age-range from`, AgeUntil = window_data_lis_reflimR$`to [Days]`,
-                              LowerLimit = window_data_lis_reflimR$`2.5 % RI`, UpperLimit = window_data_lis_reflimR$`97.5% RI`, 
+                              AgeFrom = window_data_all$`Age-range from [days]`, AgeUntil = window_data_all$`to [days]`,
+                              LowerLimit = window_data_all$`2.5% RI`, UpperLimit = window_data_all$`97.5% RI`, 
                               check.names = FALSE)
       
       write.csv(zlog_adri, file, row.names = FALSE)})
@@ -2952,7 +2541,7 @@ server <- function(input, output, session) {
   #   content = function(file){
   #     setEPS()
   #     postscript(file)
-  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     dev.off()})
@@ -2962,7 +2551,7 @@ server <- function(input, output, session) {
   #     "LMS.jpeg"},
   #   content = function(file){
   #     jpeg(file)
-  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #     centiles(lms_, cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     dev.off()})
@@ -2976,24 +2565,24 @@ server <- function(input, output, session) {
   #     
   #     par(mfrow=c(3,2))
   #     
-  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1, 
+  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1, 
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
-  #              ylab = ylab_, pch = 20, cex = 1, 
+  #              ylab = y.axis.name(), pch = 20, cex = 1, 
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent=c(2.5,50,97.5), xlab = "Age [Days]", 
-  #              ylab = ylab_, pch = 20, cex = 1,
+  #              ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     dev.off()})
@@ -3006,24 +2595,24 @@ server <- function(input, output, session) {
   #     
   #     par(mfrow=c(3,2))
   #     
-  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1, 
+  #     centiles(pb_, main = "GAMLSS with P-Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1, 
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #     centiles(cs_, main = "GAMLSS with Cubic Splines", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     centiles(poly_, main = "GAMLSS with Polynomials (Degree 3)", cent=c(2.5,50,97.5), xlab = "Age [Days]",
-  #              ylab = ylab_, pch = 20, cex = 1, 
+  #              ylab = y.axis.name(), pch = 20, cex = 1, 
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     centiles(poly4_, main = "GAMLSS with Polynomials (Degree 4)",cent=c(2.5,50,97.5), xlab = "Age [Days]", 
-  #              ylab = ylab_, pch = 20, cex = 1,
+  #              ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #     centiles(nn_, main = "GAMLSS with Neural Network", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
-  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = ylab_, pch = 20, cex = 1,
+  #     centiles(tr_, main = "GAMLSS with Decision Tree", cent=c(2.5,50,97.5), xlab = "Age [Days]", ylab = y.axis.name(), pch = 20, cex = 1,
   #              col.cent=c("indianred","black","cornflowerblue"), lty.centiles=c(3,1,3), lwd.centiles = 2, 
   #              legend = FALSE, col = "lightgrey")
   #     dev.off()})
@@ -3034,8 +2623,7 @@ server <- function(input, output, session) {
     content = function(file) {
       setEPS()
       postscript(file)
-      build_rpart()
-      rpart.plot(rpart_, box.palette = "RdBu", roundint = FALSE)
+      rpart.plot(build_rpart(), box.palette = "RdBu", roundint = FALSE)
       dev.off()})
 }  
 

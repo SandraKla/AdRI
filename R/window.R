@@ -2,37 +2,177 @@
 ####################################### Script for the Window-Methods #############################
 ###################################################################################################
 
-####################################### Bootstrapping #############################################
-
-#' Bootstrapping Confidence Intervals with package boot and 1000 Bootstrap replicates
-#' 
-#' @param x Data for the Confidence Intervals
-#' @param plot.it Plot the Bootstrapping
-# Boot_CI <- function(x, plot.it = FALSE){
-#   
-#   boot.quantile <- function(x, indices, ...){
-#     quantile(x[indices], ...)}
-#     
-#   boot_para <- boot(x, boot.quantile, R = 1000, probs = c(0.025, 0.975))
-#   
-#   if(plot.it){
-#     plot(boot_para)}
-#   
-#   # Calculate the quantile of the different bootstrapping values with Confidence Intervals
-#   ci <- apply(boot_para$t, MARGIN = 2, FUN = quantile, probs = c(0.5, 0.025, 0.975), na.rm = TRUE)
-#   
-#   return(ci)
-# }
-
 ####################################### Decision Tree #############################################
 
-#' Build a Decision Tree from the package rpart
+#' Build a Decision Tree for the data with the package rpart
 #'
-#' @param data_analyte the data
-#' @param minsplit_tree Minimum number of observations that must exist in a node in order for a split to be attempted
-make_rpart <- function(data_analyte, minsplit_tree = 360){
-  rpart_ <<- rpart(value~age_days, data = data_analyte, method = "anova", 
-                   control = rpart.control(minsplit = minsplit_tree, cp = 0.01))
+#' @param df Dataset with the columns value, age_days and sex.
+#' @param tree_cp Complexity hyperparameter for rpart.
+#' @param tree_minsplit minsplit hyperparameter for rpart.
+make_rpart <- function(df, tree_cp, tree_minsplit) {
+  
+  if (tree_minsplit == 0 || tree_minsplit == "" || is.na(tree_minsplit)) {
+    tree_minsplit <- 20
+  } else{
+    tree_minsplit <- as.numeric(tree_minsplit)
+  }
+  
+  if (tree_cp == 0 || tree_cp == "" || is.na(tree_cp)) {
+    tree_cp <- 0.01
+  } else{
+    tree_cp <- as.numeric(tree_cp)
+  }
+  
+  rpart_ <<- rpart(value ~ age_days + sex, data = df, 
+                   control = rpart.control(cp = tree_cp, minsplit = tree_minsplit))
+}
+
+#' Function to draw reflim lines to iterate for each RI
+#' 
+#' @param df Dataset.
+#' @param g ggplot.
+#' @param subset Subset of the dataset.
+#' @param ri_color Color for ggplot.
+#' @param xlog Logarithmic x-axis.
+#' @param reflim_n.min n.min parameter for reflimR.
+iterate_ri_rpart <- function(df, g, subset, ri_color, reflim_n.min = 40) {
+  
+  if (reflim_n.min <= 39 || is.na(reflim_n.min) || reflim_n.min == "") {
+    reflim_n.min = 40
+  }
+  
+  if (nrow(subset) != 0) {
+    for (i in 1:nrow(subset)) {
+      x <- subset[i,]
+      
+      tryCatch({
+        reflim_results <-
+          df %>% filter(leaf %in% x$leaf) %>% pull(value) %>%
+          reflim(n.min = reflim_n.min, plot.it = FALSE)
+        
+        reflim_results_sex <- df %>% filter(leaf %in% x$leaf)
+        reflim_results_sex <- reflim_results_sex$sex %>% unique()
+        
+        if ("F" %in% reflim_results_sex &&
+            "M" %in% reflim_results_sex) {
+          reflim_results_sex <- "MF"
+        }
+        
+          g <-
+            g + geom_rect(
+              alpha = 0,
+              colour = ri_color,
+              xmin = x$min_age,
+              xmax = x$max_age,
+              ymin = reflim_results$limits['lower.lim'],
+              ymax = reflim_results$limits['upper.lim']
+            )
+        
+        ri_results <-
+          rbind(
+            ri_results,
+            c(
+              x$min_age,
+              x$max_age,
+              reflim_results_sex,
+              reflim_results$limits['lower.lim'],
+              reflim_results$limits['upper.lim']
+            )
+          )
+      },
+      # use quantile if reflim is not working
+      
+      error = function(e) {
+        quantile_results <- df %>% filter(leaf %in% x$leaf) %>% pull(value)
+        
+        quantile_results_sex <- df %>% filter(leaf %in% x$leaf)
+        quantile_results_sex <- quantile_results_sex$sex %>% unique()
+        
+        if ("F" %in% quantile_results_sex &&
+            "M" %in% quantile_results_sex) {
+          quantile_results_sex <- "MF"
+        }
+        
+        i
+          g <-
+            g + geom_rect(
+              alpha = 0,
+              colour = ri_color,
+              xmin = x$min_age,
+              xmax = x$max_age,
+              ymin = as.numeric(quantile(quantile_results, 0.025)),
+              ymax = as.numeric(quantile(quantile_results, 0.975))
+            )
+        
+        ri_results <-
+          rbind(
+            ri_results,
+            c(
+              x$min_age,
+              x$max_age,
+              reflim_results_sex,
+              as.numeric(quantile(quantile_results, 0.025)),
+              as.numeric(quantile(quantile_results, 0.975))
+            )
+          )
+      })
+    }
+  }
+  ri_results <<- ri_results
+  return(g)
+}
+
+#' draw_ri_rpart two draw the data
+#'
+#' @param df Dataset
+#' @param g ggplot
+#' @param sex If dataset is for female or male
+#' @param is_unisex If dataset is for female and male
+#' @param xlog Logarithmic x-axis
+#' @param reflim_n.min n.min parameter for reflimR
+draw_ri_rpart <- function(df, g, sex, is_unisex = FALSE, reflim_n.min) {
+  
+  #define color of reference interval box
+  ri_color <-
+    case_when(
+      sex == 'M' & is_unisex == FALSE ~ 'cornflowerblue',
+      sex == 'F' & is_unisex == FALSE ~ 'indianred',
+      sex %in% c('M', 'F') &
+        is_unisex == TRUE ~ 'black'
+    )
+  
+  leafs_unisex_group <-
+    df %>%  group_by(leaf) %>%  summarise(n_sex = n_distinct(sex)) %>% filter(n_sex == 2) %>% pull(leaf)
+  
+  if (is_unisex == TRUE) {
+    #get the groups which are unisex
+    
+    #create subset of unisex_groups
+    subset <-
+      df %>% filter(leaf %in% leafs_unisex_group) %>% group_by(leaf) %>% summarise(
+        n = n(),
+        min_age = min(age_days),
+        max_age = max(age_days)
+      ) %>%
+      arrange(min_age, max_age)
+    #draw ri
+    g <- iterate_ri_rpart(df, g, subset, ri_color, reflim_n.min)
+  }
+  else if (is_unisex == FALSE) {
+    subset <-
+      df %>% group_by(leaf, sex) %>% summarise(
+        n = n(),
+        min_age = min(age_days),
+        max_age = max(age_days),
+        .groups = 'drop'
+      ) %>%
+      arrange(min_age, max_age) %>% filter(!leaf %in% leafs_unisex_group & sex == !!sex) %>% ungroup()
+    #draw ri
+    if (nrow(subset) > 0) {
+      g <- iterate_ri_rpart(df, g, subset, ri_color, reflim_n.min)
+    }
+  }
+  return(g)
 }
 
 ####################################### Regular Window-method #####################################
@@ -52,71 +192,93 @@ make_rpart <- function(data_analyte, minsplit_tree = 360){
 #' 
 #' @param window range of the window
 #' @param method reflim
-window_method <- function(data_, window, method){
-
-  ##################################### Mean ######################################################
-  mean_with_reflimR <-  data.frame() 
-  ##################################### Quantiles #################################################
-  quantiles_with_reflimR <- data.frame()
-  ##################################### Confidence Interval (95%) for the RI ######################
-  confidence_with_reflimR <- data.frame()
-  n_data_reflimR <- data.frame()
+#' @param n.min n.min for reflim()
+#' @param plot_log Plot the function lognorm() of each age groups
+window_method <- function(data, window, method = "reflim", n.min = 100, plot_log = FALSE) {
+  # Prepare result containers
+  mean_list <- list()
+  quantiles_list <- list()
+  ci_list <- list()
+  count_list <- integer()
   
-  for (i in seq(min(data_[,4]) + window, max(data_[,4]) + window, by = window)) {
-    
-    age_code <- i
+  # Define the sequence of upper bounds for each age window
+  age_sequence <- seq(min(data$age_days) + window, max(data$age_days) + window, by = window)
+  
+  for (age_code in age_sequence) {
     
     # The data subset
-    age_data <- subset(data_, data_[,4] <= i)                            # Under the condition
-    age_data_ready <- subset(age_data, age_data$age_days > i - window)     # Below the lowest condition
+    age_data <- subset(data, data$age_days <= age_code)                           # Under the condition
+    age_data <- subset(age_data, age_data$age_days > age_code - window)           # Below the lowest condition
     
-    if (i - window == 0) {
-      age_data_ready <- subset(age_data, age_data$age_days >= i - window)}
+    # Special case for the first window (starting at 0)
+    if (age_code - window == 0) {
+      age_data <- subset(age_data, age_data$age_days >= age_code - window)
+    }
     
-    normal_log <- FALSE
-    try(normal_log <- lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
-    n_data_reflimR <- rbind(n_data_reflimR, nrow(age_data_ready))
-  
-    ##################################### reflimR ################################################
+    # Save number of data points for this window
+    count_list <- c(count_list, nrow(age_data))
+    
+    # Only proceed if there is enough data
     if (method == "reflim") {
-      try(modi_qq <- reflim(age_data_ready$value, lognormal = normal_log))
+      result <- tryCatch({
+        res <- reflim(age_data$value, n.min = n.min)
+        list(mean = res$stats, quantiles = res[[3]], ci = res$confidence.int)
+      }, error = function(e) {
+        NULL
+      })
       
-      mean_with_reflimR <- rbind(mean_with_reflimR, modi_qq$stats)
-      quantiles_with_reflimR <- rbind(quantiles_with_reflimR, modi_qq[[3]])
-      confidence_with_reflimR <- rbind(confidence_with_reflimR, modi_qq$confidence.int)
+      # Save results if successful
+      if (!is.null(result)) {
+        mean_list[[length(mean_list) + 1]] <- result$mean
+        quantiles_list[[length(quantiles_list) + 1]] <- result$quantiles
+        ci_list[[length(ci_list) + 1]] <- result$ci
+      }
     }
   }
-    
-  ##################################### Save the data #############################################
   
-  # Window-Data with the reflim()
+  # Convert results from lists to data frames
+  mean_df <- do.call(rbind, mean_list)
+  quantiles_df <- do.call(rbind, quantiles_list)
+  ci_df <- do.call(rbind, ci_list)
   
-  window_data_reflimR <<- data.frame(age_days = seq(min(data_[,4]), age_code, by = window), 
-                                   mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n = 1)), 
-                                   quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n = 1)),
-                                   quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n = 1)))
+  # Create age midpoints
+  age_midpoints <- seq(min(data$age_days), max(age_sequence), by = window)
   
-  ##################################### Tables to download ########################################
+  # Main result for plotting or processing
+  window_data <- data.frame(
+    age_days = age_midpoints,
+    mean = c(mean_df[, 1], tail(mean_df[, 1], 1)),
+    quantile1 = c(quantiles_df[, 1], tail(quantiles_df[, 1], 1)),
+    quantile2 = c(quantiles_df[, 2], tail(quantiles_df[, 2], 1))
+  )
   
-  window_data_all_reflimR <<- data.frame("Age-range from"           = seq(min(data_[,4]), age_code - 1, by = window),
-                                       "to [Days]"                = c(head(seq(min(data_[,4]) + window, age_code, by = window),-1),max(data_$age_days)),
-                                       "Age-range from"           = round_df(seq(min(data_[,4]), age_code - 1, by = window)/365, 3),
-                                       "to [Years]"               = c(round_df(head(seq(min(data_[,4]) + window, age_code, by = window)/365,-1),3), max(data_$age)),
-                                       "2.5 % RI"                 = c(quantiles_with_reflimR[,1]),
-                                       "97.5% RI"                 = c(quantiles_with_reflimR[,2]),
-                                       "95% CI (2.5% RI) from"    = c(confidence_with_reflimR[,1]),
-                                       "to"                       = c(confidence_with_reflimR[,2]),
-                                       "95% CI (97.5% RI) from"   = c(confidence_with_reflimR[,3]),
-                                       "to"                       = c(confidence_with_reflimR[,4]),
-                                       "Number of data points"    = c(n_data_reflimR[,1]), check.names = FALSE)
+  # Full summary table (for download or inspection)
+  window_data_all <- data.frame(
+    "Age-range from [days]" = seq(min(data$age_days), max(age_sequence) - 1, by = window),
+    "to [days]" = c(head(seq(min(data$age_days) + window, max(age_sequence), by = window), -1), max(data$age_days)),
+    "Age-range from [years]" = round(seq(min(data$age_days), max(age_sequence) - 1, by = window) / 365, 3),
+    "to [years]" = c(round(head(seq(min(data$age_days) + window, max(age_sequence), by = window) / 365, -1), 3), max(data$age)),
+    "2.5% RI" = quantiles_df[, 1],
+    "97.5% RI" = quantiles_df[, 2],
+    "95% CI (2.5%) from" = ci_df[, 1],
+    "to" = ci_df[, 2],
+    "95% CI (97.5%) from" = ci_df[, 3],
+    "to" = ci_df[, 4],
+    "Number of data points" = count_list[1:nrow(quantiles_df)], check.names = FALSE
+  )
+  
+  # Return both outputs as a list
+  return(list(
+    window_data = window_data,
+    window_data_all = window_data_all
+  ))
 }
 
-####################################### Window-Method coupled to the Decision Tree ################
+####################################### Window-Method coupled to the LIS ##########################
 
-#' Window_method were the age groups are calculated with the help machine learning, more accurate 
-#' Decision Tree from rpart().
-#'
-#' @param data_window_split Given dataset:
+#' Window-method with LIS the reflim
+#' 
+#' @param data_ Given dataset:
 #' 
 #'     patient sex age age_days value code name
 #' 25 35714677   W   2      905  40.9  3.2 ALBS
@@ -126,423 +288,69 @@ window_method <- function(data_, window, method){
 #' 71 35744894   M   0       39  27.0  3.3 ALBS
 #' 73 35746153   W  16     5981  50.8  0.5 ALBS
 #' 
-#' @param split Age group
+#' @param split range of the window
 #' @param method reflim
+#' @param n.min n.min for reflim()
+#' @param If from regular window/LIS
 #' @param plot_log Plot the function lognorm() of each age groups
-window_method_split <- function(data_window_split, split, method, plot_log = FALSE){
+window_method_lis <- function(data_, split, method = "reflim", n.min = 100, plot_log = FALSE){
   
-  ##################################### Mean ######################################################
-  mean_with_reflimR <-  data.frame() 
-  ##################################### Quantile ##################################################
-  quantiles_with_reflimR <- data.frame() 
-  ##################################### Confidence Interval (95%) for the RI ######################
-  confidence_with_reflimR <- data.frame()
-  n_data_reflimR <- data.frame()
-  
-  for (i in seq(2,length(split))) {
-    
-    age_code <- split[i]
-
-    # The data subset 
-    age_data <- subset(data_window_split, data_window_split$age_days <= split[i])  # Under the condition
-    age_data_ready <- subset(age_data, age_data$age_days > split[i - 1])             # Below the lowest condition
-    if (split[i - 1] == 0) {
-      age_data_ready <- subset(age_data, age_data$age_days >= split[i - 1])}  # Below the lowest condition
-
-    normal_log <- FALSE
-    
-    if (!plot_log) {
-      try(normal_log <- lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
-    } else{
-      # Plot the distribution of each group to check for normally distribution
-      try(normal_log <- lognorm(age_data_ready$value, plot.it = TRUE, main = paste("between", split[i-1], "and", split[i], "days"))$lognorm)
-    }
-    n_data_reflimR <- rbind(n_data_reflimR, nrow(age_data_ready))
-    
-    ################################### reflimR ##################################################
-    if (method == "reflim") {
-      
-      try(modi_qq <- reflim(age_data_ready$value, lognormal = normal_log, plot.it = FALSE))
-
-      mean_with_reflimR <- rbind(mean_with_reflimR, modi_qq$stats)
-      quantiles_with_reflimR <- rbind(quantiles_with_reflimR, modi_qq[[3]])
-      confidence_with_reflimR <- rbind(confidence_with_reflimR, modi_qq$confidence.int)
-    }
-  }
-  
-  ##################################### Save the data #############################################
-  
-  # Window-Data with reflim()
-  window_data_reflimR_rpart <<- data.frame(age_days = split,                                    
-                                         mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n = 1)), 
-                                         quantile1 = c(quantiles_with_reflimR[,1], tail(quantiles_with_reflimR[,1], n = 1)),
-                                         quantile2 = c(quantiles_with_reflimR[,2], tail(quantiles_with_reflimR[,2], n = 1)))
-
-  ##################################### Tables to download ########################################
-
-  window_data_split_reflimR <<- data.frame("Age-range from"         = split[1:length(split) - 1],
-                                         "to [Days]"              = split[2:length(split)],
-                                         "Age-range from"         = round_df(split[1:length(split) - 1]/365, 3),
-                                         "to [Years]"             = round_df(split[2:length(split)]/365, 3),
-                                         "2.5 % RI"                 = c(quantiles_with_reflimR[,1]),
-                                         "97.5% RI"                 = c(quantiles_with_reflimR[,2]),
-                                         "95% CI (2.5% RI) from"    = c(confidence_with_reflimR[,1]),
-                                         "to"                       = c(confidence_with_reflimR[,2]),
-                                         "95% CI (97.5% RI) from"   = c(confidence_with_reflimR[,3]),
-                                         "to"                       = c(confidence_with_reflimR[,4]),
-                                         "Number of data points"    = c(n_data_reflimR[,1]), check.names = FALSE)
-}
-
-
-#' Same as window_method_split() just with given age groups
-#' 
-#' @param data_window_split Given dataset:
-#' 
-#'     patient sex age age_days value code name
-#' 25 35714677   W   2      905  40.9  3.2 ALBS
-#' 30 35746528   M   0       18  34.1  3.3 ALBS
-#' 66 35746170   W   5     2157  27.2  3.3 ALBS
-#' 68 35725954   M   1      572  41.8  3.1 ALBS
-#' 71 35744894   M   0       39  27.0  3.3 ALBS
-#' 73 35746153   W  16     5981  50.8  0.5 ALBS
-#' 
-#' @param split Age group from the LIS
-#' @param method reflim
-#' @param plot_log Plot the function lognorm() of each age groups
-window_method_lis <- function(data_window_split, split, method, plot_log = FALSE){
-  
-  ##################################### Mean ######################################################
-  mean_with_reflimR <-  data.frame() 
-  ##################################### Quantiles #################################################
-  quantiles_with_reflimR <- data.frame()
-  ##################################### Confidence Interval (95%) for the RI ######################
-  confidence_with_reflimR <- data.frame()
-  n_data_reflimR <- data.frame()
+  mean_list <-  data.frame() 
+  quantiles_list <- data.frame()
+  confidence_list <- data.frame()
+  count_list <- data.frame()
   
   for (i in seq(2,length(split))) {
     
     age_code <- split[i]
     
     # The data subset 
-    age_data <- subset(data_window_split, data_window_split$age_days <= split[i])  # Under the condition
-    age_data_ready <- subset(age_data, age_data$age_days > split[i - 1])             # Below the lowest condition
+    age_data <- subset(data_, data_$age_days <= split[i])                     # Under the condition
+    age_data_ready <- subset(age_data, age_data$age_days > split[i - 1])      # Below the lowest condition
     if (split[i - 1] == 0) {
       age_data_ready <- subset(age_data, age_data$age_days >= split[i - 1])}  # Below the lowest condition
     
-    normal_log <- FALSE
-    if (!plot_log) {
-      try(normal_log <- lognorm(age_data_ready$value, plot.it = FALSE)$lognorm)
-    } else{
+    if (plot_log) {
       # Plot the distribution of each group to check for normally distribution
-      try(normal_log <- lognorm(age_data_ready$value, plot.it = TRUE, main = paste("between", split[i-1], "and", split[i], "days"))$lognorm)
+      try(lognorm(age_data_ready$value, plot.it = TRUE, main = paste("between", split[i - 1], "and", split[i], "days"))$lognorm)
     }
-    n_data_reflimR <- rbind(n_data_reflimR, nrow(age_data_ready))
-  
-    ################################### reflimR ##################################################
+    count_list <- rbind(count_list, nrow(age_data_ready))
+    
     if (method == "reflim") {
-
-      try(modi_qq <- reflim(age_data_ready$value, lognormal = normal_log, plot.it = FALSE))
       
-      mean_with_reflimR <- rbind(mean_with_reflimR, modi_qq$stats)
-      quantiles_with_reflimR <- rbind(quantiles_with_reflimR, modi_qq[[3]])
-      confidence_with_reflimR <- rbind(confidence_with_reflimR, modi_qq$confidence.int)
+      modi_qq <- tryCatch({
+        res <- reflim(age_data_ready$value, n.min = n.min, plot.it = FALSE)
+      }, error = function(e) {
+        NULL
+      })
+      
+      mean_list <- rbind(mean_list, modi_qq$stats)
+      quantiles_list <- rbind(quantiles_list, modi_qq[[3]])
+      confidence_list <- rbind(confidence_list, modi_qq$confidence.int)
     }
   }
-  
-  ##################################### Save the data #############################################
   
   # Window-Data with reflim()
-  window_data_reflimR_lis <<- data.frame(age_days = split,
-                                       mean = c(mean_with_reflimR[,1], tail(mean_with_reflimR[,1], n = 1)), 
-                                       quantile1 = c(quantiles_with_reflimR[,1],tail(quantiles_with_reflimR[,1], n = 1)),
-                                       quantile2 = c(quantiles_with_reflimR[,2],tail(quantiles_with_reflimR[,2], n = 1)))
+  window_data <- data.frame(age_days = split,
+                            mean = c(mean_list[,1], tail(mean_list[,1], n = 1)), 
+                            quantile1 = c(quantiles_list[,1],tail(quantiles_list[,1], n = 1)),
+                            quantile2 = c(quantiles_list[,2],tail(quantiles_list[,2], n = 1)))
   
-  ##################################### Tables to download ########################################
+  window_data_all <- data.frame("Age-range from [days]"    = split[1:length(split) - 1],
+                                "to [days]"                = split[2:length(split)],
+                                "Age-range from [years]"   = round_df(split[1:length(split) - 1]/365, 3),
+                                "to [years]"               = round_df(split[2:length(split)]/365, 3),
+                                "2.5% RI"                  = c(quantiles_list[,1]),
+                                "97.5% RI"                 = c(quantiles_list[,2]),
+                                "95% CI (2.5% RI) from"    = c(confidence_list[,1]),
+                                "to"                       = c(confidence_list[,2]),
+                                "95% CI (97.5% RI) from"   = c(confidence_list[,3]),
+                                "to"                       = c(confidence_list[,4]),
+                                "Number of data points"    = c(count_list[,1]), check.names = FALSE)
   
-  window_data_lis_reflimR <<- data.frame("Age-range from"         = split[1:length(split) - 1],
-                                         "to [Days]"              = split[2:length(split)],
-                                         "Age-range from"         = round_df(split[1:length(split) - 1]/365, 3),
-                                         "to [Years]"             = round_df(split[2:length(split)]/365, 3),
-                                         "2.5 % RI"                 = c(quantiles_with_reflimR[,1]),
-                                         "97.5% RI"                 = c(quantiles_with_reflimR[,2]),
-                                         "95% CI (2.5% RI) from"    = c(confidence_with_reflimR[,1]),
-                                         "to"                       = c(confidence_with_reflimR[,2]),
-                                         "95% CI (97.5% RI) from"   = c(confidence_with_reflimR[,3]),
-                                         "to"                       = c(confidence_with_reflimR[,4]),
-                                         "Number of data points"    = c(n_data_reflimR[,1]), check.names = FALSE)
+  # Return both outputs as a list
+  return(list(
+    window_data = window_data,
+    window_data_all = window_data_all
+  ))
 }
-
-
-####################################### Sliding Window ############################################
-
-#' Sliding Window-Method goes through the data with a specific window width and with specific steps
-#'
-#' @param sliding_window_data Given dataset:
-#' 
-#'     patient sex age age_days value code name
-#' 25 35714677   W   2      905  40.9  3.2 ALBS
-#' 30 35746528   M   0       18  34.1  3.3 ALBS
-#' 66 35746170   W   5     2157  27.2  3.3 ALBS
-#' 68 35725954   M   1      572  41.8  3.1 ALBS
-#' 71 35744894   M   0       39  27.0  3.3 ALBS
-#' 73 35746153   W  16     5981  50.8  0.5 ALBS
-#' 
-#' @param width_ Range of the window
-#' @param by_ Step for the window
-#' @param outliers reflim
-sliding_window <- function(sliding_window_data, width_ = 120, by_ = 20, outliers){
-
-  # Order the data with the Index
-  sliding_window_data <- sliding_window_data[order(sliding_window_data$age_days),]
-
-  ##################################### Age for the Sliding Window ################################
-  # Begin of the Sliding Window
-  sliding_age <- rollapply(sliding_window_data$age_days, width = width_, by = by_, 
-                           FUN = min, na.rm = TRUE, partial = TRUE,align = "left")
-  # End of the Sliding Window
-  sliding_age_to <- rollapply(sliding_window_data$age_days, width = width_, by = by_, 
-                             FUN = max, na.rm = TRUE, partial = TRUE,align = "left")
-
-  ##################################### Mean of the subset generated by rollapply() ###############
-  sliding_mean <- rollapply(sliding_window_data$value, width = width_, by = by_, 
-                              FUN = mean, na.rm = TRUE, partial = TRUE,align = "left")
-
-  ##################################### Data in the window ########################################
-  suppressWarnings(sliding_reflimR_data <- rollapply(sliding_window_data$value, width = width_, by = by_, 
-                                  FUN = invisible, partial = TRUE, align = "left"))
-
-  ##################################### 2.5% Percentile ###########################################
-  sliding_2_5 <- rollapply(sliding_window_data$value, width = width_, by = by_, 
-                           FUN = quantile, probs = c(0.025), partial = TRUE, align = "left")
-  
-  ##################################### 97.5% Percentile ##########################################
-  sliding_97_5 <- rollapply(sliding_window_data$value, width = width_, by = by_, FUN = quantile, 
-                            probs = c(0.975), partial = TRUE, align = "left")
-  
-  ##################################### Dataframes for the reflim and CI ##########################
-  ##################################### Mean  #####################################################
-  mean_with_reflimR <-  data.frame() 
-  ##################################### Quantile ##################################################
-  quantiles_with_reflimR <- data.frame()
-  ##################################### Confidence Interval (95%) for the RI ######################
-  confidence_with_reflimR <- data.frame()
-  n_data_reflimR <- data.frame()
-    
-  for (i in seq(1,nrow(sliding_reflimR_data))) { 
-    
-    normal_log <- FALSE
-    try(normal_log <- lognorm(sliding_reflimR_data[i,], plot.it = FALSE)$lognorm)
-    n_data_reflimR <- rbind(n_data_reflimR, ncol(sliding_reflimR_data))
-    
-    try(modi_qq <- reflim(sliding_reflimR_data[i,], lognormal = normal_log))
-    mean_with_reflimR <- rbind(mean_with_reflimR, modi_qq$stats)
-    quantiles_with_reflimR <- rbind(quantiles_with_reflimR, modi_qq[[3]])
-    confidence_with_reflimR <- rbind(confidence_with_reflimR, modi_qq$confidence.int)
-  }
-  
-  sliding_age <- c(0, sliding_age, max(sliding_window_data$age_days))
-  sliding_n_data_reflimR <- c(n_data_reflimR[1,1], n_data_reflimR[,1], n_data_reflimR[nrow(n_data_reflimR),1])
-  sliding_age_to <- c(0, sliding_age_to, max(sliding_window_data$age_days))
-  
-  n_data_reflimR <- c(n_data_reflimR[1,1], n_data_reflimR[,1], n_data_reflimR[length(n_data_reflimR[,1]), 1])
-  mean_with_reflimR <- c(mean_with_reflimR[1,1], mean_with_reflimR[,1], mean_with_reflimR[length(mean_with_reflimR[,1]), 1])
-  quantiles_with_reflimR_2.5 <- c(quantiles_with_reflimR[1,1], quantiles_with_reflimR[,1], quantiles_with_reflimR[length(quantiles_with_reflimR[,1]), 1])
-  quantiles_with_reflimR_97.5 <- c(quantiles_with_reflimR[1,2], quantiles_with_reflimR[,2], quantiles_with_reflimR[length(quantiles_with_reflimR[,2]), 1])
-  confidence_with_reflimR_2.5_l <- c(confidence_with_reflimR[1,1], confidence_with_reflimR[,1], confidence_with_reflimR[length(confidence_with_reflimR[,1]), 1])
-  confidence_with_reflimR_97.5_l <- c(confidence_with_reflimR[1,2], confidence_with_reflimR[,2], confidence_with_reflimR[length(confidence_with_reflimR[,2]), 1])
-  confidence_with_reflimR_2.5_u <- c(confidence_with_reflimR[1,3], confidence_with_reflimR[,3], confidence_with_reflimR[length(confidence_with_reflimR[,3]), 1])
-  confidence_with_reflimR_97.5_u <- c(confidence_with_reflimR[1,4], confidence_with_reflimR[,4], confidence_with_reflimR[length(confidence_with_reflimR[,4]), 1])
-  
-  slide_reflimR <<- data.frame("Age-range from"       = sliding_age,
-                             "to [Days]"              = sliding_age_to,
-                             "Age-Range from"         = round_df(sliding_age/365, 3),
-                             "to [Years]"             = round_df(sliding_age_to/365, 3),
-                             "2.5 % RI"               = c(quantiles_with_reflimR_2.5),
-                             "97.5% RI"               = c(quantiles_with_reflimR_97.5),
-                             "95% CI (2.5% RI) from"  = c(confidence_with_reflimR_2.5_l),
-                             "to"                     = c(confidence_with_reflimR_97.5_l),
-                             "95% CI (97.5% RI) from" = c(confidence_with_reflimR_2.5_u),
-                             "to"                     = c(confidence_with_reflimR_97.5_u),
-                             "Number of data points"  = c(n_data_reflimR), check.names = FALSE)
-  
-  return(slide_reflimR)
-}
-
-####################################### Metrics ###################################################
-#' 
-#' #' Mean Absolute Error for the window methods
-#' mae_window <- function(){
-#'   
-#'   ##################################### Regular Window - Tukey ####################################
-#'   window_data_reflimR_age <- window_data_reflimR$age_days
-#'   mae_data_window_data_reflimR <- data.frame()
-#'   
-#'   for(i in seq(1:(length(window_data_reflimR_age)-1))){
-#'     mae_data_save <- data.frame(age_days = seq(window_data_reflimR$age_days[i],window_data_reflimR$age_days[i+1]), value = window_data_reflimR$mean[i])
-#'     mae_data_window_data_reflimR <- rbind(mae_data_window_data_reflimR, mae_data_save)
-#'   }
-#'   
-#'   mae_data_window_data_reflimR <- mae_data_window_data_reflimR[which(mae_data_window_data_reflimR$age_days %in% data_analyte_short$age_days),]
-#'   
-#'   value_mae <- data.frame()
-#'   for(i in data_analyte_short$age_days){
-#'     value_mae <- rbind(value_mae, mae_data_window_data_reflimR[mae_data_window_data_reflimR$age_days == i,][[2]])
-#'   }
-#' 
-#'   mae_window_data_reflimR <- mae(data_analyte_short$value, value_mae[[1]])
-#'   
-#'   ##################################### Window with Decision Tree - Tukey #########################
-#'   window_data_reflimR_rpart_age <- round(window_data_reflimR_rpart$age_days)
-#'   mae_data_window_data_reflimR_rpart <- data.frame()
-#'   
-#'   for(i in seq(1:(length(window_data_reflimR_rpart_age)-1))){
-#'     mae_data_save <- data.frame(age_days = seq(round(window_data_reflimR_rpart$age_days[i]),round(window_data_reflimR_rpart$age_days[i+1])), 
-#'                                 value = window_data_reflimR_rpart$mean[i])
-#'     mae_data_window_data_reflimR_rpart <- rbind(mae_data_window_data_reflimR_rpart, mae_data_save)
-#'   }
-#'   
-#'   mae_data_window_data_reflimR_rpart <- mae_data_window_data_reflimR_rpart[which(mae_data_window_data_reflimR_rpart$age_days %in% 
-#'                                                                                data_analyte_short$age_days),]
-#'   
-#'   value_mae <- data.frame()
-#'   for(i in data_analyte_short$age_days){
-#'     value_mae <- rbind(value_mae, mae_data_window_data_reflimR_rpart[mae_data_window_data_reflimR_rpart$age_days == i,][[2]])
-#'   }
-#' 
-#'   mae_window_data_reflimR_rpart <- mae(data_analyte_short$value, value_mae[[1]])
-#'   
-#'   return(c(mae_window_data, mae_window_data_reflimR, mae_window_data_rpart, mae_window_data_reflimR_rpart))
-#' }
-#' 
-#' 
-#' #' Mean squared Error for the window methods
-#' mse_window <- function(){
-#'   
-#'   ##################################### Regular Window - Tukey ####################################
-#'   window_data_reflimR_age <- window_data_reflimR$age_days
-#'   mse_data_window_data_reflimR <- data.frame()
-#'   
-#'   for(i in seq(1:(length(window_data_reflimR_age)-1))){
-#'     mse_data_save <- data.frame(age_days = seq(window_data_reflimR$age_days[i],window_data_reflimR$age_days[i+1]), value = window_data_reflimR$mean[i])
-#'     mse_data_window_data_reflimR <- rbind(mse_data_window_data_reflimR, mse_data_save)
-#'   }
-#'   
-#'   mse_data_window_data_reflimR <- mse_data_window_data_reflimR[which(mse_data_window_data_reflimR$age_days  %in% data_analyte_short$age_days),]
-#'   
-#'   value_mse <- data.frame()
-#'   for(i in data_analyte_short$age_days){
-#'     value_mse <- rbind(value_mse, mse_data_window_data_reflimR[mse_data_window_data_reflimR$age_days == i,][[2]])
-#'   }
-#'  
-#'   mse_window_data_reflimR <- mse(data_analyte_short$value, value_mse[[1]])
-#'   
-#'   ##################################### Window with Decision Tree - Tukey #########################
-#'   window_data_reflimR_rpart_age <- round(window_data_reflimR_rpart$age_days)
-#'   mse_data_window_data_reflimR_rpart <- data.frame()
-#'   
-#'   for(i in seq(1:(length(window_data_reflimR_rpart_age)-1))){
-#'     mse_data_save <- data.frame(age_days = seq(round(window_data_reflimR_rpart$age_days[i]),round(window_data_reflimR_rpart$age_days[i+1])), value = window_data_reflimR_rpart$mean[i])
-#'     mse_data_window_data_reflimR_rpart <- rbind(mse_data_window_data_reflimR_rpart, mse_data_save)
-#'   }
-#'   
-#'   mse_data_window_data_reflimR_rpart <- mse_data_window_data_reflimR_rpart[which(mse_data_window_data_reflimR_rpart$age_days  %in% data_analyte_short$age_days),]
-#'   
-#'   value_mse <- data.frame()
-#'   for(i in data_analyte_short$age_days){
-#'     value_mse <- rbind(value_mse, mse_data_window_data_reflimR_rpart[mse_data_window_data_reflimR_rpart$age_days == i,][[2]])
-#'   }
-#' 
-#'   mse_window_data_reflimR_rpart <- mse(data_analyte_short$value, value_mse[[1]])
-#'   
-#'   return(c(mse_window_data, mse_window_data_reflimR, mse_window_data_rpart,mse_window_data_reflimR_rpart))
-#' }
-#' 
-#' 
-#' #' Root mean squared error for the Window-methods
-#' rmse_window <- function(){
-#'   
-#'   ##################################### Regular Window - Tukey ####################################
-#'   window_data_reflimR_age <- window_data_reflimR$age_days
-#'   rmse_data_window_data_reflimR <- data.frame()
-#'   
-#'   for(i in seq(1:(length(window_data_reflimR_age)-1))){
-#'     rmse_data_save <- data.frame(age_days = seq(window_data_reflimR$age_days[i],window_data_reflimR$age_days[i+1]), value = window_data_reflimR$mean[i])
-#'     rmse_data_window_data_reflimR <- rbind(rmse_data_window_data_reflimR, rmse_data_save)
-#'   }
-#'   
-#'   rmse_data_window_data_reflimR <- rmse_data_window_data_reflimR[which(rmse_data_window_data_reflimR$age_days  %in% data_analyte_short$age_days),]
-#'   
-#'   value_rmse <- data.frame()
-#'   for(i in data_analyte_short$age_days){ 
-#'     value_rmse <- rbind(value_rmse, rmse_data_window_data_reflimR[rmse_data_window_data_reflimR$age_days == i,][[2]])
-#'   }
-#'   
-#'   rmse_window_data_reflimR <- rmse(data_analyte_short$value, value_rmse[[1]])
-#'   
-#'   ##################################### Window with Decision Tree - Tukey #########################
-#'   window_data_reflimR_rpart_age <- round(window_data_reflimR_rpart$age_days)
-#'   rmse_data_window_data_reflimR_rpart <- data.frame()
-#'   
-#'   for(i in seq(1:(length(window_data_reflimR_rpart_age)-1))){
-#'     rmse_data_save <- data.frame(age_days = seq(round(window_data_reflimR_rpart$age_days[i]), round(window_data_reflimR_rpart$age_days[i+1])), 
-#'                                  value = window_data_reflimR_rpart$mean[i])
-#'     rmse_data_window_data_reflimR_rpart <- rbind(rmse_data_window_data_reflimR_rpart, rmse_data_save)
-#'   }
-#'   
-#'   rmse_data_window_data_reflimR_rpart <- rmse_data_window_data_reflimR_rpart[which(
-#'     rmse_data_window_data_reflimR_rpart$age_days %in% data_analyte_short$age_days),]
-#'   
-#'   value_rmse <- data.frame()
-#'   for(i in data_analyte_short$age_days){
-#'     value_rmse <- rbind(value_rmse, rmse_data_window_data_reflimR_rpart[rmse_data_window_data_reflimR_rpart$age_days == i,][[2]])
-#'   }
-#'   
-#'   rmse_window_data_reflimR_rpart <- rmse(data_analyte_short$value, value_rmse[[1]])
-#'   
-#'   return(c(rmse_window_data, rmse_window_data_reflimR, rmse_window_data_rpart, rmse_window_data_reflimR_rpart))
-#' }
-#' 
-#' 
-#' #' R-Squared
-#' r_window <- function(){
-#'   
-#'   ##################################### Regular Window - Tukey ####################################
-#'   window_data_reflimR_age <- window_data_reflimR$age_days
-#'   rsquare_data_window_data_reflimR <- data.frame()
-#'   
-#'   for(i in seq(1:(length(window_data_reflimR_age)-1))){
-#'     rsquare_data_save <- data.frame(age_days = seq(window_data_reflimR$age_days[i], window_data_reflimR$age_days[i+1]), value = window_data_reflimR$mean[i])
-#'     rsquare_data_window_data_reflimR <- rbind(rsquare_data_window_data_reflimR, rsquare_data_save)
-#'   }
-#'   
-#'   rsquare_data_window_data_reflimR <- rsquare_data_window_data_reflimR[which(rsquare_data_window_data_reflimR$age_days %in% data_analyte_short$age_days),]
-#'   
-#'   value_rsquare <- data.frame()
-#'   for(i in data_analyte_short$age_days){
-#'     value_rsquare <- rbind(value_rsquare, rsquare_data_window_data_reflimR[rsquare_data_window_data_reflimR$age_days == i,][[2]])
-#'   }
-#'   
-#'   rsquare_window_data_reflimR <- rsq(data_analyte_short$value, value_rsquare[[1]])
-#'   
-#'   
-#'   ##################################### Window with Decision Tree - Tukey #########################
-#'   window_data_reflimR_rpart_age <- round(window_data_reflimR_rpart$age_days)
-#'   rsquare_data_window_data_reflimR_rpart <- data.frame()
-#'   
-#'   for(i in seq(1:(length(window_data_reflimR_rpart_age)-1))){
-#'     rsquare_data_save <- data.frame(age_days = seq(round(window_data_reflimR_rpart$age_days[i]),round(window_data_reflimR_rpart$age_days[i+1])), value = window_data_reflimR_rpart$mean[i])
-#'     rsquare_data_window_data_reflimR_rpart <- rbind(rsquare_data_window_data_reflimR_rpart, rsquare_data_save)
-#'   }
-#'   
-#'   rsquare_data_window_data_reflimR_rpart <- rsquare_data_window_data_reflimR_rpart[which(
-#'     rsquare_data_window_data_reflimR_rpart$age_days %in% data_analyte_short$age_days),]
-#'   
-#'   value_rsquare <- data.frame()
-#'   for(i in data_analyte_short$age_days){
-#'     value_rsquare <- rbind(value_rsquare, rsquare_data_window_data_reflimR_rpart[rsquare_data_window_data_reflimR_rpart$age_days == i,][[2]])
-#'   }
-#'   
-#'   rsquare_window_data_reflimR_rpart <- rsq(data_analyte_short$value, value_rsquare[[1]])
-#' 
-#'   return(c(rsquare_window_data, rsquare_window_data_reflimR, rsquare_window_data_rpart,rsquare_window_data_reflimR_rpart))
-#' }

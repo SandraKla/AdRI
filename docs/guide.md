@@ -28,7 +28,6 @@ The data set can be presorted:
 <img src="shiny_tukey.png" align="center"/>
 
 * **ID** (patient number) is automatic filled with unique numbers (if not specified)  
-* **STATION** (station code)- filled with NA (if not specified)
 * Delete data with NA in **VALUE** (value of the analyte)
 
 All tables can be saved as CSV and figures as PNG or some as EPS and JPEG. For plotly figures use the menu in the right corner. 

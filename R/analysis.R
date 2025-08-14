@@ -4,108 +4,112 @@
 
 ####################################### Preprocessing #############################################
 
-#' Preprocessing of the data: Given age range in years
+#' Preprocessing of the data
 #'
-#' @param data Selected data
-#' @param age_begin Range of the data in years (beginning)
-#' @param age_end Range of the data in years (end)
-#' @param sex Selected sex
-select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t"){  
-
+#' @param data_ Selected data
+#' @param age_begin Range of the data (beginning)
+#' @param age_end Range of the data (end)
+#' @param sex Selected sex ("m", "f", or "t" for all)
+#' @param unit Unit of age ("years" or "days")
+#' @param unique Only unique values
+select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t", unit = "years", unique = TRUE) {
+  
   # Fill ID (patient) and STATION (station) when not given in the dataset
-  if (is.null(data_$ID) || is.null(data_$STATION)) {
-    if (is.null(data_$ID)) {
-      data_$ID <- seq(1:nrow(data_))
-    }
-    if (is.null(data_$STATION)) {
-      data_$STATION <- "NA"
-    }
+  if (is.null(data_$ID)) data_$ID <- seq_len(nrow(data_))
+  
+  # Create clean data frame
+  suppressWarnings(data_analyte <- data.frame(
+    patient   = data_$ID, 
+    sex       = data_$SEX, 
+    age       = as.integer(data_$AGE_YEARS), 
+    age_days  = as.integer(data_$AGE_DAYS), 
+    value     = as.numeric(data_$VALUE),  # Non-Numeric Values are NA and deleted later
+    name      = data_$ANALYTE
+  ))
+  
+  rows_before_filter <- nrow(data_analyte)
+  
+  # Subset the data with the age_end
+  if (unit == "years") {
+    data_analyte <- subset(data_analyte, age <= age_end & age >= age_begin, select = c(patient, sex, age, age_days, value, name))
+  } else if (unit == "days") {
+    data_analyte <- subset(data_analyte, age_days <= age_end & age_days >= age_begin, select = c(patient, sex, age, age_days, value, name))
   }
-
-  # Important informations from the data
-  suppressWarnings(data_analyte <- data.frame(patient = data_$ID, 
-                                              sex = data_$SEX, 
-                                              age = as.integer(data_$AGE_YEARS), 
-                                              age_days = as.integer(data_$AGE_DAYS), 
-                                              value = as.numeric(data_$VALUE), # Non-Numeric Values are NA and deleted later
-                                              code = data_$STATION, 
-                                              name = data_$ANALYTE))
+  
+  # Deleted rows because of the subset 
+  rows_after_age_filter <- nrow(data_analyte)
+  if (rows_before_filter != rows_after_age_filter) {
+    cat(paste("*** Information!", rows_before_filter - rows_after_age_filter, "values were deleted because of your subset for the age. ***\n"))
+  }
+  
+  # Remove NAs
+  rows_before_na <- nrow(data_analyte)
+  data_analyte <- data_analyte[complete.cases(data_analyte), ]
+  rows_after_na <- nrow(data_analyte)
+  if (rows_before_na != rows_after_na) {
+    cat(paste("*** Information!", rows_before_na - rows_after_na, "values were NA and are deleted. ***\n"))
+  }
+  
+  # Filter by sex
+  if (sex == "m") {
+    data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, name))
+  } else if (sex == "f") {
+    data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, name))
+  }
+  
+  # Take only the first and unique samples from the data if ID is given
+  if (unique == TRUE) {
+    rows_before_unique <- nrow(data_analyte)
+    data_analyte <- data_analyte %>% group_by(patient) %>% filter(row_number() == 1)
+    # Convert into tibble so as.data.frame()
+    data_analyte <- as.data.frame(data_analyte)
     
-  rows_table_ <- nrow(data_analyte) 
-
-  # Subset the data with the age_end
-  data_analyte <- subset(data_analyte, age <= age_end, select = c(patient, sex, age, age_days, value, code, name))
-
-  if (!(age_begin == 0)) {
-    data_analyte <- subset(data_analyte, age >= age_begin, select = c(patient, sex, age, age_days, value, code, name))}
-  
-  # Deleted rows because of the subset 
-  if (!(rows_table_ == nrow(data_analyte))) {
-    cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were deleted because of your subset for the age. ***\n"))}
-
-  # Delete NAs
-  rows_table_ <- nrow(data_analyte)
-  data_analyte <- data_analyte[complete.cases(data_analyte), ]
-  if (!(rows_table_ == nrow(data_analyte))) {
-    cat(paste("*** Information!", rows_table_ - nrow(data_analyte), "values were NA and are deleted. ***\n"))}
-
-  # Separate data on the basis of the sex
-  if (sex == "m") {data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}
-  if (sex == "f") {data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, code, name))}
-
-  return(data_analyte)}
-
-
-#' Preprocessing of the data: Given age range in days
-#'
-#' @param data Selected data
-#' @param age_begin Range of the data in days (beginning)
-#' @param age_end Range of the data in days (end)
-#' @param sex Selected sex
-select_data_days <- function(data_, age_begin = 0, age_end, sex = "t"){  
-  
-  # Fill ID (patient) and STATION (station) when not given in the dataset
-  if (is.null(data_$ID) || is.null(data_$STATION)) {
-    if (is.null(data_$ID)){
-      data_$ID <- seq(1:nrow(data_))
-    }
-    if (is.null(data_$STATION)){
-      data_$STATION <- "NA"
-    }
+    if (!(rows_before_unique == nrow(data_analyte))) {
+      cat(paste("*** Information!", rows_before_unique - nrow(data_analyte), "values of the patients were present several times and were deleted. ***\n"))}
   }
   
-  # Important informations from the data
-  suppressWarnings(data_analyte <- data.frame(patient = data_$ID, 
-                                              sex = data_$SEX, 
-                                              age = as.integer(data_$AGE_YEARS), 
-                                              age_days = as.integer(data_$AGE_DAYS), 
-                                              value = as.numeric(data_$VALUE), # Non-Numeric Values are NA and deleted later
-                                              code = data_$STATION, 
-                                              name = data_$ANALYTE))
-  
-  rows_table_ <- nrow(data_analyte) 
-  
-  # Subset the data with the age_end
-  data_analyte <- subset(data_analyte, age_days <= age_end, select = c(patient, sex, age, age_days, value, code, name)) 
-  
-  if (!(age_begin == 0)) {
-    data_analyte <- subset(data_analyte, age_days >= age_begin, select = c(patient, sex, age, age_days, value, code, name))}
-  
-  # Deleted rows because of the subset 
-  if (!(rows_table_ == nrow(data_analyte))) {
-    cat(paste("*** Information!", rows_table_ - nrow(data_analyte) ,"values were deleted because of your subset for the age. ***\n"))}
-  
-  # Delete NAs
+  return(data_analyte)
+}
+
+#' Outlierdetection
+#'
+#' @param data_analyte Data frame to filter
+#' @param minsplit Minimum split size for decision tree (numeric)
+outlier.detection <- function(data_analyte, minsplit = 20, cp = 0.01) {
+
   rows_table_ <- nrow(data_analyte)
-  data_analyte <- data_analyte[complete.cases(data_analyte), ]
-  if (!(rows_table_ == nrow(data_analyte))) {
-    cat(paste("*** Information!", rows_table_ - nrow(data_analyte) ,"values were NA and are deleted. ***\n"))}
+  data_analyte_withoutOutliers <- data.frame()
   
-  # Separate data on the basis of the sex
-  if (sex == "m") {data_analyte <- subset(data_analyte, sex == "M", select = c(patient, sex, age, age_days, value, code, name))}
-  if (sex == "f") {data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, code, name))}
+  # Make Decision Tree to group the data in groups
+  rpart_ready <- make_rpart(data_analyte, as.numeric(minsplit), as.numeric(cp))
+  # Read the splits from the Decision Tree
+  splits <- data.frame(rpart_$splits)
+  split <- round(c(0, sort(splits$index), max(data_analyte$age_days)))
   
-  return(data_analyte)}
+  # Select each range of the splits and delete outliers with the iboxplot()
+  for (i in 2:length(split)) {
+    data_analyte_split <- subset(data_analyte, age_days <= split[i], select = c(patient, sex, age, age_days, value, name))
+    data_analyte_subset <- subset(data_analyte_split, age_days > split[i - 1])
+    
+    if (split[i - 1] == 0) {
+      data_analyte_subset <- subset(data_analyte_split, age_days >= split[i - 1])
+    }
+    
+    # Apply Tukey outlier detection (iboxplot)
+    modi <- iboxplot(data_analyte_subset$value, plot.it = FALSE)$trunc
+    
+    # Keep only non-outliers
+    data_analyte_save <- data_analyte_subset[data_analyte_subset$value %in% modi, ]
+    data_analyte_withoutOutliers <- rbind(data_analyte_withoutOutliers, data_analyte_save)
+  }
+  
+  # Info output
+  if (rows_table_ != nrow(data_analyte_withoutOutliers)) {
+    cat(paste("*** Information!", rows_table_ - nrow(data_analyte_withoutOutliers), "values were deleted because of the outlier detection. ***\n"))
+  }
+  
+  return(data_analyte_withoutOutliers)
+}
 
 ####################################### Statistics ################################################
 

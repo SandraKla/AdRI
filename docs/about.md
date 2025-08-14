@@ -13,8 +13,10 @@ You are welcome to:
 - Make a pull request on: https://github.com/SandraKla/AdRI/pulls
 - Write an Email with any questions and problems to: s.klawitter@ostfalia.de
 
-Link to the publication: 
+Links to the publication: 
+
 [A visualization tool for continuous reference intervals based on GAMLSS](https://doi.org/10.1515/labmed-2023-0033)
+
 [Automated sex and age partitioning for the estimation of reference intervals using a regression tree model](https://doi.org/10.1515/labmed-2024-0083)
 
 ## References <a name = "references"></a>
@@ -74,7 +76,8 @@ Peng, Xiaoxia & Lv, Yaqi & Feng, Guoshuang & Peng, Yaguang & Li, Qiliang & Song,
 * [gamlss](https://cran.r-project.org/web/packages/gamlss/index.html) ≥ 5.4-1
 * [gamlss.add](https://cran.r-project.org/web/packages/gamlss.add/index.html): ≥ 5.1-6 
 * [plotly](https://cran.r-project.org/web/packages/plotly/index.html): ≥ 4.10
-* [reflimR](https://cran.r-project.org/web/packages/reflimR/index.html): ≥ 1.0.6
+* [reflimR](https://cran.r-project.org/web/packages/reflimR/index.html): ≥ 1.1.0
+* [reflimR.expand](https://github.com/SandraKla/reflimR.expand): ≥ 0.0.1
 * [rpart](https://cran.r-project.org/web/packages/rpart/index.html): ≥ 4.1-15 
 * [rpart.plot](https://cran.r-project.org/web/packages/rpart.plot/index.html): ≥ 3.1.0
 * [shiny](https://cran.r-project.org/web/packages/shiny/index.html): ≥ 1.7.1
