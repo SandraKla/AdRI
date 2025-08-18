@@ -74,14 +74,20 @@ Peng, Xiaoxia & Lv, Yaqi & Feng, Guoshuang & Peng, Yaguang & Li, Qiliang & Song,
 * [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html): ≥ 1.0.8
 * [DT](https://cran.r-project.org/web/packages/DT/index.html): ≥ 0.21
 * [gamlss](https://cran.r-project.org/web/packages/gamlss/index.html) ≥ 5.4-1
-* [gamlss.add](https://cran.r-project.org/web/packages/gamlss.add/index.html): ≥ 5.1-6 
+* [gamlss.add](https://cran.r-project.org/web/packages/gamlss.add/index.html): ≥ 5.1-6
+* [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html): ≥ 3.5.2
+* [Hmisc](https://cran.r-project.org/web/packages/Hmisc/index.html): ≥ 5.2-3
 * [plotly](https://cran.r-project.org/web/packages/plotly/index.html): ≥ 4.10
 * [reflimR](https://cran.r-project.org/web/packages/reflimR/index.html): ≥ 1.1.0
 * [reflimR.expand](https://github.com/SandraKla/reflimR.expand): ≥ 0.0.1
+* [rlang](https://cran.r-project.org/web/packages/rlang/index.html): ≥ 1.1.5
 * [rpart](https://cran.r-project.org/web/packages/rpart/index.html): ≥ 4.1-15 
 * [rpart.plot](https://cran.r-project.org/web/packages/rpart.plot/index.html): ≥ 3.1.0
 * [shiny](https://cran.r-project.org/web/packages/shiny/index.html): ≥ 1.7.1
+* [shinycssloaders](https://cran.r-project.org/web/packages/shinycssloaders/index.html): ≥ 1.1.0
 * [shinydashboard](https://cran.r-project.org/web/packages/shinydashboard/index.html) ≥ 0.7.2
+* [shinyjs](https://cran.r-project.org/web/packages/shinyjs/index.html) ≥ 2.1.0
+* [truncnorm](https://cran.r-project.org/web/packages/truncnorm/index.html) ≥ 1.0-9
 * [zoo](https://cran.r-project.org/web/packages/zoo/index.html): ≥ 1.8-9
 
 * [R](https://www.r-project.org/): ≥ 4.3.2

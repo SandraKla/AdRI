@@ -40,6 +40,11 @@ if ("ggplot2" %in% rownames(installed.packages())) {
     install.packages("ggplot2")
     library(ggplot2)}
 
+if ("Hmisc" %in% rownames(installed.packages())) {
+  library(Hmisc)} else{
+    install.packages("Hmisc")
+    library(Hmisc)}
+
 if ("plotly" %in% rownames(installed.packages())) {
   library(plotly)} else{
     install.packages("plotly")
@@ -61,6 +66,11 @@ if ("reflimR.expand" %in% rownames(installed.packages())) {
     devtools::install_github("SandraKla/reflimR.expand")
     library(reflimR.expand)}
 
+if ("rlang" %in% rownames(installed.packages())) {
+  library(rlang)} else{
+    install.packages("rlang")
+    library(rlang)}
+
 if ("rpart" %in% rownames(installed.packages())) {
   library(rpart)} else{
     install.packages("rpart")
@@ -71,10 +81,25 @@ if ("rpart.plot" %in% rownames(installed.packages())) {
     install.packages("rpart.plot")
     library(rpart.plot)}
 
+if ("shinycssloaders" %in% rownames(installed.packages())) {
+  library(shinycssloaders)} else{
+    install.packages("shinycssloaders")
+    library(shinycssloaders)}
+
 if ("shinydashboard" %in% rownames(installed.packages())) {
   library(shinydashboard)} else{
     install.packages("shinydashboard")
     library(shinydashboard)}
+
+if ("shinyjs" %in% rownames(installed.packages())) {
+  library(shinyjs)} else{
+    install.packages("shinyjs")
+    library(shinyjs)}
+
+if ("truncnorm" %in% rownames(installed.packages())) {
+  library(truncnorm)} else{
+    install.packages("truncnorm")
+    library(truncnorm)}
 
 if ("zoo" %in% rownames(installed.packages())) {
   library(zoo)} else{
@@ -98,20 +123,30 @@ for clustering (unsupervised learning). Here it used to cluster the data into su
 The Decision Tree is from the package rpart and is visualized with rpart.plot. The subgroups according to the Decision Tree
 are used to calculate the reference intervals. For futher informations read the ", a("publication", href = "https://doi.org/10.1515/labmed-2024-0083"),"!"))
 
-windowtext4 <- HTML(paste0("The weighted Sliding window method goes through the data and calculates the reference intervals from each sliding window. 
-The Sliding window method offers a range of distribution functions, including the Gaussian, triangular, and trapezoidal distributions,
-with customizable parameters. Users can apply these distributions to assign weights to the data.
-Based on the weighted data, the program computes and generates a reference interval chart."))
+windowtext4 <- HTML(paste0("Computes reference intervals based on a sliding window technique. There are two variants. 
+A fixed window size and a fixed step width by which the window is shifted or windows with a guaranteed minimum number of values."))
+
+windowtext5 <- HTML(paste0("The weighted sliding window method iterates through the data and calculates reference intervals for each window. 
+It supports multiple distribution functions, including Gaussian, triangular, and trapezoidal distributions, with customizable parameters. 
+These distributions are used to assign weights to the data, on which the program then computes and generates a reference interval chart. 
+For the triangular distribution, the vertex position ranges from 0 to 1, forming an isosceles triangle when set at 0.5. 
+In the trapezoidal distribution, the top left and right vertices also range from 0 to 1, creating an isosceles trapezoid when set to 0.3 and 0.6."))
 
 regressiontext <- HTML(paste0("Regression can be used for normally distributed data to get the 95% prediction interval. The blue
 line show the 95% Confindence interval from the regression in black and the red the prediction interval (2.5% and 97.5%)."))
 
-gamlsstext1 <- HTML(paste0("Models can be compared visually or with the Akaike Information Criterion (AIC),
+gamlsstext1 <- HTML(paste0("Generalized additive models for location, scale and shape (GAMLSS) are distributional regression models, 
+where all the parameters of the assumed distribution for the response can be modeled as additive functions of the explanatory variables. 
+GAMLSS can be created with various distributions and different additive terms for smoothing. For futher informations read the ", 
+a("publication", href = "https://doi.org/10.1515/labmed-2023-0033"),"!"))
+
+gamlsstext2 <- HTML(paste0("Models can be compared visually or with the Akaike Information Criterion (AIC),
 Generalized Information Criterion (GAIC), Bayesian Information Criterion (BIC),
 or Pseudo R-Squared (R^2). The model with the smallest value for AIC, BIC and GAIC is the best model for the data.
-The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored. For futher informations read the publication", a("Homepage", href = "https://doi.org/10.1515/labmed-2023-0033"),"!"))
+The Pseudo R-Squared (R^2) should be as large as possible for a good model. These values are colored. For futher informations read the ", 
+a("publication", href = "https://doi.org/10.1515/labmed-2023-0033"),"!"))
 
-gamlsstext2 <- HTML(paste0("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
+gamlsstext3 <- HTML(paste0("After fitting the models, the residuals can be calculated and high values can be removed to delete possible 
 outliers from the model and refit the model. High residuals values are in red, low in blue", 
 strong("This must not be equal to the real outliers of the data!", br())))
 
@@ -126,6 +161,7 @@ ui <- dashboardPage(
                               menuSubItem("Regular", tabName = "windowregular", icon = icon("chart-bar")),
                               menuSubItem("LIS", tabName = "windowlis", icon = icon("chart-bar")),
                               menuSubItem("Decision Tree", tabName = "windowtree", icon = icon("tree")),
+                              menuSubItem("Sliding", tabName = "sliding", icon = icon("chart-line")),
                               menuSubItem("Weighted Sliding", tabName = "windowsliding", icon = icon("chart-line"))),
                      menuItem("Regression", tabName = "regression", icon = icon("chart-line"), startExpanded = FALSE,
                               menuSubItem("Regression", tabName = "regressionoverview", icon = icon("chart-line")),
@@ -185,7 +221,7 @@ ui <- dashboardPage(
                     tabPanel("Overview", icon = icon("home"),
                              
                              p(text), 
-                             plotlyOutput("scatterplot_plotly", height = "700px")),
+                             withSpinner(plotlyOutput("scatterplot_plotly", height = "700px"))),
                     
                     tabPanel("Dataset", icon = icon("table"),
                              
@@ -196,8 +232,8 @@ ui <- dashboardPage(
                              
                              p(text),
                              
-                             plotOutput("barplot_sex", height = "375px"),
-                             plotOutput("barplot_value", height = "375px"))
+                             withSpinner(plotOutput("barplot_sex", height = "375px")),
+                             withSpinner(plotOutput("barplot_value", height = "375px")))
                   )
                 )
               )),
@@ -231,7 +267,7 @@ ui <- dashboardPage(
                              collapsible = TRUE,
                              status = "primary",
 
-                             plotOutput("window", height = "475px")
+                             withSpinner(plotOutput("window", height = "475px"))
                          ),
                          
                          box(title = tagList(shiny::icon("table"), "Table"),
@@ -274,7 +310,7 @@ ui <- dashboardPage(
                              collapsible = TRUE,
                              status = "primary",
                              
-                             plotOutput("lis_window", height = "475px")
+                             withSpinner(plotOutput("lis_window", height = "475px"))
                          ),
                          
                          box(title = tagList(shiny::icon("database"), "Laboratory Information System (LIS)"),
@@ -283,7 +319,7 @@ ui <- dashboardPage(
                              collapsible = TRUE,
                              status = "info",
                              
-                             plotOutput("lis_window_analysis", height = "475px")
+                             withSpinner(plotOutput("lis_window_analysis", height = "475px"))
                          ),
                          
                          box(title = tagList(shiny::icon("table"), "Table"),
@@ -325,7 +361,7 @@ ui <- dashboardPage(
                              collapsible = TRUE,
                              status = "primary",
                              
-                             plotOutput("tree_window", height = "475px")
+                             withSpinner(plotOutput("tree_window", height = "475px"))
                          ),
                          
                          box(title = tagList(shiny::icon("tree"), "Decision Tree"),
@@ -334,7 +370,7 @@ ui <- dashboardPage(
                              collapsible = TRUE,
                              status = "info",
                              
-                             plotOutput("tree_rpart", height = "475px"),
+                             withSpinner(plotOutput("tree_rpart", height = "475px")),
                              downloadButton("download_tree", "Decision Tree")
                          ),
                          
@@ -349,7 +385,47 @@ ui <- dashboardPage(
                          ))
                 ))),
       
-      # ##### Sliding Window-Method ##### 
+      ##### Sliding Window-Method ##### 
+      
+      tabItem(tabName = "sliding",
+              
+              fluidRow(
+                ### Sidebar - Regular Sliding ###
+                box(
+                  title = tagList(shiny::icon("gear"), "Settings"),
+                  width = 3,
+                  solidHeader = TRUE,
+                  status = "primary",
+                  
+                  p(windowtext4),
+                  
+                  checkboxInput("checkboxregularfixed", "Use fixed window size", value = FALSE),
+                  
+                  conditionalPanel(
+                    condition = "input.checkboxregularfixed == true",
+                    numericInput("regular_window_size_truncated", "Window Size", 1000, min = 100, max = 10000),
+                    numericInput("regular_step_width_truncated", "Step Width", 100, min = 1, max = 10000)
+                  ),
+                  
+                  conditionalPanel(
+                    condition = "input.checkboxregularfixed == false",
+                    numericInput("slding_window_nmin.window", "reflimR.expand: n.min.window", 200, min = 0, max = 10000)
+                  )
+                ),
+                
+                ### MainPanel - Regular Sliding ###
+                column(width = 9,
+                       fluidRow(
+                         box(title = tagList(shiny::icon("chart-line"), "Plot"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "primary",
+                             
+                             withSpinner(plotOutput("sliding_window", height = "475px"))
+                         ))
+                ))),
+
       tabItem(tabName = "windowsliding",
               fluidRow(
 
@@ -360,25 +436,99 @@ ui <- dashboardPage(
                   solidHeader = TRUE,
                   status = "primary",
 
-                  p(windowtext4)
+                  p(windowtext5),
+                  
+                  selectInput("distribution",
+                              label = div(icon("wave-square"), "Choose weight function:"),
+                              choices = c("Truncated gaussian" = "truncated_gaussian",
+                                          "Triangular" = "triangular",
+                                          "Trapezoidal" = "trapezoidal"),
+                              selected = "truncated_gaussian"),
+                  
+                  sliderInput("segment",
+                              "Choose Segment:",
+                              min = 1,
+                              max = 1, 
+                              value = 1,
+                              step = 1,
+                              animate = animationOptions(interval = 1000, loop = TRUE)),
+                  
+                  # for truncated_gaussian
+                  conditionalPanel(
+                    condition = "input.distribution == 'truncated_gaussian'",
+                    
+                    checkboxInput("checkboxgaussianfixed", "Use fixed window size", value = FALSE),
+                    
+                    conditionalPanel(
+                      condition = "input.checkboxgaussianfixed == true",
+                      numericInput("window_size_truncated", "Window Size", 1000, min = 100, max = 10000),
+                      numericInput("step_width_truncated", "Step Width", 100, min = 1, max = 10000)
+                    ),
+                    
+                    numericInput("standard_deviation_truncated", "Standard deviation:", value = 50)
+                  ), 
+                  # for triangular
+                  conditionalPanel(
+                    condition = "input.distribution == 'triangular'",
+                    
+                    checkboxInput("checkboxtriangularfixed", "Use fixed window size", value = FALSE),
+                    
+                    conditionalPanel(
+                      condition = "input.checkboxtriangularfixed == true",
+                      numericInput("window_size_triangular", "Window Size", 1000, min = 100, max = 10000),
+                      numericInput("step_width_triangular", "Step Width", 100, min = 1, max = 10000)
+                    ),
+                    
+                    numericInput("vertex1", "Vertex:", value = 0.5)
+                  ),
+                  # for trapezoidal
+                  conditionalPanel(
+                    condition = "input.distribution == 'trapezoidal'",
+                    
+                    checkboxInput("checkboxtrapezoidalfixed", "Use fixed window size", value = FALSE),
+                    
+                    conditionalPanel(
+                      condition = "input.checkboxtrapezoidalfixed == true",
+                      numericInput("window_size_trapezoidal", "Window Size", 1000, min = 100, max = 10000),
+                      numericInput("step_width_trapezoidal", "Step Width", 100, min = 1, max = 10000)
+                    ),
+                    
+                    numericInput("vertex1_trap", "Top left vertex:", value = 0.3),
+                    numericInput("vertex2_trap", "Top right vertex:", value = 0.6)
+                  ),
+                  
+                  numericInput("weight_threshold", "Weight threshold:", value = NA, min = 1, max = 1000),
                 ),
 
                 ### MainPanel - Sliding Window-Method ###
                 column(width = 9,
                        fluidRow(
+                         
                          box(title = tagList(shiny::icon("chart-line"), "Plot"),
                              width = 12,
                              solidHeader = TRUE,
                              collapsible = TRUE,
-                             status = "primary"
+                             status = "primary",
+                             
+                             withSpinner(plotOutput("sliding_scatterPlot", height = "475px"))
                          ),
-
-                         box(title = tagList(shiny::icon("table"), "Table"),
+                         
+                         box(title = tagList(shiny::icon("chart-line"), "Segments"),
                              width = 12,
                              solidHeader = TRUE,
                              collapsible = TRUE,
-                             status = "info",
-                             class = "custom-scrollbox"
+                             status = "primary",
+                             
+                             withSpinner(plotOutput("sliding_scatterPlot2", height = "475px"))
+                         ),
+                         
+                         box(title = tagList(shiny::icon("chart-line"), "Weight Distribution"),
+                             width = 12,
+                             solidHeader = TRUE,
+                             collapsible = TRUE,
+                             status = "primary",
+                             
+                             withSpinner(plotOutput("weightDistPlot", height = "475px"))
                          ))
                 ))),
       
@@ -405,7 +555,7 @@ ui <- dashboardPage(
                              collapsible = TRUE,
                              status = "primary",
                              
-                             plotOutput("regression", height = "600px")
+                             withSpinner(plotOutput("regression", height = "600px"))
                          ),
                          
                          box(title = tagList(shiny::icon("table"), "Table"),
@@ -452,6 +602,8 @@ ui <- dashboardPage(
                   solidHeader = TRUE,
                   status = "primary",
                   
+                  p(gamlsstext1),
+                  
                   actionButton("button_lms", "Start LMS", icon("calculator"), onclick = "$(tab).removeClass('disabled')"),
                   htmlOutput("buttons_lms"),
                   hr(),
@@ -491,7 +643,7 @@ ui <- dashboardPage(
                                  collapsible = TRUE,
                                  status = "primary",
                                  
-                                 plotOutput("lms", height = "475px")
+                                 withSpinner(plotOutput("lms", height = "475px"))
                              ),
                              
                              box(title = tagList(shiny::icon("calculator"), "Statistics"),
@@ -502,9 +654,9 @@ ui <- dashboardPage(
                                  class = "custom-scrollbox",
                                  
                                  verbatimTextOutput("lms_text"),
-                                 plotOutput("lms_plot"),
-                                 plotOutput("lms_fitted"),
-                                 plotOutput("lms_wormplots"))
+                                 withSpinner(plotOutput("lms_plot")),
+                                 withSpinner(plotOutput("lms_fitted")),
+                                 withSpinner(plotOutput("lms_wormplots")))
                            )),
                          
                          tabPanel(
@@ -519,7 +671,7 @@ ui <- dashboardPage(
                                  collapsible = TRUE,
                                  status = "primary",
                                  
-                                 plotOutput("gamlss_models_splines", height = "475px")
+                                 withSpinner(plotOutput("gamlss_models_splines", height = "475px"))
                              ),
                              
                              box(title = tagList(shiny::icon("calculator"), "Statistics"),
@@ -531,14 +683,14 @@ ui <- dashboardPage(
                                  
                                  p("GAMLSS with P-Splines:"),
                                  verbatimTextOutput("gamlss_text_psplines"),
-                                 plotOutput("gamlss_term_pb"),
-                                 plotOutput("gamlss_fitted_pb_"),
+                                 withSpinner(plotOutput("gamlss_term_pb")),
+                                 withSpinner(plotOutput("gamlss_fitted_pb_")),
                                  p("GAMLSS with Cubic-Splines:"),
                                  verbatimTextOutput("gamlss_text_splines"),
-                                 plotOutput("gamlss_term_cs"),
-                                 plotOutput("gamlss_fitted_cs_"),
+                                 withSpinner(plotOutput("gamlss_term_cs")),
+                                 withSpinner(plotOutput("gamlss_fitted_cs_")),
                                  p("Wormplots for GAMLSS with the P-Splines and Cubic Splines:"),
-                                 plotOutput("wormplots_splines"))
+                                 withSpinner(plotOutput("wormplots_splines")))
                            )),
                          
                          tabPanel(
@@ -553,7 +705,7 @@ ui <- dashboardPage(
                                  collapsible = TRUE,
                                  status = "primary",
                                  
-                                 plotOutput("gamlss_models_poly", height = "475px")
+                                 withSpinner(plotOutput("gamlss_models_poly", height = "475px"))
                              ),
                              
                              box(title = tagList(shiny::icon("calculator"), "Statistics"),
@@ -565,14 +717,14 @@ ui <- dashboardPage(
                                  
                                  p("GAMLSS with Polynomial Degree 3:"),
                                  verbatimTextOutput("gamlss_text_poly"),
-                                 plotOutput("gamlss_term_poly"),
-                                 plotOutput("gamlss_fitted_poly_"),
+                                 withSpinner(plotOutput("gamlss_term_poly")),
+                                 withSpinner(plotOutput("gamlss_fitted_poly_")),
                                  p("GAMLSS with Polynomial Degree 4:"),
                                  verbatimTextOutput("gamlss_text_poly4"),
-                                 plotOutput("gamlss_term_poly4"),
-                                 plotOutput("gamlss_fitted_poly4_"),
+                                 withSpinner(plotOutput("gamlss_term_poly4")),
+                                 withSpinner(plotOutput("gamlss_fitted_poly4_")),
                                  p("Wormplots for GAMLSS with the Polynomial Degree 3 and 4:"),
-                                 plotOutput("wormplots_poly"))
+                                 withSpinner(plotOutput("wormplots_poly")))
                            )),
                          
                          tabPanel(
@@ -587,7 +739,7 @@ ui <- dashboardPage(
                                  collapsible = TRUE,
                                  status = "primary",
                                  
-                                 plotOutput("gamlss_net", height = "475px")),
+                                 withSpinner(plotOutput("gamlss_net", height = "475px"))),
                              
                              box(title = tagList(shiny::icon("calculator"), "Statistics"),
                                  width = 12,
@@ -598,9 +750,9 @@ ui <- dashboardPage(
                                  
                                  verbatimTextOutput("net_text"),
                                  # Plot neural network with term.plot(nn_)
-                                 plotOutput("network_term"),
-                                 plotOutput("network_fitted"),
-                                 plotOutput("nn_wormplots"))
+                                 withSpinner(plotOutput("network_term")),
+                                 withSpinner(plotOutput("network_fitted")),
+                                 withSpinner(plotOutput("nn_wormplots")))
                            )),
                          
                          tabPanel(
@@ -615,7 +767,7 @@ ui <- dashboardPage(
                                  collapsible = TRUE,
                                  status = "primary",
                                  
-                                 plotOutput("gamlss_tree", height = "475px")
+                                 withSpinner(plotOutput("gamlss_tree", height = "475px"))
                              ),
                              
                              box(title = tagList(shiny::icon("calculator"), "Statistics"),
@@ -626,10 +778,10 @@ ui <- dashboardPage(
                                  class = "custom-scrollbox",
                                  
                                  verbatimTextOutput("tree_text"),
-                                 plotOutput("rpart_tree"),
-                                 plotOutput("tree_term"),
-                                 plotOutput("tree_fitted"),
-                                 plotOutput("tr_wormplots"))
+                                 withSpinner(plotOutput("rpart_tree")),
+                                 withSpinner(plotOutput("tree_term")),
+                                 withSpinner(plotOutput("tree_fitted")),
+                                 withSpinner(plotOutput("tr_wormplots")))
                            )
                          )
                        )
@@ -645,7 +797,7 @@ ui <- dashboardPage(
                   solidHeader = TRUE,
                   status = "primary",
                   
-                  p(gamlsstext1)
+                  p(gamlsstext2)
                 ),
                 
                 box(
@@ -655,7 +807,7 @@ ui <- dashboardPage(
                   status = "primary",
                   
                   DT::dataTableOutput("table_compare"),
-                  plotOutput("metrics", height = "475px")
+                  withSpinner(plotOutput("metrics", height = "475px"))
                 ))),
       
       ### GAMLSS - Prediction ###
@@ -704,7 +856,7 @@ ui <- dashboardPage(
                            collapsible = TRUE,
                            status = "primary",
                            
-                           plotOutput("gamlss_prediction", height = "475px")),
+                           withSpinner(plotOutput("gamlss_prediction", height = "475px"))),
                        
                        box(title = tagList(shiny::icon("table"), "Table"),
                            width = 12,
@@ -740,7 +892,7 @@ ui <- dashboardPage(
                            collapsible = TRUE,
                            status = "primary",
                            
-                           plotOutput("gamlss_plot", height = "475px"))
+                           withSpinner(plotOutput("gamlss_plot", height = "475px")))
                        
                        ) )))
               )),
@@ -758,7 +910,7 @@ ui <- dashboardPage(
                     solidHeader = TRUE,
                     status = "primary",
                     
-                    p(gamlsstext1),
+                    p(gamlsstext3),
                     
                     helpText("Improvement from the GAMLSS by deleting high residuals:"),
                     selectInput("select_model_resi", "Select Model:", choices = list("Splines" = c("P-Splines" = "pb_",
@@ -780,7 +932,7 @@ ui <- dashboardPage(
                            collapsible = TRUE,
                            status = "primary",
                            
-                           plotOutput("outlier", height = "600px")),
+                           withSpinner(plotOutput("outlier", height = "600px"))),
                        
                        box(title = tagList(shiny::icon("chart-line"), "Fitted Plot"),
                            width = 12,
@@ -788,8 +940,8 @@ ui <- dashboardPage(
                            collapsible = TRUE,
                            status = "primary",
                            
-                           plotOutput("gamlss_outlier", height = "600px"),
-                           plotOutput("outlier_term_gamlss", height = "475px")),
+                           withSpinner(plotOutput("gamlss_outlier", height = "600px")),
+                           withSpinner(plotOutput("outlier_term_gamlss", height = "475px"))),
                        
                        box(title = tagList(shiny::icon("table"), "Table"),
                            width = 12,
@@ -821,6 +973,9 @@ ui <- dashboardPage(
 server <- function(input, output, session) {
 
   options(shiny.sanitize.errors = TRUE)
+  
+  values <- reactiveValues(upload_state = NULL)
+  show_more_info <- reactiveVal(FALSE)
   
   ##################################### Reactive Expressions ######################################
 
@@ -865,6 +1020,26 @@ server <- function(input, output, session) {
   
   observeEvent(input$reset, {
     values_lis$upload_state_lis <- 'reset'
+  })
+  
+  # Reset inputs when switching the distribution
+  observeEvent(input$distribution, {
+    updateTextInput(session, "window_size_truncated", value = "")
+    updateTextInput(session, "step_width_truncated", value = "")
+    updateTextInput(session, "window_size_triangular", value = "")
+    updateTextInput(session, "step_width_triangular", value = "")
+    updateTextInput(session, "window_size_trapezoidal", value = "")
+    updateTextInput(session, "step_width_trapezoidal", value = "")
+    
+    if (input$distribution == "truncated_gaussian") {
+      updateNumericInput(session, "standard_deviation_truncated", value = 5)
+    } else if (input$distribution == "gaussian") {
+      updateNumericInput(session, "standard_deviation_gaussian", value = 5)
+    } else if (input$distribution == "triangular") {
+      updateNumericInput(session, "vertex1", value = 0.5)
+    } else if (input$distribution == "trapezoidal") {
+      updateNumericInput(session, "vertex1_trap", value = 0.3)
+      updateNumericInput(session, "vertex2_trap", value = 0.6)}
   })
   
   dataset_input_lis <- reactive({
@@ -989,12 +1164,182 @@ server <- function(input, output, session) {
   
   ##################################### Reactive Sliding Window ###################################
   
+  slidingwindowregular <- reactive({
+    
+    progress <- shiny::Progress$new()
+    progress$set(message = "Calculate Sliding Window RI...", detail = "", value = 2)
+    
+    df <- data_analyte()
+    
+    on.exit(progress$close())
+    
+    return(df)
+  })
+  
   slidingwindow <- reactive({
 
     progress <- shiny::Progress$new()
     progress$set(message = "Calculate Sliding Window RI...", detail = "", value = 2)
+    
+    df <- data_analyte()
+    
+    selected_x <- df$value
+    selected_t <- df$age_days
 
     on.exit(progress$close())
+    
+    return(list(x = selected_x, t = selected_t))
+  })
+  
+  sliding_data <- reactive({
+    
+    user_data <- slidingwindow()
+    user_x <- user_data$x
+    user_t <- user_data$t
+    
+    window_size <- switch(input$distribution,
+                          "truncated_gaussian" = if (!is.null(input$checkboxgaussianfixed) && input$checkboxgaussianfixed) input$window_size_truncated else NULL,
+                          "triangular"         = if (!is.null(input$checkboxtriangularfixed) && input$checkboxtriangularfixed) input$window_size_triangular else NULL,
+                          "trapezoidal"        = if (!is.null(input$checkboxtrapezoidalfixed) && input$checkboxtrapezoidalfixed) input$window_size_trapezoidal else NULL,
+                          NULL
+    )
+    
+    step_width <- switch(input$distribution,
+                         "truncated_gaussian" = if (!is.null(input$checkboxgaussianfixed) && input$checkboxgaussianfixed) input$step_width_truncated else NULL,
+                         "triangular"         = if (!is.null(input$checkboxtriangularfixed) && input$checkboxtriangularfixed) input$step_width_triangular else NULL,
+                         "trapezoidal"        = if (!is.null(input$checkboxtrapezoidalfixed) && input$checkboxtrapezoidalfixed) input$step_width_trapezoidal else NULL,
+                         NULL
+    )
+    
+    standard_deviation <- switch(input$distribution, "truncated_gaussian" = input$standard_deviation_truncated, NULL)
+    
+    vertex1 <- input$vertex1
+    vertex1_trap <- input$vertex1_trap
+    vertex2_trap <- input$vertex2_trap
+    
+    result <- tryCatch({
+      
+      if (input$distribution == "truncated_gaussian") {
+        
+        res <- reflimR.expand::w.sliding.reflim.plot(
+          user_x,
+          user_t,
+          distribution = input$distribution,
+          standard_deviation = standard_deviation,
+          window.size = window_size,
+          step.width = step_width,
+          weight_threshold = input$weight_threshold
+        )
+      } else if (input$distribution == "triangular") {
+        
+        res <- reflimR.expand::w.sliding.reflim.plot(
+          user_x,
+          user_t,
+          distribution = input$distribution,
+          vertex1 = vertex1,
+          window.size = window_size,
+          step.width = step_width,
+          weight_threshold = input$weight_threshold
+        )
+      } else if (input$distribution == "trapezoidal") {
+        
+        res <- reflimR.expand::w.sliding.reflim.plot(
+          user_x,
+          user_t,
+          distribution = input$distribution,
+          vertex1 = vertex1_trap,
+          vertex2 = vertex2_trap,
+          window.size = window_size,
+          step.width = step_width,
+          weight_threshold = input$weight_threshold
+        )
+      }
+      
+      # Compute segment index
+      segment_indices <- which(res$x == "---") - 1
+      
+      if (length(segment_indices) == 0) {
+        segment_indices <- nrow(res)
+        segment_count <- 1
+      } else {
+        if (tail(segment_indices, 1) < nrow(res)) {
+          segment_indices <- c(segment_indices, nrow(res))
+        }
+        segment_count <- length(segment_indices)
+      }
+      
+      updateSliderInput(session, "segment", max = segment_count)
+      
+      list(
+        res = res,
+        segment_indices = segment_indices,
+        segment_count = segment_count,
+        error = NULL
+      )
+      
+    }, error = function(e) {
+      list(
+        res = NULL,
+        segment_indices = NULL,
+        segment_count = 0,
+        error = e$message
+      )
+    })
+    
+    return(result)
+  })
+  
+  plot_sliding_data <- reactive({
+    
+    user_data <- slidingwindow()
+    user_x <- user_data$x
+    user_t <- user_data$t
+    
+    window_size <- switch(input$distribution,
+                          "truncated_gaussian" = if (!is.null(input$checkboxgaussianfixed) && input$checkboxgaussianfixed) input$window_size_truncated else NULL,
+                          "triangular"         = if (!is.null(input$checkboxtriangularfixed) && input$checkboxtriangularfixed) input$window_size_triangular else NULL,
+                          "trapezoidal"        = if (!is.null(input$checkboxtrapezoidalfixed) && input$checkboxtrapezoidalfixed) input$window_size_trapezoidal else NULL,
+                          NULL
+    )
+    
+    step_width <- switch(input$distribution,
+                         "truncated_gaussian" = if (!is.null(input$checkboxgaussianfixed) && input$checkboxgaussianfixed) input$step_width_truncated else NULL,
+                         "triangular"         = if (!is.null(input$checkboxtriangularfixed) && input$checkboxtriangularfixed) input$step_width_triangular else NULL,
+                         "trapezoidal"        = if (!is.null(input$checkboxtrapezoidalfixed) && input$checkboxtrapezoidalfixed) input$step_width_trapezoidal else NULL,
+                         NULL
+    )
+    
+    standard_deviation <- switch(input$distribution, "truncated_gaussian" = input$standard_deviation_truncated, NULL)
+    
+    vertex1 <- input$vertex1
+    vertex1_trap <- input$vertex1_trap
+    vertex2_trap <- input$vertex2_trap
+    
+    result <- tryCatch({
+      if (input$distribution == "truncated_gaussian") {
+        reflimR.expand::sliding.w.reflim(user_x, user_t, distribution = input$distribution, log.scale = FALSE,
+                        standard_deviation = standard_deviation,
+                        window.size = window_size,
+                        step.width = step_width,
+                        weight_threshold = input$weight_threshold)
+      } else if (input$distribution == "triangular") {
+        reflimR.expand::sliding.w.reflim(user_x, user_t, distribution = input$distribution, log.scale = FALSE,
+                        vertex1 = vertex1,
+                        window.size = window_size,
+                        step.width = step_width,
+                        weight_threshold = input$weight_threshold)
+      } else if (input$distribution == "trapezoidal") {
+        reflimR.expand::sliding.w.reflim(user_x, user_t, distribution = input$distribution, log.scale = FALSE,
+                        vertex1 = vertex1_trap, vertex2 = vertex2_trap,
+                        window.size = window_size,
+                        step.width = step_width,
+                        weight_threshold = input$weight_threshold)
+      }
+    }, error = function(e) {
+      message("Error: ", e$message)
+      return(NULL)
+    })
+    return(result)
   })
   
   ##################################### Reactive GAMLSS ###########################################
@@ -1287,6 +1632,119 @@ server <- function(input, output, session) {
     
     rpart.plot(build_rpart(), box.palette = "RdBu", roundint = FALSE)
     #rsq.rpart(build_rpart())
+  })
+  
+  output$sliding_window <- renderPlot({
+    
+    df <- slidingwindowregular()
+    x <- df$value
+    covariate <- df$age_days
+    
+    if (input$checkboxregularfixed) {
+      
+      result <- reflimR.expand::sliding.reflim(x, covariate, window.size = input$regular_window_size_truncated,
+        step.width = input$regular_step_width_truncated)
+      
+      reflimR.expand::draw.sliding.reflims(result, xlim = c(0, max(covariate) + max(covariate)*0.1), 
+                                           ylim = c(0, max(x) + max(x)*0.1), xlab = "Age [Days]", ylab = y.axis.name(),
+                                           col.low = c(0.392,0.620,0.929), col.upp = c(0.804,0.361,0.361))
+    } else {
+      
+      result <- reflimR.expand::sliding.reflim(x, covariate, n.min.window = input$slding_window_nmin.window)
+      
+      reflimR.expand::draw.sliding.reflims(result, xlim = c(0, max(covariate) + max(covariate)*0.1), 
+                                           ylim = c(0, max(x) + max(x)*0.1), xlab = "Age [Days]", ylab = y.axis.name(),
+                                           col.low = c(0.392,0.620,0.929), col.upp = c(0.804,0.361,0.361))
+      
+    }
+  })
+  
+  output$sliding_scatterPlot <- renderPlot({
+    alistplot <- plot_sliding_data()
+    
+    if (is.null(alistplot)) {
+      return(NULL)
+    }
+    
+    alistplot + ggtitle("Reference Limits") + 
+      theme(plot.title = element_text(face = "bold", hjust = 0.5))
+  })
+  
+  output$sliding_scatterPlot2 <- renderPlot({
+    data_info <- sliding_data()
+    
+    if (!is.null(data_info$error)) {
+      return(NULL)
+    }
+    
+    res <- data_info$res
+    
+    segment_indices <- data_info$segment_indices
+    segment_count <- data_info$segment_count
+    
+    segment_index <- input$segment
+    
+    if (segment_index == 1) {
+      start_row <- 1
+    } else {
+      start_row <- segment_indices[segment_index - 1] + 2
+    }
+    end_row <- segment_indices[segment_index]
+    
+    segment_data <- res[start_row:end_row, ]
+    
+    calculated_window_size <- max(as.numeric(segment_data$t)) - min(as.numeric(segment_data$t))
+    calculated_step_width <- if (segment_count > 1 && segment_index > 1) {
+      current_start_time <- min(as.numeric(segment_data$t))
+      prev_start_time <- min(as.numeric(res[if (segment_index == 2) 1 else segment_indices[segment_index - 2] + 2, "t"]))
+      current_start_time - prev_start_time
+    } else 0
+    
+    w_values <- as.numeric(segment_data$w)
+    total_w <- sum(w_values, na.rm = TRUE)
+    
+    # Creating a continuous color gradient with colorRampPalette()
+    color_palette <- colorRampPalette(c("cornflowerblue", "indianred"))(100)
+    w_colors <- color_palette[cut(w_values, breaks = 100, labels = FALSE)]
+    
+    plot(as.numeric(segment_data$t), as.numeric(segment_data$x), xlab = "Age [Days]", ylab = y.axis.name(),
+         main = paste("Scatter Plot for Segment", segment_index, "with Distribution:", input$distribution), pch = 16, col = w_colors)
+    
+    legend("topright", legend = c("w = 1", "w = 0.8", "w = 0.5"), col = color_palette[c(100, 80, 50)],
+           pch = 16, title = "Weighting", xpd = TRUE, bty = "n")
+  })
+  
+  output$weightDistPlot <- renderPlot({
+    
+    data_info <- sliding_data()
+    
+    if (!is.null(data_info$error)) {
+      return(NULL)
+    }
+    
+    res <- data_info$res
+    segment_indices <- data_info$segment_indices    # the end of each segment
+    segment_count <- data_info$segment_count        # the number of segments
+    
+    segment_index <- input$segment
+    
+    if (segment_index == 1) {
+      start_row <- 1
+    } else {
+      start_row <- segment_indices[segment_index - 1] + 2
+    }
+    end_row <- segment_indices[segment_index]
+    
+    segment_data <- res[start_row:end_row, ]
+    interval_cov <- as.numeric(segment_data$t)
+    www <- as.numeric(segment_data$w)
+    www_sum <- sum(www, na.rm = TRUE)
+    
+    plot(interval_cov, www, type = "l", col = "cornflowerblue",
+         lwd = 2,  main = paste("Weight Distribution - Segment", segment_index), xlab = "Interval Covariate", ylab = "Weight")
+    points(interval_cov, www, col = "indianred")
+    
+    legend("topright", legend = paste("Total weight:", round(www_sum, 2)), col = "black", xpd = TRUE, bty = "n")
   })
  
   ################################ LMS #############################################
