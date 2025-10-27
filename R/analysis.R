@@ -57,6 +57,8 @@ select_data <- function(data_, age_begin = 0, age_end = 123, sex = "t", unit = "
     data_analyte <- subset(data_analyte, sex == "F", select = c(patient, sex, age, age_days, value, name))
   }
   
+  data_analyte <- data_analyte %>% filter(sex %in% c("M", "F"))
+  
   # Take only the first and unique samples from the data if ID is given
   if (unique == TRUE) {
     rows_before_unique <- nrow(data_analyte)

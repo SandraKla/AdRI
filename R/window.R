@@ -110,7 +110,7 @@ iterate_ri_rpart <- function(df, g, subset, ri_color, reflim_n.min = 40) {
             c(
               x$min_age,
               x$max_age,
-              reflim_results_sex,
+              quantile_results_sex,
               as.numeric(quantile(quantile_results, 0.025)),
               as.numeric(quantile(quantile_results, 0.975))
             )
@@ -151,19 +151,22 @@ draw_ri_rpart <- function(df, g, sex, is_unisex = FALSE, reflim_n.min) {
     subset <-
       df %>% filter(leaf %in% leafs_unisex_group) %>% group_by(leaf) %>% summarise(
         n = n(),
-        min_age = min(age_days),
-        max_age = max(age_days)
+        min_age = min(age_days, na.rm = TRUE),
+        max_age = max(age_days, na.rm = TRUE),
+        .groups = 'drop'
       ) %>%
       arrange(min_age, max_age)
     #draw ri
-    g <- iterate_ri_rpart(df, g, subset, ri_color, reflim_n.min)
+    if (nrow(subset) > 0) {
+      g <- iterate_ri_rpart(df, g, subset, ri_color, reflim_n.min)
+    }
   }
   else if (is_unisex == FALSE) {
     subset <-
       df %>% group_by(leaf, sex) %>% summarise(
         n = n(),
-        min_age = min(age_days),
-        max_age = max(age_days),
+        min_age = min(age_days, na.rm = TRUE),
+        max_age = max(age_days, na.rm = TRUE),
         .groups = 'drop'
       ) %>%
       arrange(min_age, max_age) %>% filter(!leaf %in% leafs_unisex_group & sex == !!sex) %>% ungroup()

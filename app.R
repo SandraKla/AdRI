@@ -120,8 +120,8 @@ and the Reference Intervals will be calculated."))
 
 windowtext3 <- HTML(paste0("Decision Trees are used for machine learning. It can be used for classification (supervised learning), but also
 for clustering (unsupervised learning). Here it used to cluster the data into subgroups with similar values.
-The Decision Tree is from the package rpart and is visualized with rpart.plot. The subgroups according to the Decision Tree
-are used to calculate the reference intervals. For futher informations read the ", a("publication", href = "https://doi.org/10.1515/labmed-2024-0083"),"!"))
+The Decision Tree is from the package rpart and is visualized with rpart.plot. The age groups suggested by the Decision Tree are used to calculate the reference intervals with reflimR. 
+If reflimR is not applicable, quantiles are used instead. For futher informations read the ", a("publication", href = "https://doi.org/10.1515/labmed-2024-0083"),"!"))
 
 windowtext4 <- HTML(paste0("Computes reference intervals based on a sliding window technique. There are two variants. 
 A fixed window size and a fixed step width by which the window is shifted or windows with a guaranteed minimum number of values."))
