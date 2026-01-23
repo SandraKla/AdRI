@@ -59,13 +59,4 @@ Link to the publications:
 
 ## Disclaimer
 
-Only anonymized data may be uploaded to this application.
-This application is provided “as is” and “as available”, without any express or implied warranties of any kind.
-No warranty is given regarding the accuracy, completeness, reliability, or timeliness of the results.
-
-The results are provided for informational and research purposes only and must not be used for diagnosis, treatment, prevention, or any form of clinical or medical decision-making.
-This application is not a medical device or medical product and does not replace professional medical advice.
-
-To the fullest extent permitted by law, the author disclaims all liability for any direct, indirect, incidental, consequential, or special damages arising from the use of this application or its results.
-
-Use of this application is entirely at your own risk.
+Only anonymized data may be uploaded to this application. This application is provided “as is” and “as available”, without any express or implied warranties of any kind. No warranty is given regarding the accuracy, completeness, reliability, or timeliness of the results. The results are provided for informational and research purposes only and must not be used for diagnosis, treatment, prevention, or any form of clinical or medical decision-making. This application is not a medical device or medical product and does not replace professional medical advice. To the fullest extent permitted by law, the author disclaims all liability for any direct, indirect, incidental, consequential, or special damages arising from the use of this application or its results. Use of this application is entirely at your own risk.
